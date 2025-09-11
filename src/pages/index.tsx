@@ -27,20 +27,29 @@ export default function Meals() {
       setMeals(ms.sort((a, b) => b.date.toMillis() - a.date.toMillis()))
     );
     const q = query(collection(db, "meals"), orderBy("date", "desc"));
-    const unsubMeals = onSnapshot(q, async snap => {
-      const serverMeals = snap.docs.map(d => ({
-        id: d.id,
-        ...(d.data() as any),
-        pending: false,
-      }));
-      for (const m of serverMeals) await saveMeal(m);
-      const pending = await getPendingMeals();
-      setMeals(
-        [...serverMeals, ...pending].sort(
-          (a, b) => b.date.toMillis() - a.date.toMillis()
-        )
-      );
-    });
+    const unsubMeals = onSnapshot(
+      q,
+      async snap => {
+        const serverMeals = snap.docs.map(d => ({
+          id: d.id,
+          ...(d.data() as any),
+          pending: false,
+        }));
+        for (const m of serverMeals) await saveMeal(m);
+        const pending = await getPendingMeals();
+        setMeals(
+          [...serverMeals, ...pending].sort(
+            (a, b) => b.date.toMillis() - a.date.toMillis()
+          )
+        );
+      },
+      async err => {
+        console.error("Meal subscription failed", err);
+        const all = await getAllMeals();
+        setMeals(all.sort((a, b) => b.date.toMillis() - a.date.toMillis()));
+        setMessage("Unable to sync with server");
+      }
+    );
     syncPendingMeals();
     return () => {
       unsubMeals();

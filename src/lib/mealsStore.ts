@@ -34,7 +34,17 @@ function getDb() {
 export async function getAllMeals(): Promise<Meal[]> {
   const db = getDb();
   if (!db) return [];
-  return (await db).getAll('meals');
+  const meals = await (await db).getAll('meals');
+  // IndexedDB strips class prototypes, so Firestore Timestamps stored there
+  // come back as plain objects without the `toDate`/`toMillis` helpers. Restore
+  // them here so the rest of the app can safely use Timestamp methods.
+  return meals.map(m => ({
+    ...m,
+    date:
+      m.date instanceof Timestamp
+        ? m.date
+        : new Timestamp((m.date as any).seconds, (m.date as any).nanoseconds),
+  }));
 }
 
 export async function saveMeal(meal: Meal) {
