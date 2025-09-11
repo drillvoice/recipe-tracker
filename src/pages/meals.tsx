@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "@/lib/firebaseClient";
+import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, addDoc, query, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
+import Link from "next/link";
 
 interface Meal {
   id: string;
@@ -41,6 +42,7 @@ export default function Meals() {
     <main>
       <h1>Meals</h1>
       <button onClick={() => signOut(auth)}>Log Out</button>
+      <Link href="/history">History</Link>
       <div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} />
         <input placeholder="Meal name" value={mealName} onChange={e => setMealName(e.target.value)} />
