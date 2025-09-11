@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/lib/firebase', () => ({ auth: {} }));
+jest.mock('@/lib/firebaseClient', () => ({ auth: {} }));
 
 jest.mock('firebase/auth', () => ({
   signInWithEmailAndPassword: jest.fn(),

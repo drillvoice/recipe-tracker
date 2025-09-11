@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 
 document.createRange = () => ({
   setStart: () => {},
@@ -6,10 +6,28 @@ document.createRange = () => ({
   commonAncestorContainer: document.createElement('div')
 } as any);
 
-jest.mock('@/lib/firebase', () => ({
+jest.mock('@/lib/firebaseClient', () => ({
   auth: {},
-  db: {}
+  db: {},
 }));
+
+jest.mock('@/lib/mealsStore', () => {
+  const mockMeal = {
+    id: '1',
+    mealName: 'Pizza',
+    date: {
+      toDate: () => new Date('2024-01-02'),
+      toMillis: () => new Date('2024-01-02').getTime(),
+    },
+    pending: false,
+  };
+  return {
+    getAllMeals: jest.fn().mockResolvedValue([mockMeal]),
+    saveMeal: jest.fn().mockResolvedValue(undefined),
+    getPendingMeals: jest.fn().mockResolvedValue([]),
+    markMealSynced: jest.fn().mockResolvedValue(undefined),
+  };
+});
 
 const mockSignOut = jest.fn();
 const mockOnAuthStateChanged = jest.fn((_auth, cb) => {
@@ -37,17 +55,19 @@ jest.mock('firebase/firestore', () => ({
   orderBy: jest.fn(),
   onSnapshot: mockOnSnapshot,
   Timestamp: {
-    fromDate: (d: Date) => ({ toDate: () => d }),
-    now: () => ({ toDate: () => new Date('2024-01-03') })
+    fromDate: (d: Date) => ({ toDate: () => d, toMillis: () => d.getTime() }),
+    now: () => ({ toDate: () => new Date('2024-01-03'), toMillis: () => new Date('2024-01-03').getTime() })
   }
 }));
 
 const Meals = require('@/pages/meals').default;
 
-test('renders meals list', () => {
-  render(<Meals />);
+test('renders meals list', async () => {
+  await act(async () => {
+    render(<Meals />);
+  });
   const dateString = new Date('2024-01-02').toLocaleDateString();
   expect(screen.getByText('Meals')).toBeInTheDocument();
   expect(screen.getByText('Log Out')).toBeInTheDocument();
-  expect(screen.getByText(`${dateString} – Pizza`)).toBeInTheDocument();
+  expect(await screen.findByText(`${dateString} – Pizza`)).toBeInTheDocument();
 });
