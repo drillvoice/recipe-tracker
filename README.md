@@ -8,7 +8,7 @@ A tiny web app for logging what you cooked each night.
 - Store entries in Firestore and list them chronologically.
 
 ## Tech Stack
-- [Next.js](https://nextjs.org/) (deployed on Vercel)
+- [Next.js](https://nextjs.org/) (deployed on Firebase Hosting)
 - [Firebase Firestore](https://firebase.google.com/docs/firestore)
 - [Firebase Auth](https://firebase.google.com/docs/auth)
 
@@ -19,10 +19,33 @@ npm install
 npm run dev
 ```
 
-## Vercel Deployment
-1. Create a Vercel project named **recipe-tracker** and connect this repo.
-2. Add the above environment variables in Vercel’s dashboard.
-3. Push to `main`; Vercel will build and deploy automatically.
+### Environment Variables
+
+Create a `.env.local` file with the following values:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...
+```
+
+## Firebase Hosting Deployment
+1. Install the [Firebase CLI](https://firebase.google.com/docs/cli) and log in.
+2. Build and export the static site:
+
+   ```bash
+   npm run build
+   npx next export -o public
+   ```
+3. Deploy to Firebase Hosting:
+
+   ```bash
+   firebase deploy
+   ```
 
 ## Roadmap
 - Search/filter by date or meal name  
