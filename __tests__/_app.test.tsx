@@ -1,4 +1,10 @@
 import { render, screen } from '@testing-library/react';
+
+jest.mock('@/lib/firebaseClient', () => ({ auth: {} }));
+
+const mockSignInAnonymously = jest.fn().mockResolvedValue({});
+jest.mock('firebase/auth', () => ({ signInAnonymously: mockSignInAnonymously }));
+
 import App from '@/pages/_app';
 
 function Dummy() {
@@ -8,4 +14,5 @@ function Dummy() {
 test('renders page component', () => {
   render(<App Component={Dummy} pageProps={{}} />);
   expect(screen.getByTestId('dummy')).toBeInTheDocument();
+  expect(mockSignInAnonymously).toHaveBeenCalled();
 });
