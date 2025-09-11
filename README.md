@@ -4,7 +4,7 @@ A tiny web app for logging what you cooked each night.
 
 ## Features (MVP)
 - Record a meal name and date.
-- Email/password authentication (Firebase Auth).
+- Anonymous authentication (Firebase Auth).
 - Store entries in Firestore and list them chronologically.
 
 ## Tech Stack
