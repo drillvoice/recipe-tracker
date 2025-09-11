@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/router";
 
