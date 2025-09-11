@@ -1,23 +1,46 @@
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/lib/firebase', () => ({ auth: {} }));
+document.createRange = () => ({
+  setStart: () => {},
+  setEnd: () => {},
+  commonAncestorContainer: document.createElement('div')
+} as any);
+
+jest.mock('@/lib/firebaseClient', () => ({
+  auth: {},
+  db: {}
+}));
+
+const mockOnSnapshot = jest.fn((_q, cb) => {
+  cb({
+    docs: [
+      { id: '1', data: () => ({ mealName: 'Pizza', date: { toDate: () => new Date('2024-01-02') } }) }
+    ]
+  });
+  return jest.fn();
+});
 
 jest.mock('firebase/auth', () => ({
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn()
+  signInAnonymously: jest.fn()
 }));
 
-jest.mock('next/router', () => ({
-  useRouter: () => ({ push: jest.fn() })
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn(),
+  addDoc: jest.fn(),
+  query: jest.fn(),
+  orderBy: jest.fn(),
+  onSnapshot: mockOnSnapshot,
+  Timestamp: {
+    fromDate: (d: Date) => ({ toDate: () => d }),
+    now: () => ({ toDate: () => new Date('2024-01-03') })
+  }
 }));
 
-const Home = require('@/pages/index').default;
+const Index = require('@/pages/index').default;
 
-test('renders login form', () => {
-  render(<Home />);
-  expect(screen.getByText('Recipe Tracker')).toBeInTheDocument();
-  expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
-  expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
-  expect(screen.getByText('Log In')).toBeInTheDocument();
-  expect(screen.getByText('Sign Up')).toBeInTheDocument();
+test('renders meals list', () => {
+  render(<Index />);
+  const dateString = new Date('2024-01-02').toLocaleDateString();
+  expect(screen.getByRole('heading', { name: 'Add Meal' })).toBeInTheDocument();
+  expect(screen.getByText(`${dateString} – Pizza`)).toBeInTheDocument();
 });

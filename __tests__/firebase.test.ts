@@ -2,7 +2,11 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-jest.mock('firebase/app', () => ({ initializeApp: jest.fn(() => 'app') }));
+jest.mock('firebase/app', () => ({
+  initializeApp: jest.fn(() => 'app'),
+  getApps: jest.fn(() => []),
+  getApp: jest.fn(() => 'app')
+}));
 jest.mock('firebase/auth', () => ({ getAuth: jest.fn(() => 'auth') }));
 jest.mock('firebase/firestore', () => ({ getFirestore: jest.fn(() => 'db') }));
 
@@ -19,7 +23,7 @@ test('initializes firebase with env config', () => {
   process.env.NEXT_PUBLIC_FIREBASE_APP_ID = 'appid';
   process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = 'measure';
 
-  const { auth, db } = require('@/lib/firebase');
+  const { auth, db } = require('@/lib/firebaseClient');
 
   expect(initializeApp).toHaveBeenCalledWith({
     apiKey: 'key',
