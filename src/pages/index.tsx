@@ -16,9 +16,16 @@ import {
   type Meal,
 } from "@/lib/mealsStore";
 
+function formatDate(d: Date) {
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function Meals() {
   const [mealName, setMealName] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => formatDate(new Date()));
   const [meals, setMeals] = useState<Meal[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -75,10 +82,18 @@ export default function Meals() {
   }
 
   async function addMeal() {
+    let mealTimestamp = Timestamp.now();
+    if (date) {
+      const [day, month, year] = date.split("/").map(Number);
+      const parsed = new Date(year, month - 1, day);
+      if (!isNaN(parsed.getTime())) {
+        mealTimestamp = Timestamp.fromDate(parsed);
+      }
+    }
     const newMeal: Meal = {
       id: Date.now().toString(),
       mealName,
-      date: date ? Timestamp.fromDate(new Date(date)) : Timestamp.now(),
+      date: mealTimestamp,
       uid: auth.currentUser?.uid,
       pending: true,
     };
@@ -98,7 +113,12 @@ export default function Meals() {
     <main>
       <h1>Meals</h1>
       <div>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+        <input
+          type="text"
+          value={date}
+          onChange={e => setDate(e.target.value)}
+          placeholder="dd/mm/yyyy"
+        />
         <input
           placeholder="Meal name"
           value={mealName}
@@ -109,9 +129,7 @@ export default function Meals() {
       {message && <p>{message}</p>}
       <ul>
         {meals.map(m => (
-          <li key={m.id}>
-            {m.date.toDate().toLocaleDateString()} – {m.mealName}
-          </li>
+          <li key={m.id}>{formatDate(m.date.toDate())} – {m.mealName}</li>
         ))}
       </ul>
     </main>
