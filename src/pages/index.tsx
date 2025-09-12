@@ -9,6 +9,8 @@ import {
   type Meal,
 } from "@/lib/mealsStore";
 import Navigation from "@/components/Navigation";
+import { validateMeal } from "@/utils/validation";
+import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 
 export default function Meals() {
   const [mealName, setMealName] = useState("");
@@ -16,6 +18,7 @@ export default function Meals() {
     new Date().toISOString().substring(0, 10)
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -69,24 +72,49 @@ export default function Meals() {
   }
 
   async function addMeal() {
-    const newMeal: Meal = {
-      id: Date.now().toString(),
-      mealName,
-      date: date ? Timestamp.fromDate(new Date(date)) : Timestamp.now(),
-      uid: auth.currentUser?.uid,
-      pending: true,
-    };
-    await saveMeal(newMeal);
-    setMealName("");
-    setDate(new Date().toISOString().substring(0, 10));
-    setMessage("Meal saved locally");
-    setTimeout(() => setMessage(null), 2000);
-    setSuggestions(prev =>
-      Array.from(new Set([...prev, mealName]))
-    );
-    setShowSuggestions(false);
-    setFilteredSuggestions([]);
-    syncPendingMeals();
+    // Clear previous errors and messages
+    setErrors([]);
+    setMessage(null);
+
+    // Check rate limiting
+    const rateLimitCheck = checkFormSubmissionLimit(auth.currentUser?.uid);
+    if (!rateLimitCheck.allowed) {
+      setErrors([`Too many submissions. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`]);
+      return;
+    }
+
+    // Validate input
+    const validation = validateMeal({ mealName, date });
+    if (!validation.success) {
+      setErrors(validation.errors);
+      return;
+    }
+
+    try {
+      const newMeal: Meal = {
+        id: Date.now().toString(),
+        mealName: validation.data.mealName,
+        date: Timestamp.fromDate(new Date(validation.data.date + 'T00:00:00')),
+        uid: auth.currentUser?.uid,
+        pending: true,
+      };
+      
+      await saveMeal(newMeal);
+      setMealName("");
+      setDate(new Date().toISOString().substring(0, 10));
+      setMessage("Meal saved successfully");
+      setTimeout(() => setMessage(null), 3000);
+      
+      setSuggestions(prev =>
+        Array.from(new Set([...prev, validation.data.mealName]))
+      );
+      setShowSuggestions(false);
+      setFilteredSuggestions([]);
+      syncPendingMeals();
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      setErrors(['Failed to save meal. Please try again.']);
+    }
   }
 
   return (
@@ -139,10 +167,19 @@ export default function Meals() {
         </label>
         <button onClick={addMeal}>Add Meal</button>
       </div>
-      {message && <p className="message">{message}</p>}
+      
+      {errors.length > 0 && (
+        <div className="form" style={{ marginTop: '0.5rem' }}>
+          {errors.map((error, index) => (
+            <p key={index} className="error-message">{error}</p>
+          ))}
+        </div>
+      )}
+      
+      {message && <p className="success-message">{message}</p>}
       
       <div className="version-indicator">
-        v0.0.6
+        v0.0.7
       </div>
     </main>
   );

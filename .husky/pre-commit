@@ -1,0 +1,5 @@
+# Run TypeScript check
+npm run type-check
+
+# Run tests
+npm test -- --passWithNoTests --watchAll=false
