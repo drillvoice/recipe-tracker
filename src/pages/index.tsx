@@ -68,13 +68,16 @@ export default function Meals() {
     <main className="container">
       <nav className="top-nav">
         <Link href="/" className="nav-item active">
-          Add
+          + Add
         </Link>
         <Link href="/history" className="nav-item">
           History
         </Link>
         <Link href="/ideas" className="nav-item">
           Ideas
+        </Link>
+        <Link href="/account" className="nav-item">
+          Account
         </Link>
       </nav>
       <h1>Add Meal</h1>
