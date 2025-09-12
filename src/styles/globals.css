@@ -80,3 +80,23 @@ body {
   color: #16a34a;
 }
 
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.history-table th,
+.history-table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+
+.history-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
