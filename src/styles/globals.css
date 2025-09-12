@@ -227,3 +227,16 @@ body {
   color: #dc2626;
 }
 
+.version-indicator {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  backdrop-filter: blur(4px);
+  border: 1px solid #e5e7eb;
+}
+
