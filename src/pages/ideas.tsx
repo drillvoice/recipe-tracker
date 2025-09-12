@@ -1,7 +1,7 @@
-import { useState } from "react";
-import ActionButton from "@/components/ActionButton";
+import { useState, useCallback, useMemo } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Navigation from "@/components/Navigation";
+import IdeasTableRow from "@/components/IdeasTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
@@ -11,7 +11,7 @@ export default function Ideas() {
   const { dialogProps, showDialog } = useConfirmDialog();
   const { ideas, isLoading, error, toggleMealVisibility } = useIdeas();
 
-  function confirmHide(idea: Idea) {
+  const confirmHide = useCallback((idea: Idea) => {
     showDialog(
       idea.hidden ? "Show Meal" : "Hide Meal",
       idea.hidden 
@@ -19,17 +19,20 @@ export default function Ideas() {
         : `Hide "${idea.mealName}" from ideas list?`,
       () => handleToggleHidden(idea.mealName, !idea.hidden)
     );
-  }
+  }, [showDialog]);
 
-  async function handleToggleHidden(mealName: string, hidden: boolean) {
+  const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
     try {
       await toggleMealVisibility(mealName, hidden);
     } catch (error) {
       console.error('Error toggling meal visibility:', error);
     }
-  }
+  }, [toggleMealVisibility]);
 
-  const visibleIdeas = ideas.filter(idea => showHidden || !idea.hidden);
+  const visibleIdeas = useMemo(() => 
+    ideas.filter(idea => showHidden || !idea.hidden),
+    [ideas, showHidden]
+  );
 
   if (error) {
     return (
@@ -91,30 +94,11 @@ export default function Ideas() {
             </thead>
             <tbody>
               {visibleIdeas.map(idea => (
-                <tr key={idea.mealName} className={idea.hidden ? 'hidden-meal' : ''}>
-                  <td>{idea.mealName}</td>
-                  <td>
-                    {idea.lastMade
-                      .toDate()
-                      .toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                  </td>
-                  <td>
-                    <span className="count-badge">{idea.count}x</span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <ActionButton
-                        icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
-                        onClick={() => confirmHide(idea)}
-                        title={idea.hidden ? "Show meal" : "Hide meal"}
-                        variant={idea.hidden ? "default" : "default"}
-                      />
-                    </div>
-                  </td>
-                </tr>
+                <IdeasTableRow
+                  key={idea.mealName}
+                  idea={idea}
+                  onConfirmHide={confirmHide}
+                />
               ))}
             </tbody>
           </table>

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Timestamp } from "firebase/firestore";
-import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Navigation from "@/components/Navigation";
+import HistoryTableRow from "@/components/HistoryTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/mealsStore";
@@ -14,19 +14,19 @@ export default function History() {
   const { dialogProps, showDialog } = useConfirmDialog();
   const { meals, isLoading, error, updateMealData, deleteMealData } = useMeals();
 
-  function startEdit(meal: Meal) {
+  const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);
     setEditMealName(meal.mealName);
     setEditDate(meal.date.toDate().toISOString().substring(0, 10));
-  }
+  }, []);
 
-  function cancelEdit() {
+  const cancelEdit = useCallback(() => {
     setEditingId(null);
     setEditMealName("");
     setEditDate("");
-  }
+  }, []);
 
-  async function saveEdit() {
+  const saveEdit = useCallback(async () => {
     if (!editingId) return;
     
     try {
@@ -38,23 +38,31 @@ export default function History() {
     } catch (error) {
       console.error('Error updating meal:', error);
     }
-  }
+  }, [editingId, editMealName, editDate, updateMealData, cancelEdit]);
 
-  function confirmDelete(meal: Meal) {
+  const confirmDelete = useCallback((meal: Meal) => {
     showDialog(
       "Delete Meal",
       `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
       () => handleDelete(meal.id)
     );
-  }
+  }, [showDialog]);
 
-  async function handleDelete(id: string) {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteMealData(id);
     } catch (error) {
       console.error('Error deleting meal:', error);
     }
-  }
+  }, [deleteMealData]);
+
+  const handleEditMealNameChange = useCallback((value: string) => {
+    setEditMealName(value);
+  }, []);
+
+  const handleEditDateChange = useCallback((value: string) => {
+    setEditDate(value);
+  }, []);
 
   if (error) {
     return (
@@ -87,68 +95,19 @@ export default function History() {
             </thead>
             <tbody>
               {meals.map(meal => (
-                <tr key={meal.id}>
-                  <td>
-                    {editingId === meal.id ? (
-                      <input
-                        type="date"
-                        value={editDate}
-                        onChange={(e) => setEditDate(e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      meal.date.toDate().toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })
-                    )}
-                  </td>
-                  <td>
-                    {editingId === meal.id ? (
-                      <input
-                        type="text"
-                        value={editMealName}
-                        onChange={(e) => setEditMealName(e.target.value)}
-                        className="edit-input"
-                      />
-                    ) : (
-                      meal.mealName
-                    )}
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {editingId === meal.id ? (
-                        <>
-                          <ActionButton
-                            icon="✓"
-                            onClick={saveEdit}
-                            title="Save changes"
-                            variant="success"
-                          />
-                          <ActionButton
-                            icon="✕"
-                            onClick={cancelEdit}
-                            title="Cancel editing"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <ActionButton
-                            icon="✏️"
-                            onClick={() => startEdit(meal)}
-                            title="Edit meal"
-                          />
-                          <ActionButton
-                            icon="🗑️"
-                            onClick={() => confirmDelete(meal)}
-                            title="Delete meal"
-                            variant="danger"
-                          />
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <HistoryTableRow
+                  key={meal.id}
+                  meal={meal}
+                  editingId={editingId}
+                  editMealName={editMealName}
+                  editDate={editDate}
+                  onStartEdit={startEdit}
+                  onCancelEdit={cancelEdit}
+                  onSaveEdit={saveEdit}
+                  onConfirmDelete={confirmDelete}
+                  onEditMealNameChange={handleEditMealNameChange}
+                  onEditDateChange={handleEditDateChange}
+                />
               ))}
             </tbody>
           </table>
