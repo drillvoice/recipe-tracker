@@ -1,36 +1,18 @@
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { getAllMeals, updateMeal, deleteMeal, type Meal } from "@/lib/mealsStore";
+import { useState } from "react";
 import { Timestamp } from "firebase/firestore";
 import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import Navigation from "@/components/Navigation";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useMeals } from "@/hooks/useMeals";
+import type { Meal } from "@/lib/mealsStore";
 
 export default function History() {
-  const [meals, setMeals] = useState<Meal[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMealName, setEditMealName] = useState("");
   const [editDate, setEditDate] = useState("");
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: "",
-    message: "",
-    onConfirm: () => {}
-  });
-
-  useEffect(() => {
-    loadMeals();
-  }, []);
-
-  async function loadMeals() {
-    const all = await getAllMeals();
-    all.sort((a, b) => b.date.toMillis() - a.date.toMillis());
-    setMeals(all);
-  }
+  const { dialogProps, showDialog } = useConfirmDialog();
+  const { meals, isLoading, error, updateMealData, deleteMealData } = useMeals();
 
   function startEdit(meal: Meal) {
     setEditingId(meal.id);
@@ -48,11 +30,10 @@ export default function History() {
     if (!editingId) return;
     
     try {
-      await updateMeal(editingId, {
+      await updateMealData(editingId, {
         mealName: editMealName,
         date: Timestamp.fromDate(new Date(editDate + 'T00:00:00'))
       });
-      await loadMeals();
       cancelEdit();
     } catch (error) {
       console.error('Error updating meal:', error);
@@ -60,42 +41,38 @@ export default function History() {
   }
 
   function confirmDelete(meal: Meal) {
-    setConfirmDialog({
-      isOpen: true,
-      title: "Delete Meal",
-      message: `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
-      onConfirm: () => handleDelete(meal.id)
-    });
+    showDialog(
+      "Delete Meal",
+      `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
+      () => handleDelete(meal.id)
+    );
   }
 
   async function handleDelete(id: string) {
     try {
-      await deleteMeal(id);
-      await loadMeals();
-      setConfirmDialog({ ...confirmDialog, isOpen: false });
+      await deleteMealData(id);
     } catch (error) {
       console.error('Error deleting meal:', error);
     }
   }
 
+  if (error) {
+    return (
+      <main className="container">
+        <Navigation currentPage="history" />
+        <h1>History</h1>
+        <p className="error-message">Error loading meals: {error.message}</p>
+      </main>
+    );
+  }
+
   return (
     <main className="container">
-      <nav className="top-nav">
-        <Link href="/" className="nav-item">
-          + Add
-        </Link>
-        <Link href="/history" className="nav-item active">
-          History
-        </Link>
-        <Link href="/ideas" className="nav-item">
-          Ideas
-        </Link>
-        <Link href="/account" className="nav-item">
-          Account
-        </Link>
-      </nav>
+      <Navigation currentPage="history" />
       <h1>History</h1>
-      {meals.length > 0 ? (
+      {isLoading ? (
+        <p>Loading meals...</p>
+      ) : meals.length > 0 ? (
         <>
           <p className="subtitle">
             {meals.length} meal{meals.length === 1 ? "" : "s"} tracked
@@ -181,11 +158,7 @@ export default function History() {
       )}
 
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        {...dialogProps}
         confirmText="Delete"
         variant="danger"
       />

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
@@ -9,6 +8,7 @@ import {
   markMealSynced,
   type Meal,
 } from "@/lib/mealsStore";
+import Navigation from "@/components/Navigation";
 
 export default function Meals() {
   const [mealName, setMealName] = useState("");
@@ -91,20 +91,7 @@ export default function Meals() {
 
   return (
     <main className="container">
-      <nav className="top-nav">
-        <Link href="/" className="nav-item active">
-          + Add
-        </Link>
-        <Link href="/history" className="nav-item">
-          History
-        </Link>
-        <Link href="/ideas" className="nav-item">
-          Ideas
-        </Link>
-        <Link href="/account" className="nav-item">
-          Account
-        </Link>
-      </nav>
+      <Navigation currentPage="add" />
       <h1>Add Meal</h1>
       <p className="subtitle">Track what you're cooking today</p>
       <div className="form">
@@ -155,7 +142,7 @@ export default function Meals() {
       {message && <p className="message">{message}</p>}
       
       <div className="version-indicator">
-        v0.0.4
+        v0.0.5
       </div>
     </main>
   );
