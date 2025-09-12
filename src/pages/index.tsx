@@ -61,9 +61,9 @@ export default function Meals() {
         <Link href="/history" className="nav-item">
           History
         </Link>
-        <button className="nav-item" disabled>
+        <Link href="/ideas" className="nav-item">
           Ideas
-        </button>
+        </Link>
       </nav>
       <h1>Add Meal</h1>
       <p className="subtitle">Track what you're cooking today</p>
