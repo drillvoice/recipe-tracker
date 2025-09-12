@@ -14,6 +14,9 @@ jest.mock('@/lib/firebaseClient', () => ({
 jest.mock('@/lib/mealsStore', () => ({
   saveMeal: jest.fn().mockResolvedValue(undefined),
   getPendingMeals: jest.fn().mockResolvedValue([]),
+  getAllMeals: jest.fn().mockResolvedValue([
+    { id: '1', mealName: 'Burritos', date: {} } as any,
+  ]),
   markMealSynced: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -35,5 +38,16 @@ test('renders add meal form', async () => {
   expect(screen.getByRole('heading', { name: 'Add Meal' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Add Meal' })).toBeInTheDocument();
   expect(screen.getByPlaceholderText('Enter meal name...')).toBeInTheDocument();
+});
+
+test('suggests previous meals', async () => {
+  let container: HTMLElement;
+  await act(async () => {
+    const rendered = render(<Page />);
+    container = rendered.container;
+  });
+  expect(
+    container.querySelector('option[value="Burritos"]')
+  ).toBeInTheDocument();
 });
 

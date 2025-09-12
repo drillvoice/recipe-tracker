@@ -5,6 +5,7 @@ import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
   saveMeal,
   getPendingMeals,
+  getAllMeals,
   markMealSynced,
   type Meal,
 } from "@/lib/mealsStore";
@@ -15,10 +16,18 @@ export default function Meals() {
     new Date().toISOString().substring(0, 10)
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     syncPendingMeals();
+    loadSuggestions();
   }, []);
+
+  async function loadSuggestions() {
+    const all = await getAllMeals();
+    const names = Array.from(new Set(all.map(m => m.mealName)));
+    setSuggestions(names);
+  }
 
   async function syncPendingMeals() {
     const pending = await getPendingMeals();
@@ -49,6 +58,9 @@ export default function Meals() {
     setDate(new Date().toISOString().substring(0, 10));
     setMessage("Meal saved locally");
     setTimeout(() => setMessage(null), 2000);
+    setSuggestions(prev =>
+      Array.from(new Set([...prev, mealName]))
+    );
     syncPendingMeals();
   }
 
@@ -71,10 +83,16 @@ export default function Meals() {
         <label>
           Meal Name
           <input
+            list="mealSuggestions"
             placeholder="Enter meal name..."
             value={mealName}
             onChange={e => setMealName(e.target.value)}
           />
+          <datalist id="mealSuggestions">
+            {suggestions.map(name => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
         </label>
         <label>
           Date
