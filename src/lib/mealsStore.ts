@@ -74,7 +74,7 @@ export async function markMealSynced(localId: string, newId: string) {
 
 export async function updateMeal(id: string, updates: Partial<Meal>) {
   const db = getDb();
-  if (!db) return;
+  if (!db) return null;
   const inst = await db;
   const meal = await inst.get('meals', id);
   if (meal) {
@@ -82,6 +82,7 @@ export async function updateMeal(id: string, updates: Partial<Meal>) {
     await inst.put('meals', updatedMeal);
     return updatedMeal;
   }
+  return null;
 }
 
 export async function deleteMeal(id: string) {

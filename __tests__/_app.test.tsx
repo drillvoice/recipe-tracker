@@ -12,7 +12,21 @@ function Dummy() {
 }
 
 test('renders page component', () => {
-  render(<App Component={Dummy} pageProps={{}} />);
+  const mockRouter = {
+    route: '/',
+    pathname: '/',
+    query: {},
+    asPath: '/',
+    push: jest.fn(),
+    replace: jest.fn(),
+    reload: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    beforePopState: jest.fn(),
+    events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() }
+  } as any;
+  
+  render(<App Component={Dummy} pageProps={{}} router={mockRouter} />);
   expect(screen.getByTestId('dummy')).toBeInTheDocument();
   expect(mockSignInAnonymously).toHaveBeenCalled();
 });

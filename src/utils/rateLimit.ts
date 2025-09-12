@@ -55,7 +55,8 @@ class RateLimiter {
   // Clean up old entries periodically
   cleanup(): void {
     const now = Date.now();
-    for (const [key, state] of this.limits.entries()) {
+    const entries = Array.from(this.limits.entries());
+    for (const [key, state] of entries) {
       const hasRecentAttempts = state.attempts.some((time: number) => now - time < 300000); // 5 minutes
       const isBlocked = state.blockedUntil && now < state.blockedUntil;
       

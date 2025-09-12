@@ -15,7 +15,9 @@
       "Bash(npm install zod dompurify)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx husky init:*)"
+      "Bash(npx husky init:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

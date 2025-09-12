@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import Account from '@/pages/account';
 
-const mockUser = { email: null, emailVerified: false, isAnonymous: true };
+const mockUser = { email: null as string | null, emailVerified: false, isAnonymous: true };
 
 jest.mock('firebase/auth', () => ({
   onAuthStateChanged: (auth: any, cb: any) => {

@@ -79,7 +79,7 @@ beforeAll(() => {
   global.Date = class extends originalDate {
     constructor(...args: any[]) {
       if (args.length) {
-        super(...args);
+        super(...(args as [number | string | Date]));
       } else {
         super(mockDate);
       }
