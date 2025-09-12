@@ -14,6 +14,7 @@ interface Idea {
 export default function Ideas() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [showHidden, setShowHidden] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -103,9 +104,20 @@ export default function Ideas() {
           Account
         </Link>
       </nav>
-      <h1>Ideas</h1>
+      <div className="page-header">
+        <h1>Ideas</h1>
+        {ideas.length > 0 && (
+          <button 
+            className="filter-button"
+            onClick={() => setShowFilters(!showFilters)}
+            title="Filter options"
+          >
+            🔍
+          </button>
+        )}
+      </div>
       
-      {ideas.length > 0 && (
+      {showFilters && ideas.length > 0 && (
         <div className="ideas-filters">
           <label className="filter-toggle">
             <input
@@ -153,10 +165,10 @@ export default function Ideas() {
                   <td>
                     <div className="action-buttons">
                       <ActionButton
-                        icon={idea.hidden ? "👁️" : "⭕"}
+                        icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
                         onClick={() => confirmHide(idea)}
                         title={idea.hidden ? "Show meal" : "Hide meal"}
-                        variant={idea.hidden ? "default" : "danger"}
+                        variant={idea.hidden ? "default" : "default"}
                       />
                     </div>
                   </td>
