@@ -67,3 +67,16 @@ Pull requests are welcome! Please ensure `npm test` passes before submitting.
 
 ## License
 MIT
+
+## Sync Logic
+Firestore persistence is enabled in `src/lib/firebase.ts`. Writes are queued locally when offline and synchronized in the background. Conflicts are resolved with a last-write-wins policy using server timestamps.
+
+## Setup Notes
+1. Create `.env.local` with Firebase keys as listed above.
+2. On Vercel, set the same keys in the project settings.
+3. To run emulators locally:
+   ```bash
+   npx firebase emulators:start
+   ```
+4. Seed sample data by adding meals in the UI while offline and reconnecting.
+5. To verify cross-device sync, sign in with the same account on two browsers and add meals; they should appear on both after sync.
