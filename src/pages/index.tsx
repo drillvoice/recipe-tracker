@@ -142,7 +142,7 @@ export default function Meals() {
       {message && <p className="message">{message}</p>}
       
       <div className="version-indicator">
-        v0.0.5
+        v0.0.6
       </div>
     </main>
   );
