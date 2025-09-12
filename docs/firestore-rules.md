@@ -4,14 +4,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // User profile documents (if needed in future)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    match /recipes/{userId}/items/{recipeId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /meals/{userId}/items/{mealId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // Meals collection - flat structure with uid field for user separation
+    match /meals/{mealId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.uid;
     }
   }
 }

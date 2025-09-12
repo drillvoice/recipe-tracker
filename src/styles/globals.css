@@ -153,7 +153,7 @@ body {
 }
 
 .auth-tab.active {
-  background: #eff6ff;
+  background: #f8f9fb;
   color: #2563eb;
 }
 
@@ -186,5 +186,44 @@ body {
   border-radius: 0.5rem;
   font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.auth-submit:hover {
+  background: #1d4ed8;
+}
+
+.auth-submit.secondary {
+  background: #6b7280;
+}
+
+.auth-submit.secondary:hover {
+  background: #4b5563;
+}
+
+.success-message {
+  color: #16a34a;
+  font-weight: 500;
+  margin: 0;
+}
+
+.error-message {
+  color: #dc2626;
+  font-weight: 500;
+  margin: 0;
+}
+
+.verification-status {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+.verification-status.verified {
+  color: #16a34a;
+}
+
+.verification-status.unverified {
+  color: #dc2626;
 }
 
