@@ -23,9 +23,9 @@ export default function History() {
         <Link href="/history" className="nav-item active">
           History
         </Link>
-        <button className="nav-item" disabled>
+        <Link href="/ideas" className="nav-item">
           Ideas
-        </button>
+        </Link>
       </nav>
       <h1>History</h1>
       {meals.length > 0 ? (
