@@ -17,6 +17,8 @@ export default function Meals() {
   );
   const [message, setMessage] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     syncPendingMeals();
@@ -45,6 +47,27 @@ export default function Meals() {
     }
   }
 
+  function handleMealNameChange(value: string) {
+    setMealName(value);
+    if (value.trim() === "") {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    const filtered = suggestions.filter(suggestion =>
+      suggestion.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredSuggestions(filtered);
+    setShowSuggestions(filtered.length > 0 && value !== "");
+  }
+
+  function selectSuggestion(suggestion: string) {
+    setMealName(suggestion);
+    setShowSuggestions(false);
+    setFilteredSuggestions([]);
+  }
+
   async function addMeal() {
     const newMeal: Meal = {
       id: Date.now().toString(),
@@ -61,6 +84,8 @@ export default function Meals() {
     setSuggestions(prev =>
       Array.from(new Set([...prev, mealName]))
     );
+    setShowSuggestions(false);
+    setFilteredSuggestions([]);
     syncPendingMeals();
   }
 
@@ -85,17 +110,37 @@ export default function Meals() {
       <div className="form">
         <label>
           Meal Name
-          <input
-            list="mealSuggestions"
-            placeholder="Enter meal name..."
-            value={mealName}
-            onChange={e => setMealName(e.target.value)}
-          />
-          <datalist id="mealSuggestions">
-            {suggestions.map(name => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
+          <div className="autocomplete-container">
+            <input
+              placeholder="Enter meal name..."
+              value={mealName}
+              onChange={e => handleMealNameChange(e.target.value)}
+              onFocus={() => {
+                if (mealName.trim() && filteredSuggestions.length > 0) {
+                  setShowSuggestions(true);
+                }
+              }}
+              onBlur={() => {
+                // Delay hiding to allow clicks on suggestions
+                setTimeout(() => setShowSuggestions(false), 150);
+              }}
+            />
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div className="suggestions-dropdown">
+                {filteredSuggestions.slice(0, 5).map(suggestion => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    className="suggestion-item"
+                    onClick={() => selectSuggestion(suggestion)}
+                    onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </label>
         <label>
           Date
@@ -110,7 +155,7 @@ export default function Meals() {
       {message && <p className="message">{message}</p>}
       
       <div className="version-indicator">
-        v0.0.1
+        v0.0.2
       </div>
     </main>
   );
