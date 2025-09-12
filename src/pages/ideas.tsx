@@ -45,13 +45,16 @@ export default function Ideas() {
     <main className="container">
       <nav className="top-nav">
         <Link href="/" className="nav-item">
-          Add
+          + Add
         </Link>
         <Link href="/history" className="nav-item">
           History
         </Link>
         <Link href="/ideas" className="nav-item active">
           Ideas
+        </Link>
+        <Link href="/account" className="nav-item">
+          Account
         </Link>
       </nav>
       <h1>Ideas</h1>

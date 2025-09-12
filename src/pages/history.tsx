@@ -18,13 +18,16 @@ export default function History() {
     <main className="container">
       <nav className="top-nav">
         <Link href="/" className="nav-item">
-          Add
+          + Add
         </Link>
         <Link href="/history" className="nav-item active">
           History
         </Link>
         <Link href="/ideas" className="nav-item">
           Ideas
+        </Link>
+        <Link href="/account" className="nav-item">
+          Account
         </Link>
       </nav>
       <h1>History</h1>
