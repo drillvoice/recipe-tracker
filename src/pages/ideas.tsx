@@ -1,86 +1,29 @@
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { getAllMeals, hideMealsByName, type Meal } from "@/lib/mealsStore";
+import { useState } from "react";
 import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
-interface Idea {
-  mealName: string;
-  lastMade: Meal["date"];
-  count: number;
-  hidden: boolean;
-}
+import Navigation from "@/components/Navigation";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 export default function Ideas() {
-  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: "",
-    message: "",
-    onConfirm: () => {}
-  });
-
-  useEffect(() => {
-    loadIdeas();
-  }, []);
-
-  async function loadIdeas() {
-    const all = await getAllMeals();
-    const map = new Map<string, Idea>();
-    
-    for (const meal of all) {
-      const existing = map.get(meal.mealName);
-      if (existing) {
-        existing.count += 1;
-        if (meal.date.toMillis() > existing.lastMade.toMillis()) {
-          existing.lastMade = meal.date;
-        }
-        // If any meal with this name is hidden, mark the idea as hidden
-        if (meal.hidden) {
-          existing.hidden = true;
-        }
-      } else {
-        map.set(meal.mealName, {
-          mealName: meal.mealName,
-          lastMade: meal.date,
-          count: 1,
-          hidden: meal.hidden || false,
-        });
-      }
-    }
-    
-    const arr = Array.from(map.values());
-    arr.sort(
-      (a, b) =>
-        b.lastMade.toMillis() - a.lastMade.toMillis() ||
-        a.mealName.localeCompare(b.mealName)
-    );
-    setIdeas(arr);
-  }
+  const { dialogProps, showDialog } = useConfirmDialog();
+  const { ideas, isLoading, error, toggleMealVisibility } = useIdeas();
 
   function confirmHide(idea: Idea) {
-    setConfirmDialog({
-      isOpen: true,
-      title: idea.hidden ? "Show Meal" : "Hide Meal",
-      message: idea.hidden 
+    showDialog(
+      idea.hidden ? "Show Meal" : "Hide Meal",
+      idea.hidden 
         ? `Show "${idea.mealName}" in ideas list?`
         : `Hide "${idea.mealName}" from ideas list?`,
-      onConfirm: () => handleToggleHidden(idea.mealName, !idea.hidden)
-    });
+      () => handleToggleHidden(idea.mealName, !idea.hidden)
+    );
   }
 
   async function handleToggleHidden(mealName: string, hidden: boolean) {
     try {
-      await hideMealsByName(mealName, hidden);
-      await loadIdeas();
-      setConfirmDialog({ ...confirmDialog, isOpen: false });
+      await toggleMealVisibility(mealName, hidden);
     } catch (error) {
       console.error('Error toggling meal visibility:', error);
     }
@@ -88,22 +31,19 @@ export default function Ideas() {
 
   const visibleIdeas = ideas.filter(idea => showHidden || !idea.hidden);
 
+  if (error) {
+    return (
+      <main className="container">
+        <Navigation currentPage="ideas" />
+        <h1>Ideas</h1>
+        <p className="error-message">Error loading meals: {error.message}</p>
+      </main>
+    );
+  }
+
   return (
     <main className="container">
-      <nav className="top-nav">
-        <Link href="/" className="nav-item">
-          + Add
-        </Link>
-        <Link href="/history" className="nav-item">
-          History
-        </Link>
-        <Link href="/ideas" className="nav-item active">
-          Ideas
-        </Link>
-        <Link href="/account" className="nav-item">
-          Account
-        </Link>
-      </nav>
+      <Navigation currentPage="ideas" />
       <div className="page-header">
         <h1>Ideas</h1>
         {ideas.length > 0 && (
@@ -130,7 +70,9 @@ export default function Ideas() {
         </div>
       )}
 
-      {visibleIdeas.length > 0 ? (
+      {isLoading ? (
+        <p>Loading meals...</p>
+      ) : visibleIdeas.length > 0 ? (
         <>
           <p className="subtitle">
             {visibleIdeas.length} unique meal{visibleIdeas.length === 1 ? "" : "s"}
@@ -182,11 +124,7 @@ export default function Ideas() {
       )}
 
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        {...dialogProps}
         confirmText="Confirm"
       />
     </main>

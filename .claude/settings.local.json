@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(start https://github.com/drillvoice/recipe-tracker/pull/new/feature/improved-mobile-autocomplete)",
+      "Bash(start https://github.com/drillvoice/recipe-tracker/pull/new/feature/advanced-edit-delete-hide-functionality)",
+      "Bash(start https://github.com/drillvoice/recipe-tracker/pull/new/feature/comprehensive-ui-modernization-v004)",
+      "Bash(npm test)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

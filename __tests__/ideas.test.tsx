@@ -62,6 +62,6 @@ test('shows message when there are no meals', async () => {
     render(<Page />);
   });
 
-  expect(screen.getByText('No meals recorded.')).toBeInTheDocument();
+  expect(screen.getByText('No visible meals. Toggle \'Show Hidden\' to see hidden meals.')).toBeInTheDocument();
 });
 

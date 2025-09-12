@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import {
   signInEmail,
   signUpEmail,
@@ -9,6 +8,7 @@ import {
 } from "@/lib/auth";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import Navigation from "@/components/Navigation";
 
 export default function Account() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -78,20 +78,7 @@ export default function Account() {
 
   return (
     <main className="container">
-      <nav className="top-nav">
-        <Link href="/" className="nav-item">
-          + Add
-        </Link>
-        <Link href="/history" className="nav-item">
-          History
-        </Link>
-        <Link href="/ideas" className="nav-item">
-          Ideas
-        </Link>
-        <Link href="/account" className="nav-item active">
-          Account
-        </Link>
-      </nav>
+      <Navigation currentPage="account" />
       
       <h1>Account</h1>
       
