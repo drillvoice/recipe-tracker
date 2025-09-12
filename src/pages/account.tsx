@@ -9,12 +9,15 @@ import {
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import Navigation from "@/components/Navigation";
+import { validateEmail, validatePassword } from "@/utils/validation";
+import { checkAuthAttemptLimit, checkPasswordResetLimit } from "@/utils/rateLimit";
 
 export default function Account() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string>("");
+  const [errors, setErrors] = useState<string[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
@@ -28,31 +31,69 @@ export default function Account() {
   }, []);
 
   async function handleSubmit() {
+    // Clear previous errors and status
+    setErrors([]);
     setStatus("");
+
+    // Check rate limiting
+    const rateLimitCheck = checkAuthAttemptLimit(email);
+    if (!rateLimitCheck.allowed) {
+      setErrors([`Too many authentication attempts. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`]);
+      return;
+    }
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.success) {
+      setErrors(emailValidation.errors);
+      return;
+    }
+
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.success) {
+      setErrors(passwordValidation.errors);
+      return;
+    }
+
     try {
       if (mode === "signin") {
-        await signInEmail(email, password);
+        await signInEmail(emailValidation.data, passwordValidation.data);
       } else {
-        await signUpEmail(email, password);
+        await signUpEmail(emailValidation.data, passwordValidation.data);
       }
       setStatus("Successfully " + (mode === "signin" ? "signed in" : "signed up") + "!");
       setEmail("");
       setPassword("");
     } catch (e: any) {
-      setStatus(e.message);
+      setErrors([e.message || 'Authentication failed. Please try again.']);
     }
   }
 
   async function handleReset() {
-    if (!email) {
-      setStatus("Please enter your email address first");
+    // Clear previous errors and status
+    setErrors([]);
+    setStatus("");
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.success) {
+      setErrors(emailValidation.errors);
       return;
     }
+
+    // Check rate limiting for password reset
+    const rateLimitCheck = checkPasswordResetLimit(emailValidation.data);
+    if (!rateLimitCheck.allowed) {
+      setErrors([`Too many password reset attempts. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`]);
+      return;
+    }
+
     try {
-      await sendReset(email);
-      setStatus("Password reset email sent to " + email);
+      await sendReset(emailValidation.data);
+      setStatus("Password reset email sent to " + emailValidation.data);
     } catch (e: any) {
-      setStatus(e.message);
+      setErrors([e.message || 'Failed to send reset email. Please try again.']);
     }
   }
 
@@ -82,10 +123,20 @@ export default function Account() {
       
       <h1>Account</h1>
       
+      {errors.length > 0 && (
+        <div className="auth-card">
+          <div className="auth-fields">
+            {errors.map((error, index) => (
+              <p key={index} className="error-message">{error}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
       {status && (
         <div className="auth-card">
           <div className="auth-fields">
-            <p className={status.includes("error") || status.includes("Error") ? "error-message" : "success-message"}>
+            <p className="success-message">
               {status}
             </p>
           </div>
