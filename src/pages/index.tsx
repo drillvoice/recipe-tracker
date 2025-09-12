@@ -108,6 +108,10 @@ export default function Meals() {
         <button onClick={addMeal}>Add Meal</button>
       </div>
       {message && <p className="message">{message}</p>}
+      
+      <div className="version-indicator">
+        v0.0.1
+      </div>
     </main>
   );
 }
