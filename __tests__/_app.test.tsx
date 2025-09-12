@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/lib/firebaseClient', () => ({ auth: {} }));
+jest.mock('@/lib/firebase', () => ({ auth: {} }));
 
 const mockSignInAnonymously = jest.fn().mockResolvedValue({});
 jest.mock('firebase/auth', () => ({ signInAnonymously: mockSignInAnonymously }));

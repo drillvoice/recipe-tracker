@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { auth, db } from "@/lib/firebaseClient";
+import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
   saveMeal,

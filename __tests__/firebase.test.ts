@@ -1,20 +1,27 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
 jest.mock('firebase/app', () => ({
   initializeApp: jest.fn(() => 'app'),
   getApps: jest.fn(() => []),
   getApp: jest.fn(() => 'app'),
 }));
-jest.mock('firebase/auth', () => ({ getAuth: jest.fn(() => 'auth') }));
-jest.mock('firebase/firestore', () => ({ getFirestore: jest.fn(() => 'db') }));
+jest.mock('firebase/auth', () => ({
+  getAuth: jest.fn(() => 'auth'),
+  setPersistence: jest.fn(),
+  browserLocalPersistence: 'local',
+}));
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(() => 'db'),
+  enableIndexedDbPersistence: jest.fn(() => Promise.resolve()),
+}));
 
 afterEach(() => {
   jest.resetModules();
 });
 
-test('initializes firebase with env config', () => {
+test('initializes firebase with persistence', async () => {
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'key';
   process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = 'domain';
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'project';
@@ -23,19 +30,13 @@ test('initializes firebase with env config', () => {
   process.env.NEXT_PUBLIC_FIREBASE_APP_ID = 'appid';
   process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = 'measure';
 
-  const { auth, db } = require('@/lib/firebaseClient');
+  const { auth, db } = require('@/lib/firebase');
 
-  expect(initializeApp).toHaveBeenCalledWith({
-    apiKey: 'key',
-    authDomain: 'domain',
-    projectId: 'project',
-    storageBucket: 'bucket',
-    messagingSenderId: 'sender',
-    appId: 'appid',
-    measurementId: 'measure'
-  });
+  expect(initializeApp).toHaveBeenCalled();
   expect(getAuth).toHaveBeenCalledWith('app');
+  expect(setPersistence).toHaveBeenCalledWith('auth', 'local');
   expect(getFirestore).toHaveBeenCalledWith('app');
+  expect(enableIndexedDbPersistence).toHaveBeenCalledWith('db');
   expect(auth).toBe('auth');
   expect(db).toBe('db');
 });

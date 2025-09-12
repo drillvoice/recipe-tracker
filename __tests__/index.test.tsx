@@ -6,7 +6,7 @@ document.createRange = () => ({
   commonAncestorContainer: document.createElement('div')
 } as any);
 
-jest.mock('@/lib/firebaseClient', () => ({
+jest.mock('@/lib/firebase', () => ({
   auth: {},
   db: {},
 }));
