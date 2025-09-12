@@ -267,6 +267,207 @@ body {
   background: #e5e7eb;
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #374151;
+  transition: all 0.15s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn-success {
+  background: #16a34a;
+  color: white;
+}
+
+.action-btn-success:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.action-btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.action-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Table Actions Column */
+.history-table th:last-child,
+.ideas-table th:last-child {
+  width: 100px;
+  text-align: center;
+}
+
+.history-table td:last-child,
+.ideas-table td:last-child {
+  text-align: center;
+}
+
+/* Edit Inputs */
+.edit-input {
+  padding: 0.5rem;
+  border: 2px solid #2563eb;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  width: 100%;
+  background: #eff6ff;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #1d4ed8;
+}
+
+/* Dialog/Modal */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.dialog-content {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dialog-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dialog-message {
+  margin: 0 0 1.5rem 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.dialog-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dialog-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.dialog-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.dialog-btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.dialog-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.dialog-btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.dialog-btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Ideas Filter Toggle */
+.ideas-filters {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.filter-toggle input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.filter-label {
+  color: #374151;
+}
+
+/* Hidden Meal Styling */
+.hidden-meal {
+  opacity: 0.6;
+  background: #f9fafb;
+}
+
+.hidden-meal td {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.hidden-count {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
 .version-indicator {
   position: fixed;
   bottom: 1rem;
