@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { auth, db } from "@/lib/firebaseClient";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
@@ -54,10 +55,12 @@ export default function Meals() {
   return (
     <main className="container">
       <nav className="top-nav">
-        <button className="nav-item active">Add</button>
-        <button className="nav-item" disabled>
+        <Link href="/" className="nav-item active">
+          Add
+        </Link>
+        <Link href="/history" className="nav-item">
           History
-        </button>
+        </Link>
         <button className="nav-item" disabled>
           Ideas
         </button>
