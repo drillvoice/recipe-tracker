@@ -29,7 +29,7 @@ class MockTimestamp {
     return new Date(this.toMillis());
   }
 
-  isEqual(other: MockTimestamp) {
+  isEqual(other: any) {
     return this.seconds === other.seconds && this.nanoseconds === other.nanoseconds;
   }
 
@@ -38,7 +38,7 @@ class MockTimestamp {
   }
 
   valueOf() {
-    return `Timestamp(${this.seconds}, ${this.nanoseconds})`;
+    return this.toMillis();
   }
 }
 
@@ -102,7 +102,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-1',
         mealName: 'Spaghetti Carbonara',
-        date: MockTimestamp.fromDate(new Date('2024-03-15')),
+        date: MockTimestamp.fromDate(new Date('2024-03-15')) as any,
         uid: 'test-user',
         pending: false,
         hidden: false
@@ -110,7 +110,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-2',
         mealName: 'Chicken Curry',
-        date: MockTimestamp.fromDate(new Date('2024-03-16')),
+        date: MockTimestamp.fromDate(new Date('2024-03-16')) as any,
         uid: 'test-user',
         pending: true,
         hidden: false
@@ -118,7 +118,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-3',
         mealName: 'Vegetable Stir Fry',
-        date: MockTimestamp.fromDate(new Date('2024-03-17')),
+        date: MockTimestamp.fromDate(new Date('2024-03-17')) as any,
         uid: 'test-user',
         pending: false,
         hidden: true
@@ -217,13 +217,13 @@ describe('Backup System Integration Tests', () => {
         {
           id: 'valid-meal',
           mealName: 'Test Meal',
-          date: MockTimestamp.fromDate(new Date()),
+          date: MockTimestamp.fromDate(new Date()) as any,
           uid: 'test-user'
         },
         {
           id: '', // Invalid - empty ID
           mealName: 'Invalid Meal',
-          date: MockTimestamp.fromDate(new Date()),
+          date: MockTimestamp.fromDate(new Date()) as any,
           uid: 'test-user'
         }
       ];
@@ -419,7 +419,7 @@ describe('Backup System Integration Tests', () => {
       const invalidMeal = {
         id: '', // Invalid empty ID
         mealName: '',
-        date: MockTimestamp.fromDate(new Date()),
+        date: MockTimestamp.fromDate(new Date()) as any,
         uid: 'test-user'
       } as Meal;
 
@@ -447,7 +447,7 @@ describe('Backup System Integration Tests', () => {
         new Array(15000).fill(null).map((_, i) => ({
           id: `meal-${i}`,
           mealName: `Meal ${i}`,
-          date: MockTimestamp.fromDate(new Date()),
+          date: MockTimestamp.fromDate(new Date()) as any,
           uid: 'test-user'
         }))
       );

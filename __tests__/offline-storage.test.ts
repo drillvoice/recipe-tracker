@@ -44,14 +44,15 @@ class MockTimestamp {
     return new Date(this.toMillis());
   }
 
-  isEqual(other: MockTimestamp) {
+  isEqual(other: any) {
     return this.seconds === other.seconds && this.nanoseconds === other.nanoseconds;
   }
 
   toJSON() {
     return {
       seconds: this.seconds,
-      nanoseconds: this.nanoseconds
+      nanoseconds: this.nanoseconds,
+      type: 'timestamp'
     };
   }
 
@@ -79,7 +80,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Test Pasta',
-        date: TimestampClass.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')) as any,
         uid: 'test-user',
         pending: false,
         hidden: false
@@ -97,7 +98,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Original Name',
-        date: TimestampClass.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')) as any,
         uid: 'test-user'
       };
 
@@ -115,7 +116,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Test Pasta',
-        date: TimestampClass.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')) as any,
         uid: 'test-user'
       };
 
@@ -189,14 +190,14 @@ describe('Enhanced Offline Storage', () => {
       await saveMeal({
         id: 'test-1',
         mealName: 'Test Meal 1',
-        date: Timestamp.fromDate(new Date()),
+        date: TimestampClass.fromDate(new Date()) as any,
         uid: 'test-user'
       });
 
       await saveMeal({
         id: 'test-2',
         mealName: 'Test Meal 2',
-        date: Timestamp.fromDate(new Date()),
+        date: TimestampClass.fromDate(new Date()) as any,
         uid: 'test-user'
       });
 
@@ -233,7 +234,7 @@ describe('Enhanced Offline Storage', () => {
         saveMeal({
           id: `test-${i}`,
           mealName: `Test Meal ${i}`,
-          date: Timestamp.fromDate(new Date(2024, 0, i + 1)),
+          date: TimestampClass.fromDate(new Date(2024, 0, i + 1)) as any,
           uid: 'test-user'
         })
       );
