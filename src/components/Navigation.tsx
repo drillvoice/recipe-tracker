@@ -25,11 +25,11 @@ export default function Navigation({ currentPage }: NavigationProps) {
       >
         Ideas
       </Link>
-      <Link 
-        href="/account" 
+      <Link
+        href="/account"
         className={`nav-item ${currentPage === 'account' ? 'active' : ''}`}
       >
-        Account
+        Data
       </Link>
     </nav>
   );

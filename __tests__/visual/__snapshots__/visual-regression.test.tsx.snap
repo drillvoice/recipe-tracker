@@ -29,7 +29,7 @@ exports[`Visual Regression Tests Component States Empty state renders consistent
       class="nav-item "
       href="/account"
     >
-      Account
+      Data
     </a>
   </nav>
   <h1>
@@ -229,65 +229,60 @@ exports[`Visual Regression Tests Page Layouts Account page renders consistently:
       class="nav-item active"
       href="/account"
     >
-      Account
+      Data
     </a>
   </nav>
   <h1>
-    Account
+    Data Management
   </h1>
-  <div
-    class="auth-card"
+  <section
+    class="data-section"
+  >
+    <h2>
+      Cloud Backup
+    </h2>
+    <div
+      class="backup-status-card"
+    >
+      <div
+        class="loading"
+      >
+        Loading backup status...
+      </div>
+    </div>
+    <div
+      class="backup-description"
+    >
+      <p>
+        Your data is automatically backed up to Firebase Cloud weekly when you're online. Manual backups can be triggered anytime from the backup status above.
+      </p>
+    </div>
+  </section>
+  <section
+    class="data-section"
   >
     <div
-      class="auth-tabs"
+      class="section-header"
     >
-      <button
-        class="auth-tab active"
+      <h2>
+        Enhanced Data Management
+      </h2>
+      <span
+        class="expand-icon "
       >
-        Sign In
-      </button>
-      <button
-        class="auth-tab "
-      >
-        Sign Up
-      </button>
+        ▼
+      </span>
     </div>
-    <div
-      class="auth-fields"
-    >
-      <p
-        class="subtitle"
-      >
-        Sign in to sync your meals across devices
-      </p>
-      <label>
-        Email Address
-        <input
-          placeholder="Enter your email..."
-          type="email"
-          value=""
-        />
-      </label>
-      <label>
-        Password
-        <input
-          minlength="6"
-          placeholder="Enter your password..."
-          type="password"
-          value=""
-        />
-      </label>
-      <button
-        class="auth-submit"
-      >
-        Sign In
-      </button>
-      <button
-        class="auth-submit secondary"
-      >
-        Forgot Password?
-      </button>
-    </div>
+  </section>
+  <div
+    class="info-note"
+  >
+    <p>
+      <strong>
+        Note:
+      </strong>
+       The enhanced data management system above provides comprehensive backup and restore capabilities. Your data is now safer with automatic weekly backups and advanced import/export options.
+    </p>
   </div>
 </main>
 `;
@@ -321,7 +316,7 @@ exports[`Visual Regression Tests Page Layouts History page renders consistently:
       class="nav-item "
       href="/account"
     >
-      Account
+      Data
     </a>
   </nav>
   <h1>
