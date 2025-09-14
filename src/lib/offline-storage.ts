@@ -18,6 +18,9 @@ export interface CacheMetadata {
   lastSyncCheck?: number;
   mealCount?: number;
   version?: string;
+  lastImportTimestamp?: number;
+  lastImportSource?: string;
+  lastImportFormat?: string;
 }
 
 export interface AppSettings {
@@ -67,6 +70,14 @@ interface RecipeTrackerDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<RecipeTrackerDB>> | null = null;
+
+// Export function to reset database promise (for testing)
+export function resetDbPromise(): void {
+  if (dbPromise) {
+    dbPromise.then(db => db.close()).catch(() => {});
+  }
+  dbPromise = null;
+}
 
 const DB_NAME = 'recipe-tracker-enhanced';
 const DB_VERSION = 2;
