@@ -28,6 +28,18 @@ class MockTimestamp {
   toDate() {
     return new Date(this.toMillis());
   }
+
+  isEqual(other: MockTimestamp) {
+    return this.seconds === other.seconds && this.nanoseconds === other.nanoseconds;
+  }
+
+  toJSON() {
+    return { seconds: this.seconds, nanoseconds: this.nanoseconds, type: 'timestamp' };
+  }
+
+  valueOf() {
+    return `Timestamp(${this.seconds}, ${this.nanoseconds})`;
+  }
 }
 
 jest.mock('firebase/firestore', () => ({

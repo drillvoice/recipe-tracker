@@ -43,11 +43,30 @@ class MockTimestamp {
   toDate() {
     return new Date(this.toMillis());
   }
+
+  isEqual(other: MockTimestamp) {
+    return this.seconds === other.seconds && this.nanoseconds === other.nanoseconds;
+  }
+
+  toJSON() {
+    return {
+      seconds: this.seconds,
+      nanoseconds: this.nanoseconds
+    };
+  }
+
+  valueOf() {
+    return this.toMillis();
+  }
 }
 
+// Mock the entire firebase/firestore module
 jest.mock('firebase/firestore', () => ({
   Timestamp: MockTimestamp
 }));
+
+// Also create a local Timestamp for this test file
+const TimestampClass = MockTimestamp;
 
 describe('Enhanced Offline Storage', () => {
   beforeEach(() => {
@@ -60,7 +79,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Test Pasta',
-        date: Timestamp.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')),
         uid: 'test-user',
         pending: false,
         hidden: false
@@ -78,7 +97,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Original Name',
-        date: Timestamp.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')),
         uid: 'test-user'
       };
 
@@ -96,7 +115,7 @@ describe('Enhanced Offline Storage', () => {
       const testMeal: Meal = {
         id: 'test-1',
         mealName: 'Test Pasta',
-        date: Timestamp.fromDate(new Date('2024-03-15')),
+        date: TimestampClass.fromDate(new Date('2024-03-15')),
         uid: 'test-user'
       };
 

@@ -1,205 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Visual Regression Tests Component States Empty state renders consistently: history-empty-state 1`] = `
-<main
-  class="container"
->
-  <nav
-    class="top-nav"
-  >
-    <a
-      class="nav-item "
-      href="/"
-    >
-      + Add
-    </a>
-    <a
-      class="nav-item active"
-      href="/history"
-    >
-      History
-    </a>
-    <a
-      class="nav-item "
-      href="/ideas"
-    >
-      Ideas
-    </a>
-    <a
-      class="nav-item "
-      href="/account"
-    >
-      Account
-    </a>
-  </nav>
-  <h1>
-    History
-  </h1>
-  <p
-    class="error-message"
-  >
-    Error loading meals: 
-    this is not a Date object.
-  </p>
-</main>
-`;
-
-exports[`Visual Regression Tests Component States Error state renders consistently: error-state 1`] = `
-<main
-  class="container"
->
-  <div
-    class="top-nav"
-  >
-    <a
-      class="nav-item"
-      href="/"
-    >
-      + Add
-    </a>
-    <a
-      class="nav-item active"
-      href="/history"
-    >
-      History
-    </a>
-    <a
-      class="nav-item"
-      href="/ideas"
-    >
-      Ideas
-    </a>
-    <a
-      class="nav-item"
-      href="/account"
-    >
-      Account
-    </a>
-  </div>
-  <h1>
-    History
-  </h1>
-  <p
-    class="error-message"
-  >
-    Error loading meals: Network error
-  </p>
-</main>
-`;
-
-exports[`Visual Regression Tests Component States Loading state renders consistently: loading-state 1`] = `
-<main
-  class="container"
->
-  <div
-    class="top-nav"
-  >
-    <a
-      class="nav-item"
-      href="/"
-    >
-      + Add
-    </a>
-    <a
-      class="nav-item active"
-      href="/history"
-    >
-      History
-    </a>
-    <a
-      class="nav-item"
-      href="/ideas"
-    >
-      Ideas
-    </a>
-    <a
-      class="nav-item"
-      href="/account"
-    >
-      Account
-    </a>
-  </div>
-  <h1>
-    History
-  </h1>
-  <p>
-    Loading meals...
-  </p>
-</main>
-`;
-
-exports[`Visual Regression Tests Interactive States Dialog modal renders consistently: modal-dialog 1`] = `
-<div>
-  <main
-    class="container"
-  >
-    <h1>
-      Test Page
-    </h1>
-  </main>
-  <div
-    class="dialog-overlay"
-  >
-    <div
-      class="dialog-content"
-    >
-      <h2
-        class="dialog-title"
-      >
-        Delete Meal
-      </h2>
-      <p
-        class="dialog-message"
-      >
-        Are you sure you want to delete "Pizza" from Mar 15?
-      </p>
-      <div
-        class="dialog-actions"
-      >
-        <button
-          class="dialog-btn dialog-btn-secondary"
-        >
-          Cancel
-        </button>
-        <button
-          class="dialog-btn dialog-btn-danger"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Visual Regression Tests Interactive States Form validation states render consistently: form-validation-states 1`] = `
-<main
-  class="container"
->
-  <div
-    class="form"
-  >
-    <label>
-      Meal Name
-      <input
-        class="edit-input"
-        style="border-color: #16a34a;"
-        value="Test Meal"
-      />
-    </label>
-    <label>
-      Date
-      <input
-        class="edit-input"
-        style="border-color: #dc2626;"
-        type="date"
-        value=""
-      />
-    </label>
-  </div>
-</main>
-`;
-
 exports[`Visual Regression Tests Page Layouts Account page renders consistently: account-page 1`] = `
 <main
   class="container"
@@ -229,109 +29,60 @@ exports[`Visual Regression Tests Page Layouts Account page renders consistently:
       class="nav-item active"
       href="/account"
     >
-      Account
+      Data
     </a>
   </nav>
   <h1>
-    Account
+    Data Management
   </h1>
-  <div
-    class="auth-card"
+  <section
+    class="data-section"
   >
+    <h2>
+      Cloud Backup
+    </h2>
     <div
-      class="auth-tabs"
+      class="backup-status-card"
     >
-      <button
-        class="auth-tab active"
+      <div
+        class="loading"
       >
-        Sign In
-      </button>
-      <button
-        class="auth-tab "
-      >
-        Sign Up
-      </button>
+        Loading backup status...
+      </div>
     </div>
     <div
-      class="auth-fields"
+      class="backup-description"
     >
-      <p
-        class="subtitle"
-      >
-        Sign in to sync your meals across devices
+      <p>
+        Your data is automatically backed up to Firebase Cloud weekly when you're online. Manual backups can be triggered anytime from the backup status above.
       </p>
-      <label>
-        Email Address
-        <input
-          placeholder="Enter your email..."
-          type="email"
-          value=""
-        />
-      </label>
-      <label>
-        Password
-        <input
-          minlength="6"
-          placeholder="Enter your password..."
-          type="password"
-          value=""
-        />
-      </label>
-      <button
-        class="auth-submit"
-      >
-        Sign In
-      </button>
-      <button
-        class="auth-submit secondary"
-      >
-        Forgot Password?
-      </button>
     </div>
+  </section>
+  <section
+    class="data-section"
+  >
+    <div
+      class="section-header"
+    >
+      <h2>
+        Enhanced Data Management
+      </h2>
+      <span
+        class="expand-icon "
+      >
+        ▼
+      </span>
+    </div>
+  </section>
+  <div
+    class="info-note"
+  >
+    <p>
+      <strong>
+        Note:
+      </strong>
+       The enhanced data management system above provides comprehensive backup and restore capabilities. Your data is now safer with automatic weekly backups and advanced import/export options.
+    </p>
   </div>
-</main>
-`;
-
-exports[`Visual Regression Tests Page Layouts History page renders consistently: history-page 1`] = `
-<main
-  class="container"
->
-  <nav
-    class="top-nav"
-  >
-    <a
-      class="nav-item "
-      href="/"
-    >
-      + Add
-    </a>
-    <a
-      class="nav-item active"
-      href="/history"
-    >
-      History
-    </a>
-    <a
-      class="nav-item "
-      href="/ideas"
-    >
-      Ideas
-    </a>
-    <a
-      class="nav-item "
-      href="/account"
-    >
-      Account
-    </a>
-  </nav>
-  <h1>
-    History
-  </h1>
-  <p
-    class="error-message"
-  >
-    Error loading meals: 
-    this is not a Date object.
-  </p>
 </main>
 `;

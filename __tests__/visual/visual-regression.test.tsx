@@ -153,11 +153,11 @@ describe('Visual Regression Tests', () => {
 
     test('Account page renders consistently', () => {
       const { container } = render(<AccountPage />);
-      
+
       // Basic structure checks
       expect(container.querySelector('.container')).toBeInTheDocument();
-      expect(container.querySelector('.auth-card')).toBeInTheDocument();
-      
+      expect(container.querySelector('.data-section')).toBeInTheDocument();
+
       expect(container.firstChild).toMatchSnapshot('account-page');
     });
   });
