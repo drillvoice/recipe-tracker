@@ -1,22 +1,42 @@
 # Recipe Tracker
 
-A small offline-capable web app for logging what you cooked each night. Meals are saved locally for instant feedback and synced to Firebase when a connection is available.
+A Next.js web application for tracking meals with offline-first architecture. Built with TypeScript, Firebase, and IndexedDB for reliable local storage and cloud sync.
 
 ## Current Features
-- Add a meal with a name and date.
-- Automatic anonymous authentication with Firebase Auth.
-- Offline storage via IndexedDB with background sync to Firestore.
-- History page listing all meals chronologically.
-- Ideas page showing unique meals, last made date, and how many times you've cooked them.
-- Account page stub for future email/password sign in.
+- **Meal Tracking**: Add meals with names and dates, with autocomplete suggestions based on previous entries
+- **Offline Storage**: IndexedDB-based local storage ensures data persistence even when offline
+- **Cloud Sync**: Automatic Firebase Firestore sync with anonymous authentication
+- **History View**: Chronological listing of all meals with edit/delete capabilities
+- **Ideas View**: Unique meal aggregation showing frequency and last cooked date
+- **Mobile-Friendly**: Responsive design optimized for mobile devices
+- **Data Management**: Hide/show meals, bulk operations, and conflict resolution
 
-## Project Structure
+## Architecture
+
+### Storage Layer
+- **IndexedDB**: Primary storage using `idb` library with `recipe-tracker` database
+- **Object Store**: Single `meals` store with meal objects containing id, mealName, date, uid, pending, and hidden flags
+- **Offline-First**: All operations write to IndexedDB first, then queue for cloud sync
+
+### Sync System
+- **Anonymous Authentication**: Automatic Firebase Auth sign-in on app load
+- **Background Sync**: Pending meals automatically sync to Firestore when online
+- **Conflict Resolution**: Last-write-wins using server timestamps
+- **Persistence**: Firebase offline persistence enabled for seamless offline experience
+
+### Project Structure
 ```
 src/
-  lib/          # Firebase initialization and local meal store helpers
-  pages/        # Next.js pages (index, history, ideas, account)
-  styles/       # Global CSS styles
-__tests__/      # Jest unit tests for pages and libraries
+  lib/
+    firebase.ts       # Firebase config and initialization
+    auth.ts          # Authentication helpers
+    mealsStore.ts    # IndexedDB operations and meal data models
+  pages/             # Next.js pages (index, history, ideas, account)
+  hooks/             # React hooks for data management (useMeals, useIdeas)
+  components/        # Reusable UI components
+  utils/             # Validation, rate limiting, performance utilities
+  styles/           # Global CSS styles
+__tests__/          # Comprehensive Jest test suite
 ```
 
 ## Getting Started
@@ -57,10 +77,11 @@ npm test
    ```
 
 ## Roadmap
-- Search/filter by date or meal name
-- Suggestions for meals not cooked recently
-- Export/import meal history
-- Optional calendar integration and multi-user support
+- **Enhanced Backup System**: Manual export/import with multiple formats, conflict resolution, and metadata
+- **Search & Filtering**: Advanced search by date, meal name, and frequency
+- **Smart Suggestions**: Recommendations for meals not cooked recently
+- **Calendar Integration**: Optional calendar view and scheduling
+- **Multi-User Support**: Shared meal tracking for households
 
 ## Contributing
 Pull requests are welcome! Please ensure `npm test` passes before submitting.

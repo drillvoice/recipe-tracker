@@ -17,7 +17,9 @@
       "Bash(npx tsc:*)",
       "Bash(npx husky init:*)",
       "Bash(npm run type-check:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Read(//c/Users/drill/OneDrive/Desktop/**)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
