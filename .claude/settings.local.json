@@ -19,7 +19,8 @@
       "Bash(npm run type-check:*)",
       "Bash(npm run lint)",
       "Read(//c/Users/drill/OneDrive/Desktop/**)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm update:*)"
     ],
     "deny": [],
     "ask": []
