@@ -188,9 +188,9 @@ export class ExportManager {
       data.settings = await getSettings();
     }
 
-    // Get metadata if requested
+    // Get cache metadata if requested
     if (options.includeMetadata) {
-      data.metadata = await getCacheMetadata('backup_status');
+      data.cache_meta = await getCacheMetadata('backup_status');
     }
 
     return data;

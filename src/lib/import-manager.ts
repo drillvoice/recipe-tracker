@@ -336,7 +336,8 @@ export class ImportManager {
   private static isJSONExportFormat(data: any): boolean {
     return data &&
            data.metadata &&
-           data.metadata.format === 'json' &&
+           (data.metadata.format === 'json' ||
+            (data.metadata.key === 'backup_status' || !data.metadata.format)) &&
            Array.isArray(data.meals);
   }
 
