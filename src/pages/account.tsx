@@ -6,6 +6,8 @@ import { DataValidator, type ValidationResult } from "@/lib/data-validator";
 import { getAllMeals } from "@/lib/offline-storage";
 import { getBackupStatus as getEnhancedBackupStatus } from "@/lib/offline-storage";
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from "@/lib/firestore-backup";
+import InstallPrompt from "@/components/InstallPrompt";
+import PWAStatus from "@/components/PWAStatus";
 
 interface BackupStatus {
   lastBackup: number;
@@ -113,7 +115,7 @@ export default function DataManagement() {
       if (result.success) {
         setMessage({
           type: 'success',
-          text: `Export completed: ${result.filename} (${result.itemCount} meals, ${formatFileSize(result.size)})`
+          text: `Export completed: ${result.filename} (${result.itemCount} meals, ${formatFileSize(result.size)}). ${result.saveLocationDescription || 'File saved successfully.'}`
         });
       } else {
         setMessage({
@@ -269,6 +271,8 @@ export default function DataManagement() {
       <Navigation currentPage="account" />
 
       <h1>Data Management</h1>
+
+      <InstallPrompt />
 
       {message && (
         <div className={`message-card ${message.type}`}>
@@ -528,6 +532,9 @@ export default function DataManagement() {
           )}
         </div>
       </section>
+
+      {/* PWA Status */}
+      <PWAStatus />
 
       {/* Information Note */}
       <div className="info-note">

@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { getAllMeals, getSettings, getCacheMetadata, type Meal, type AppSettings } from './offline-storage';
+import { PWAFileManager } from './pwa-file-manager';
 
 export type ExportFormat = 'json' | 'csv' | 'backup';
 
@@ -23,6 +24,8 @@ export interface ExportResult {
   checksum?: string;
   itemCount: number;
   errors: string[];
+  saveLocation?: 'native-picker' | 'download' | 'error';
+  saveLocationDescription?: string;
 }
 
 export interface BackupMetadata {
@@ -118,11 +121,19 @@ export class ExportManager {
         content = JSON.stringify(parsedContent, null, 0);
       }
 
-      // Trigger download
-      result.filename = await this.downloadFile(content, filename);
-      result.size = new Blob([content]).size;
+      // Save file using PWA file manager
+      const saveResult = await PWAFileManager.saveFile(content, filename, 'application/json');
+
+      result.filename = saveResult.filename;
+      result.size = saveResult.size;
       result.itemCount = data.meals.length;
-      result.success = true;
+      result.success = saveResult.success;
+      result.saveLocation = saveResult.location;
+      result.saveLocationDescription = PWAFileManager.getSaveLocationDescription(saveResult.location);
+
+      if (!saveResult.success && saveResult.error) {
+        result.errors.push(saveResult.error);
+      }
 
     } catch (error) {
       result.errors.push(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -299,56 +310,6 @@ export class ExportManager {
     return Math.abs(hash).toString(16);
   }
 
-  /**
-   * Download file to user's device with improved save dialog
-   */
-  private static async downloadFile(content: string, filename: string): Promise<string> {
-    if (typeof window === 'undefined') {
-      throw new Error('File download only available in browser environment');
-    }
-
-    try {
-      const blob = new Blob([content], { type: 'application/json' });
-
-      // Try to use File System Access API if available (Chrome 86+)
-      if ('showSaveFilePicker' in window) {
-        try {
-          const fileHandle = await (window as any).showSaveFilePicker({
-            suggestedName: filename,
-            types: [{
-              description: 'JSON files',
-              accept: { 'application/json': ['.json'] }
-            }]
-          });
-          const writable = await fileHandle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          return filename;
-        } catch (error) {
-          // User cancelled or API not supported, fall back to traditional download
-          console.log('File System Access API failed, falling back to traditional download');
-        }
-      }
-
-      // Traditional download method (fallback)
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up the URL object
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-
-      return filename;
-    } catch (error) {
-      throw new Error(`Failed to download file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
 
   /**
    * Get formatted date string for filenames

@@ -21,7 +21,8 @@
       "Read(//c/Users/drill/OneDrive/Desktop/**)",
       "Bash(npm run build:*)",
       "Bash(npm update:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

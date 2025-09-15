@@ -1,0 +1,10 @@
+
+<svg width="384" height="384" viewBox="0 0 384 384" xmlns="http://www.w3.org/2000/svg">
+  <rect width="384" height="384" fill="#2563eb" rx="38.400000000000006"/>
+  <circle cx="115.19999999999999" cy="153.60000000000002" r="57.599999999999994" fill="#ffffff"/>
+  <circle cx="268.79999999999995" cy="153.60000000000002" r="57.599999999999994" fill="#ffffff"/>
+  <path d="M 76.80000000000001 268.79999999999995 Q 192 345.6 307.20000000000005 268.79999999999995"
+        stroke="#ffffff" stroke-width="7.68" fill="none" stroke-linecap="round"/>
+  <text x="192" y="96" text-anchor="middle" font-family="Arial"
+        font-size="30.72" fill="#ffffff">RECIPE</text>
+</svg>
