@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-01-15
+
+### Added
+- **BREAKING**: Implemented true cloud backup functionality to Firestore
+- Anonymous authentication with automatic sign-in for cloud services
+- Real-time cloud backup status display showing authentication and sync state
+- Comprehensive firestore-backup.ts module with full CRUD operations
+- Cloud backup metadata tracking with timestamps and meal counts
+
+### Changed
+- **BREAKING**: "Backup Now" button now creates actual Firestore backup instead of local file download
+- Replaced misleading local backup status with accurate cloud backup indicators
+- Renamed "Enhanced Data Management" to "Local Data Management" for clarity
+- Updated UI to clearly distinguish between cloud backup and local file operations
+- Cloud backup shows real meal count, last backup time, and connection status
+
+### Fixed
+- Resolved user confusion about backup destination (cloud vs local)
+- Fixed inaccurate backup status that showed "warning" after successful backups
+- Improved user feedback with clear success/error messages for cloud operations
+
+### Technical
+- Added comprehensive test coverage for cloud backup functionality
+- Proper error handling and retry logic for Firestore operations
+- TypeScript interfaces for cloud backup status and results
+
 ## [0.1.0] - 2025-01-15
 
 ### Major Updates

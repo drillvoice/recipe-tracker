@@ -179,7 +179,7 @@ export default function Meals() {
       {message && <p className="success-message">{message}</p>}
       
       <div className="version-indicator">
-        v0.1.0
+        v0.2.0
       </div>
     </main>
   );
