@@ -12,7 +12,7 @@ import {
   type User
 } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { getAllMeals } from './offline-storage';
+import { getAllMeals } from './mealsStore';
 import { setLastBackupTimestamp } from './offline-storage';
 
 export interface CloudBackupResult {
@@ -194,7 +194,7 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
     const snapshot = await getDocs(mealsCollectionRef);
     status.cloudMealCount = snapshot.size;
 
-    // Check if local meals need syncing
+    // Check if local meals need syncing (use actual meal count from main database)
     const localMeals = await getAllMeals();
     status.syncNeeded = localMeals.length !== status.cloudMealCount;
 

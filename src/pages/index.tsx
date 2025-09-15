@@ -3,10 +3,12 @@ import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
   saveMeal,
-  getPendingMeals,
   getAllMeals,
-  markMealSynced,
   type Meal,
+} from "@/lib/offline-storage";
+import {
+  getPendingMeals,
+  markMealSynced,
 } from "@/lib/mealsStore";
 import Navigation from "@/components/Navigation";
 import { validateMeal } from "@/utils/validation";

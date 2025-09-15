@@ -152,14 +152,14 @@ export class ExportManager {
         const startTime = options.dateRange.start.getTime();
         const endTime = options.dateRange.end.getTime();
 
-        meals = meals.filter(meal => {
+        meals = meals.filter((meal: Meal) => {
           const mealTime = meal.date.toMillis();
           return mealTime >= startTime && mealTime <= endTime;
         });
       }
 
       // Convert to serializable format
-      data.meals = meals.map(meal => ({
+      data.meals = meals.map((meal: Meal) => ({
         id: meal.id,
         mealName: meal.mealName,
         date: {
@@ -300,7 +300,7 @@ export class ExportManager {
   }
 
   /**
-   * Download file to user's device
+   * Download file to user's device with improved save dialog
    */
   private static async downloadFile(content: string, filename: string): Promise<string> {
     if (typeof window === 'undefined') {
@@ -308,9 +308,30 @@ export class ExportManager {
     }
 
     try {
-      const blob = new Blob([content], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
+      const blob = new Blob([content], { type: 'application/json' });
 
+      // Try to use File System Access API if available (Chrome 86+)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'JSON files',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return filename;
+        } catch (error) {
+          // User cancelled or API not supported, fall back to traditional download
+          console.log('File System Access API failed, falling back to traditional download');
+        }
+      }
+
+      // Traditional download method (fallback)
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
@@ -375,7 +396,7 @@ export class ExportManager {
       const startTime = options.dateRange.start.getTime();
       const endTime = options.dateRange.end.getTime();
 
-      meals = meals.filter(meal => {
+      meals = meals.filter((meal: Meal) => {
         const mealTime = meal.date.toMillis();
         return mealTime >= startTime && mealTime <= endTime;
       });

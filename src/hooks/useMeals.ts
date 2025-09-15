@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, type Meal } from '@/lib/mealsStore';
+import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, type Meal } from '@/lib/offline-storage';
+import { migrateLegacyData, isMigrationNeeded } from '@/lib/database-migration';
 import { Timestamp } from 'firebase/firestore';
 
 export function useMeals() {
@@ -11,6 +12,18 @@ export function useMeals() {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Check if migration is needed and run it
+      if (await isMigrationNeeded()) {
+        console.log('Running legacy data migration...');
+        const migrationResult = await migrateLegacyData();
+        if (!migrationResult.success) {
+          console.error('Migration errors:', migrationResult.errors);
+        } else {
+          console.log(`Successfully migrated ${migrationResult.migratedCount} meals`);
+        }
+      }
+
       const all = await getAllMeals();
       all.sort((a, b) => b.date.toMillis() - a.date.toMillis());
       setMeals(all);

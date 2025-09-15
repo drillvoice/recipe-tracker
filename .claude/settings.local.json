@@ -20,7 +20,8 @@
       "Bash(npm run lint)",
       "Read(//c/Users/drill/OneDrive/Desktop/**)",
       "Bash(npm run build:*)",
-      "Bash(npm update:*)"
+      "Bash(npm update:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

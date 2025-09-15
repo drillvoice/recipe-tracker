@@ -3,7 +3,8 @@ import Navigation from "@/components/Navigation";
 import { ExportManager, type ExportOptions } from "@/lib/export-manager";
 import { ImportManager, type ImportOptions, type ImportPreview } from "@/lib/import-manager";
 import { DataValidator, type ValidationResult } from "@/lib/data-validator";
-import { getBackupStatus } from "@/lib/offline-storage";
+import { getAllMeals } from "@/lib/offline-storage";
+import { getBackupStatus as getEnhancedBackupStatus } from "@/lib/offline-storage";
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from "@/lib/firestore-backup";
 
 interface BackupStatus {
@@ -19,7 +20,6 @@ export default function DataManagement() {
   const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null);
   const [cloudBackupStatus, setCloudBackupStatus] = useState<CloudBackupStatus | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'backup'>('json');
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
@@ -34,7 +34,14 @@ export default function DataManagement() {
 
   const loadBackupStatus = async () => {
     try {
-      const status = await getBackupStatus();
+      // Get actual meal count from main database
+      const meals = await getAllMeals();
+      const status = {
+        lastBackup: 0,
+        mealCount: meals.length,
+        needsBackup: true,
+        daysSinceBackup: Infinity
+      };
       setBackupStatus(status);
     } catch (error) {
       console.error('Failed to load backup status:', error);
@@ -95,10 +102,10 @@ export default function DataManagement() {
 
     try {
       const options: ExportOptions = {
-        format: exportFormat,
+        format: 'json',
         includeMeals: true,
-        includeSettings: exportFormat !== 'csv',
-        includeMetadata: exportFormat === 'backup'
+        includeSettings: true,
+        includeMetadata: true
       };
 
       const result = await ExportManager.exportData(options);
@@ -349,50 +356,26 @@ export default function DataManagement() {
           {activeTab === 'export' && (
             <div>
               <div className="export-controls">
-                <label className="export-format-label">
-                  <span className="label-text">Export Format</span>
-                  <select
-                    className="form input compact"
-                    value={exportFormat}
-                    onChange={(e) => setExportFormat(e.target.value as any)}
-                  >
-                    <option value="json">JSON (Complete data with metadata)</option>
-                    <option value="csv">CSV (Spreadsheet format)</option>
-                    <option value="backup">Backup (Compressed with checksums)</option>
-                  </select>
-                </label>
-
-                <div className="export-checkboxes">
-                  <label className="checkbox-label">
-                    <input type="checkbox" defaultChecked className="checkbox-input" />
-                    <span>✓ Training Sessions & Games</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input type="checkbox" defaultChecked className="checkbox-input" />
-                    <span>✓ Daily Goals & Progress</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input type="checkbox" defaultChecked className="checkbox-input" />
-                    <span>✓ Settings & Preferences</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input type="checkbox" defaultChecked className="checkbox-input" />
-                    <span>✓ Backup Metadata</span>
-                  </label>
-                </div>
+                <p className="export-description">
+                  Export all your meal data as a JSON file for backup or transfer to another device.
+                </p>
 
                 <button
                   className="export-button primary"
                   onClick={handleExport}
                   disabled={exporting}
                 >
-                  {exporting ? 'Exporting...' : 'Export & Save Data'}
+                  {exporting ? 'Exporting...' : 'Export All Data (JSON)'}
                 </button>
-              </div>
 
-              <p className="export-description">
-                Choose where to save: Local storage, Google Drive, or share to other apps
-              </p>
+                <p className="export-note">
+                  <strong>Save Options:</strong> Modern browsers (Chrome, Edge) will show a "Save As" dialog to choose your save location.
+                  For Google Drive, save to your local Google Drive folder or use the Google Drive web interface to upload the file.
+                </p>
+                <p className="export-details">
+                  The exported file will include all meals, settings, and metadata in JSON format.
+                </p>
+              </div>
             </div>
           )}
 

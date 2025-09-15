@@ -21,6 +21,9 @@ export interface CacheMetadata {
   lastImportTimestamp?: number;
   lastImportSource?: string;
   lastImportFormat?: string;
+  legacyMigrationComplete?: boolean;
+  migrationTimestamp?: number;
+  migratedCount?: number;
 }
 
 export interface AppSettings {

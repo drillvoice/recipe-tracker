@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMeals } from './useMeals';
-import type { Meal } from '@/lib/mealsStore';
+import type { Meal } from '@/lib/offline-storage';
 
 export interface Idea {
   mealName: string;
