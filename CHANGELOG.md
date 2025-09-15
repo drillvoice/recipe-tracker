@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-09-16
+
+### Fixed
+- **Import Validation Enhancement**: Improved legacy format detection and validation logic for better compatibility
+- **Status Text Display**: Fixed "Up to Date" text wrapping to ensure single-line display next to Cloud Backup
+
+### Technical
+- Enhanced import manager validation logic for more robust file format detection
+- Improved CSS layout for status indicators with white-space controls
+
 ## [0.2.1] - 2025-09-15
 
 ### Added
@@ -25,8 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unified Database Layer**: All components consistently use enhanced IndexedDB schema
 
 ### Fixed
-- **Import Validation Enhancement**: Improved legacy format detection and validation logic for better compatibility
-- **Status Text Display**: Fixed "Up to Date" text wrapping to ensure single-line display next to Cloud Backup
 - **Critical Export/Import Compatibility**: Fixed "unrecognized JSON format" error when importing exported data
 - **Mobile UI Status Positioning**: Fixed Cloud Backup status text positioning on mobile devices
 - **Critical Cloud Backup Issue**: Fixed "0 meals backed up" error by consolidating database sources
