@@ -261,7 +261,7 @@ export class ExportManager {
         version: this.VERSION,
         exportDate: new Date().toISOString(),
         source: this.SOURCE,
-        appVersion: '0.2.0', // TODO: Get from package.json
+        appVersion: this.VERSION,
         format: 'backup',
         itemCounts: {
           meals: data.meals.length,

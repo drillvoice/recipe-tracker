@@ -183,10 +183,15 @@ export default function DataManagement() {
     setMessage(null);
 
     try {
+      console.log('Starting import process...');
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       const file = fileInput?.files?.[0];
-      if (!file) return;
+      if (!file) {
+        console.log('No file found');
+        return;
+      }
 
+      console.log('Reading file content...');
       const content = await ImportManager.readFileContent(file);
       const options: ImportOptions = {
         conflictResolution: 'ask',
@@ -194,7 +199,9 @@ export default function DataManagement() {
         dryRun: false
       };
 
+      console.log('Calling ImportManager.importData...');
       const result = await ImportManager.importData(content, options);
+      console.log('Import result:', result);
 
       if (result.success) {
         setMessage({
@@ -205,12 +212,14 @@ export default function DataManagement() {
         await loadBackupStatus();
         await performDataValidation();
       } else {
+        console.log('Import failed with errors:', result.errors);
         setMessage({
           type: 'error',
           text: `Import failed: ${result.errors.join(', ')}`
         });
       }
     } catch (error) {
+      console.error('Import exception:', error);
       setMessage({
         type: 'error',
         text: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`
