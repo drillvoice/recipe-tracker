@@ -79,10 +79,16 @@ describe('Data Management Page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Backup Recommended')).toBeInTheDocument();
+      expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/5 meals — last backed up Never/)).toBeInTheDocument();
+    // Check for backup status elements in the new compact format
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('training sessions')).toBeInTheDocument();
+    expect(screen.getByText('Last backup:')).toBeInTheDocument();
+    expect(screen.getByText('Never')).toBeInTheDocument();
+    expect(screen.getByText('Auto backup:')).toBeInTheDocument();
+    expect(screen.getByText('Weekly')).toBeInTheDocument();
   });
 
   test('backup button is clickable', async () => {
@@ -112,7 +118,9 @@ describe('Data Management Page', () => {
       expect(screen.getByText('Enhanced Data Management')).toBeInTheDocument();
     });
 
-    // Should show the expandable section
-    expect(screen.getByText('▼')).toBeInTheDocument();
+    // Should show the tabbed interface
+    expect(screen.getByText('Export Data')).toBeInTheDocument();
+    expect(screen.getByText('Import Data')).toBeInTheDocument();
+    expect(screen.getByText('Backup Verification')).toBeInTheDocument();
   });
 });

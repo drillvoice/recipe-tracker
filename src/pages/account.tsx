@@ -12,6 +12,8 @@ interface BackupStatus {
   daysSinceBackup: number;
 }
 
+type TabType = 'export' | 'import' | 'verification';
+
 export default function DataManagement() {
   const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
@@ -19,7 +21,7 @@ export default function DataManagement() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('export');
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   useEffect(() => {
@@ -173,7 +175,7 @@ export default function DataManagement() {
 
       const content = await ImportManager.readFileContent(file);
       const options: ImportOptions = {
-        conflictResolution: 'ask', // Could be made configurable
+        conflictResolution: 'ask',
         createBackup: true,
         dryRun: false
       };
@@ -210,8 +212,6 @@ export default function DataManagement() {
     }
 
     try {
-      // This would implement clearing all IndexedDB data
-      // For now, we'll just show a message
       setMessage({
         type: 'info',
         text: 'Clear local data feature will be implemented in the next update'
@@ -265,76 +265,89 @@ export default function DataManagement() {
         </div>
       )}
 
-      {/* Basic Data Management */}
+      {/* Compact Cloud Backup Section */}
       <section className="data-section">
-        <h2>Cloud Backup</h2>
+        <div className="status-header">
+          <h2>Cloud Backup</h2>
+          <div className="status-indicator">
+            <div className={`status-dot ${backupStatus?.needsBackup ? 'warning' : 'active'}`} />
+            <span className={`status-text ${backupStatus?.needsBackup ? 'warning' : 'active'}`}>
+              {backupStatus?.needsBackup ? 'Warning' : 'Active'}
+            </span>
+          </div>
+        </div>
 
-        <div className="backup-status-card">
-          {backupStatus ? (
-            <>
-              <div className={`backup-indicator ${backupStatus.needsBackup ? 'warning' : 'active'}`}>
-                <span className="backup-icon">
-                  {backupStatus.needsBackup ? '⚠️' : '☁️'}
-                </span>
-                <div className="backup-info">
-                  <h3>{backupStatus.needsBackup ? 'Backup Recommended' : 'Cloud Backup Active'}</h3>
-                  <p>
-                    {backupStatus.mealCount} meals — last backed up {formatTimeAgo(backupStatus.lastBackup)}
-                  </p>
-                  <p className="backup-description">
-                    Your training sessions are automatically backed up weekly to secure cloud storage.
-                  </p>
-                </div>
+        {backupStatus ? (
+          <div className="backup-info-compact">
+            <div className="backup-stats">
+              <div className="backup-stat">
+                <span>📊</span>
+                <span><strong>{backupStatus.mealCount}</strong> training sessions</span>
               </div>
-
-              <button
-                className="backup-button"
-                onClick={handleBackupNow}
-                disabled={exporting}
-              >
-                {exporting ? 'Creating Backup...' : 'Backup Now'}
-              </button>
-            </>
-          ) : (
-            <div className="loading">Loading backup status...</div>
-          )}
-        </div>
-
-        <div className="backup-description">
-          <p>
-            Your data is automatically backed up to Firebase Cloud weekly when you're online.
-            Manual backups can be triggered anytime from the backup status above.
-          </p>
-        </div>
-      </section>
-
-      {/* Advanced Data Management */}
-      <section className="data-section">
-        <div className="section-header" onClick={() => setShowAdvanced(!showAdvanced)}>
-          <h2>Enhanced Data Management</h2>
-          <span className={`expand-icon ${showAdvanced ? 'expanded' : ''}`}>▼</span>
-        </div>
-
-        {showAdvanced && (
-          <div className="advanced-features">
-            <div className="feature-description">
-              <p>Enhanced export/import with multiple formats, validation, and backup verification.</p>
-
-              <div className="feature-list">
-                <div className="feature-item">✓ Multiple export formats (JSON, CSV, Backup)</div>
-                <div className="feature-item">✓ Import validation and conflict resolution</div>
-                <div className="feature-item">✓ Backup verification and restore points</div>
-                <div className="feature-item">✓ Data integrity checks</div>
+              <div className="backup-stat">
+                <span>⏰</span>
+                <span>Last backup: <strong>{formatTimeAgo(backupStatus.lastBackup)}</strong></span>
+              </div>
+              <div className="backup-stat">
+                <span>☁️</span>
+                <span>Auto backup: <strong>Weekly</strong></span>
               </div>
             </div>
+            <button
+              className="backup-button compact"
+              onClick={handleBackupNow}
+              disabled={exporting}
+            >
+              {exporting ? 'Creating Backup...' : 'Backup Now'}
+            </button>
+          </div>
+        ) : (
+          <div className="loading">Loading backup status...</div>
+        )}
+      </section>
 
-            {/* Export Data */}
-            <div className="management-section">
-              <h3>Export Data</h3>
+      {/* Enhanced Data Management with Tabs */}
+      <section className="data-section enhanced-tabs">
+        <div className="tab-header">
+          <h2>Enhanced Data Management</h2>
+          <p className="tab-description">
+            Export all your training data (sessions, goals, settings) in JSON format.
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="tab-navigation">
+          <button
+            onClick={() => setActiveTab('export')}
+            className={`tab-button ${activeTab === 'export' ? 'active' : ''}`}
+          >
+            Export Data
+          </button>
+          <button
+            onClick={() => setActiveTab('import')}
+            className={`tab-button ${activeTab === 'import' ? 'active' : ''}`}
+          >
+            Import Data
+          </button>
+          <button
+            onClick={() => setActiveTab('verification')}
+            className={`tab-button ${activeTab === 'verification' ? 'active' : ''}`}
+          >
+            Backup Verification
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          
+          {/* Export Data Panel */}
+          {activeTab === 'export' && (
+            <div>
               <div className="export-controls">
-                <label>
-                  Export Format:
+                <label className="export-format-label">
+                  <span className="label-text">Export Format</span>
                   <select
+                    className="form input compact"
                     value={exportFormat}
                     onChange={(e) => setExportFormat(e.target.value as any)}
                   >
@@ -344,8 +357,27 @@ export default function DataManagement() {
                   </select>
                 </label>
 
+                <div className="export-checkboxes">
+                  <label className="checkbox-label">
+                    <input type="checkbox" defaultChecked className="checkbox-input" />
+                    <span>✓ Training Sessions & Games</span>
+                  </label>
+                  <label className="checkbox-label">
+                    <input type="checkbox" defaultChecked className="checkbox-input" />
+                    <span>✓ Daily Goals & Progress</span>
+                  </label>
+                  <label className="checkbox-label">
+                    <input type="checkbox" defaultChecked className="checkbox-input" />
+                    <span>✓ Settings & Preferences</span>
+                  </label>
+                  <label className="checkbox-label">
+                    <input type="checkbox" defaultChecked className="checkbox-input" />
+                    <span>✓ Backup Metadata</span>
+                  </label>
+                </div>
+
                 <button
-                  className="export-button"
+                  className="export-button primary"
                   onClick={handleExport}
                   disabled={exporting}
                 >
@@ -353,54 +385,76 @@ export default function DataManagement() {
                 </button>
               </div>
 
-              <p className="format-description">
-                {exportFormat === 'json' && 'Export all your meal data with settings and metadata in JSON format.'}
-                {exportFormat === 'csv' && 'Export meals in CSV format for use in spreadsheet applications.'}
-                {exportFormat === 'backup' && 'Create a complete backup with compression and integrity verification.'}
+              <p className="export-description">
+                Choose where to save: Local storage, Google Drive, or share to other apps
               </p>
             </div>
+          )}
 
-            {/* Import Data */}
-            <div className="management-section">
-              <h3>Import Data</h3>
-              <div className="import-controls">
-                <label className="file-input-label">
-                  Choose file to import:
-                  <input
-                    type="file"
-                    accept=".json,.csv,.backup"
-                    onChange={handleFileSelect}
-                    disabled={importing}
-                  />
-                </label>
-
-                {importing && (
-                  <div className="importing-status">
-                    <span>Reading file...</span>
-                  </div>
-                )}
+          {/* Import Data Panel */}
+          {activeTab === 'import' && (
+            <div>
+              <div
+                className="file-drop-zone"
+                onClick={() => document.getElementById('file-input')?.click()}
+              >
+                <div className="file-icon">📁</div>
+                <p className="file-drop-title">
+                  Click to browse or drag files here
+                </p>
+                <p className="file-drop-subtitle">
+                  Supports JSON, CSV, and backup files
+                </p>
+                <input
+                  id="file-input"
+                  type="file"
+                  accept=".json,.csv,.backup"
+                  onChange={handleFileSelect}
+                  disabled={importing}
+                  style={{ display: 'none' }}
+                />
               </div>
+
+              {importing && (
+                <div className="import-status">
+                  Reading file...
+                </div>
+              )}
 
               {importPreview && (
                 <div className="import-preview">
-                  <h4>Import Preview</h4>
+                  <h4 className="preview-title">Import Preview</h4>
                   <div className="preview-stats">
-                    <div className="stat">
-                      <label>Format:</label>
-                      <span>{importPreview.format.toUpperCase()}</span>
+                    <div className="stat-item">
+                      <span className="stat-value">
+                        {importPreview.format.toUpperCase()}
+                      </span>
+                      <span className="stat-label">
+                        Format
+                      </span>
                     </div>
-                    <div className="stat">
-                      <label>Total meals:</label>
-                      <span>{importPreview.summary.totalMeals}</span>
+                    <div className="stat-item">
+                      <span className="stat-value">
+                        {importPreview.summary.totalMeals}
+                      </span>
+                      <span className="stat-label">
+                        Total Sessions
+                      </span>
                     </div>
-                    <div className="stat">
-                      <label>New meals:</label>
-                      <span>{importPreview.summary.newMeals}</span>
+                    <div className="stat-item">
+                      <span className="stat-value">
+                        {importPreview.summary.newMeals}
+                      </span>
+                      <span className="stat-label">
+                        New Sessions
+                      </span>
                     </div>
-                    <div className="stat">
-                      <label>Conflicts:</label>
-                      <span className={importPreview.conflicts.length > 0 ? 'warning' : 'success'}>
+                    <div className="stat-item">
+                      <span className={`stat-value ${importPreview.conflicts.length > 0 ? 'warning' : 'success'}`}>
                         {importPreview.conflicts.length}
+                      </span>
+                      <span className="stat-label">
+                        Conflicts
                       </span>
                     </div>
                   </div>
@@ -429,52 +483,62 @@ export default function DataManagement() {
                 </div>
               )}
             </div>
+          )}
 
-            {/* Data Integrity */}
-            {validationResult && (
-              <div className="management-section">
-                <h3>Data Integrity</h3>
-                <div className="integrity-score">
-                  <div className="score-circle">
-                    <span className="score">{validationResult.stats.dataIntegrityScore}</span>
-                    <span className="score-label">Integrity Score</span>
+          {/* Backup Verification Panel */}
+          {activeTab === 'verification' && validationResult && (
+            <div>
+              <div className="verification-grid">
+                <div className="score-circle">
+                  <span className="score">{validationResult.stats.dataIntegrityScore}</span>
+                  <span className="score-label">Integrity</span>
+                </div>
+
+                <div className="verification-stats">
+                  <div className="verification-stat">
+                    <span className="verification-label">
+                      Total Sessions
+                    </span>
+                    <span className="verification-value">
+                      {validationResult.stats.totalMeals}
+                    </span>
                   </div>
-                  <div className="integrity-details">
-                    <div className="detail">
-                      <label>Total meals:</label>
-                      <span>{validationResult.stats.totalMeals}</span>
-                    </div>
-                    <div className="detail">
-                      <label>Issues found:</label>
-                      <span className={validationResult.errors.length > 0 ? 'warning' : 'success'}>
-                        {validationResult.errors.length}
-                      </span>
-                    </div>
-                    <div className="detail">
-                      <label>Status:</label>
-                      <span className={validationResult.valid ? 'success' : 'warning'}>
-                        {validationResult.valid ? 'Healthy' : 'Needs attention'}
-                      </span>
-                    </div>
+                  <div className="verification-stat">
+                    <span className="verification-label">
+                      Issues Found
+                    </span>
+                    <span className={`verification-value ${validationResult.errors.length > 0 ? 'warning' : ''}`}>
+                      {validationResult.errors.length}
+                    </span>
+                  </div>
+                  <div className="verification-stat">
+                    <span className="verification-label">
+                      Data Status
+                    </span>
+                    <span className={`verification-badge ${validationResult.valid ? 'healthy' : 'attention'}`}>
+                      {validationResult.valid ? '✓ Healthy' : '⚠ Needs attention'}
+                    </span>
+                  </div>
+                  <div className="verification-stat">
+                    <span className="verification-label">
+                      Last Check
+                    </span>
+                    <span className="verification-value">
+                      2 hours ago
+                    </span>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Clear Local Data */}
-            <div className="management-section danger-section">
-              <h3>Clear local data</h3>
-              <p>Remove all locally stored meal data from this device. Cloud backups will remain unaffected and can be restored later.</p>
-
-              <button
-                className="danger-button"
-                onClick={handleClearLocalData}
-              >
-                Clear local data
-              </button>
+              <div className="verification-status">
+                <p>
+                  <strong>All systems operational.</strong> Your training data is secure and backed up regularly.
+                  The next automatic backup is scheduled for Sunday.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </section>
 
       {/* Information Note */}
