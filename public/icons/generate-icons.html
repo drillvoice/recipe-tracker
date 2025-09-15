@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <script>
+        // Simple icon generator for PWA testing
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function generateIcon(size) {
+            canvas.width = size;
+            canvas.height = size;
+
+            // Background
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(0, 0, size, size);
+
+            // Fork and knife icon (simple)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🍽️', size/2, size/2);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Generate all required sizes
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        let index = 0;
+
+        function generateNext() {
+            if (index < sizes.length) {
+                generateIcon(sizes[index]);
+                index++;
+                setTimeout(generateNext, 100);
+            }
+        }
+
+        // Start generation after page loads
+        setTimeout(generateNext, 1000);
+    </script>
+    <p>This page will automatically generate PWA icons. Check your downloads folder.</p>
+    <p>Note: Replace these placeholder icons with proper designs for production.</p>
+</body>
+</html>

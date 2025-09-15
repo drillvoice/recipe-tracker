@@ -1,0 +1,10 @@
+
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" fill="#2563eb" rx="12.8"/>
+  <circle cx="38.4" cy="51.2" r="19.2" fill="#ffffff"/>
+  <circle cx="89.6" cy="51.2" r="19.2" fill="#ffffff"/>
+  <path d="M 25.6 89.6 Q 64 115.2 102.4 89.6"
+        stroke="#ffffff" stroke-width="2.56" fill="none" stroke-linecap="round"/>
+  <text x="64" y="32" text-anchor="middle" font-family="Arial"
+        font-size="10.24" fill="#ffffff">RECIPE</text>
+</svg>

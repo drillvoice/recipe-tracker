@@ -8,25 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.1] - 2025-09-15
 
 ### Added
+- **Progressive Web App (PWA) Implementation**: Complete conversion to PWA with full feature set
+- **Web App Manifest**: App installation support across desktop and mobile platforms
+- **Service Worker**: Comprehensive offline functionality with intelligent caching strategies
+- **Native File Picker**: File System Access API for saving directly to Google Drive, OneDrive, and custom locations
+- **Install Prompt Component**: Smart installation prompts with beforeinstallprompt handling
+- **PWA Status Dashboard**: Real-time display of PWA capabilities and installation status
 - **Database Migration System**: Automatic migration from legacy to enhanced IndexedDB schema
-- **File System Access API**: Modern "Save As" dialog support for Chrome/Edge browsers
-- **Enhanced Export Instructions**: Clear guidance for saving to Google Drive and other locations
+- **Comprehensive Testing Guide**: Complete PWA testing documentation with cross-platform instructions
 
 ### Changed
-- **Simplified Export Interface**: Removed complex dropdowns and checkboxes for one-click JSON export
-- **Unified Database Layer**: All components now consistently use enhanced IndexedDB schema
-- **Improved Export Experience**: Single "Export All Data (JSON)" button includes all meals, settings, and metadata
+- **App Installation**: Users can now install as native-like app on desktop and mobile
+- **Export Experience**: Native "Save As" dialogs replace traditional downloads in supported browsers
+- **Offline Functionality**: Complete app functionality available without internet connection
+- **Simplified Export Interface**: Single "Export All Data (JSON)" button with enhanced save options
+- **Unified Database Layer**: All components consistently use enhanced IndexedDB schema
 
 ### Fixed
 - **Critical Cloud Backup Issue**: Fixed "0 meals backed up" error by consolidating database sources
 - **Data Synchronization**: Resolved inconsistency between UI data display and cloud backup sources
-- **Export Functionality**: Enhanced file save dialog with better location selection options
+- **Cross-Platform Compatibility**: PWA features gracefully degrade on unsupported browsers
 
 ### Technical
-- Added database migration utilities with automated legacy data transfer
-- Updated all meal operations (save, load, export, backup) to use unified database
-- Maintained complete backup system test coverage (23/23 tests passing)
-- Enhanced CacheMetadata interface with migration tracking fields
+- Added comprehensive PWA infrastructure (manifest.json, sw.js, PWA utilities)
+- Implemented File System Access API with fallback strategies
+- Service worker with app shell, network-first, and cache-first strategies
+- TypeScript interfaces for PWA features and file operations
+- Enhanced Firestore security rules for proper data isolation
+- Database migration utilities with automated legacy data transfer
 
 ## [0.2.0] - 2025-01-15
 
