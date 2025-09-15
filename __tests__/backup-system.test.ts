@@ -491,7 +491,7 @@ describe('Backup System Integration Tests', () => {
           version: '1.0.0',
           exportDate: new Date().toISOString(),
           source: 'recipe-tracker-enhanced',
-          appVersion: '0.0.7',
+          appVersion: '0.1.0',
           format: 'backup',
           itemCounts: {
             meals: 3,

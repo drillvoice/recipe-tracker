@@ -542,11 +542,12 @@ export class ImportManager {
         return 'skip';
       case 'overwrite':
         return 'overwrite';
-      case 'merge':
+      case 'merge': {
         // For meals, merge means take newer timestamp
         const existingTime = conflict.existing.date.toMillis();
         const incomingTime = conflict.incoming.date.seconds * 1000;
         return incomingTime > existingTime ? 'overwrite' : 'skip';
+      }
       case 'ask':
         // In a real implementation, this would prompt the user
         // For now, default to skip
