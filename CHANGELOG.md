@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-09-15
+
+### Added
+- **Database Migration System**: Automatic migration from legacy to enhanced IndexedDB schema
+- **File System Access API**: Modern "Save As" dialog support for Chrome/Edge browsers
+- **Enhanced Export Instructions**: Clear guidance for saving to Google Drive and other locations
+
+### Changed
+- **Simplified Export Interface**: Removed complex dropdowns and checkboxes for one-click JSON export
+- **Unified Database Layer**: All components now consistently use enhanced IndexedDB schema
+- **Improved Export Experience**: Single "Export All Data (JSON)" button includes all meals, settings, and metadata
+
+### Fixed
+- **Critical Cloud Backup Issue**: Fixed "0 meals backed up" error by consolidating database sources
+- **Data Synchronization**: Resolved inconsistency between UI data display and cloud backup sources
+- **Export Functionality**: Enhanced file save dialog with better location selection options
+
+### Technical
+- Added database migration utilities with automated legacy data transfer
+- Updated all meal operations (save, load, export, backup) to use unified database
+- Maintained complete backup system test coverage (23/23 tests passing)
+- Enhanced CacheMetadata interface with migration tracking fields
+
 ## [0.2.0] - 2025-01-15
 
 ### Added
