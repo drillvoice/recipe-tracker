@@ -334,11 +334,24 @@ export class ImportManager {
    * Check if data is JSON export format
    */
   private static isJSONExportFormat(data: any): boolean {
-    return data &&
-           data.metadata &&
-           (data.metadata.format === 'json' ||
-            (data.metadata.key === 'backup_status' || !data.metadata.format)) &&
-           Array.isArray(data.meals);
+    // Check if it's a valid JSON export with proper structure
+    if (!data || !data.metadata || !Array.isArray(data.meals)) {
+      return false;
+    }
+
+    // Accept new format with explicit format field
+    if (data.metadata.format === 'json') {
+      return true;
+    }
+
+    // Accept legacy formats:
+    // 1. Files with backup_status key (cache metadata exports)
+    // 2. Files without format field (older exports)
+    if (data.metadata.key === 'backup_status' || !data.metadata.format) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
