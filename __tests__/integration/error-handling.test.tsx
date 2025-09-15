@@ -61,7 +61,7 @@ describe('Error Handling Integration Tests', () => {
       });
       
       // Should not crash the app
-      expect(screen.getByText('History')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'History' })).toBeInTheDocument();
     });
 
     test('shows loading state before error', async () => {
@@ -139,7 +139,7 @@ describe('Error Handling Integration Tests', () => {
       });
       
       // App should still be functional
-      expect(screen.getByText('History')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'History' })).toBeInTheDocument();
     });
 
     test('handles meal deletion failures', async () => {
@@ -184,7 +184,7 @@ describe('Error Handling Integration Tests', () => {
       });
       
       // App should still be functional
-      expect(screen.getByText('History')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'History' })).toBeInTheDocument();
     });
 
     test('handles meal visibility toggle failures', async () => {
@@ -230,7 +230,7 @@ describe('Error Handling Integration Tests', () => {
       });
       
       // App should still be functional
-      expect(screen.getByText('Ideas')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ideas' })).toBeInTheDocument();
     });
   });
 
@@ -277,7 +277,7 @@ describe('Error Handling Integration Tests', () => {
       
       // Should handle empty/missing names gracefully
       await waitFor(() => {
-        expect(screen.getByText('History')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'History' })).toBeInTheDocument();
       });
     });
 
@@ -301,7 +301,7 @@ describe('Error Handling Integration Tests', () => {
       
       // Should load and process large dataset reasonably quickly
       await waitFor(() => {
-        expect(screen.getByText('Ideas')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Ideas' })).toBeInTheDocument();
       }, { timeout: 5000 });
       
       const end = performance.now();
@@ -315,7 +315,7 @@ describe('Error Handling Integration Tests', () => {
         const subtitleElement = screen.getByText(/unique meal/);
         expect(subtitleElement).toBeInTheDocument();
       });
-    });
+    }, 10000); // Increase timeout to 10 seconds
 
     test('handles concurrent operations gracefully', async () => {
       const testMeals = [

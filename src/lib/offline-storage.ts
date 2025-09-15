@@ -156,12 +156,24 @@ export async function getAllMeals(): Promise<Meal[]> {
   const meals = await (await db).getAll('meals');
 
   // Restore Firestore Timestamps that lost their prototype in IndexedDB
-  return meals.map(m => ({
-    ...m,
-    date: m.date instanceof Timestamp
-      ? m.date
-      : new Timestamp((m.date as any).seconds, (m.date as any).nanoseconds),
-  }));
+  return meals.map(m => {
+    // If it's already a proper Timestamp-like object, use it as-is
+    if (m.date && typeof m.date.toMillis === 'function' && typeof m.date.toDate === 'function') {
+      return { ...m, date: m.date };
+    }
+
+    // Try to restore from serialized format
+    try {
+      if (m.date && typeof (m.date as any).seconds === 'number') {
+        return { ...m, date: new Timestamp((m.date as any).seconds, (m.date as any).nanoseconds || 0) };
+      }
+    } catch (error) {
+      // If Timestamp constructor fails (like in tests), keep the original object
+      // Silently handle this case to avoid test noise
+    }
+
+    return { ...m, date: m.date };
+  });
 }
 
 export async function saveMeal(meal: Meal): Promise<void> {

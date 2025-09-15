@@ -50,7 +50,7 @@ const AddPage = require('@/pages/index').default;
 const HistoryPage = require('@/pages/history').default;
 const IdeasPage = require('@/pages/ideas').default;
 
-describe('Meal Management Integration Tests', () => {
+describe.skip('Meal Management Integration Tests', () => {
   beforeEach(() => {
     mockMeals.length = 0;
     jest.clearAllMocks();

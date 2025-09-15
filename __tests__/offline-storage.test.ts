@@ -70,9 +70,12 @@ jest.mock('firebase/firestore', () => ({
 const TimestampClass = MockTimestamp;
 
 describe('Enhanced Offline Storage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Clear IndexedDB before each test
     indexedDB = new (require('fake-indexeddb/lib/FDBFactory'))();
+    // Reset the database promise to ensure clean state
+    const { resetDbPromise } = await import('../src/lib/offline-storage');
+    resetDbPromise();
   });
 
   describe('Meal Operations', () => {

@@ -1,82 +1,118 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import Account from '@/pages/account';
 
-const mockUser = { email: null as string | null, emailVerified: false, isAnonymous: true };
+// Mock the async functions that cause state updates
+jest.mock('@/lib/offline-storage', () => ({
+  getBackupStatus: jest.fn().mockResolvedValue({
+    lastBackup: 0,
+    mealCount: 5,
+    needsBackup: true,
+    daysSinceBackup: Infinity
+  }),
+  isBackupNeeded: jest.fn().mockReturnValue(true)
+}));
 
-jest.mock('firebase/auth', () => ({
-  onAuthStateChanged: (auth: any, cb: any) => {
-    cb(mockUser);
-    return () => {};
+jest.mock('@/lib/data-validator', () => ({
+  DataValidator: {
+    validateAllData: jest.fn().mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      totalMeals: 5,
+      validMeals: 5
+    })
   }
 }));
 
-const signInEmail = jest.fn();
-const signUpEmail = jest.fn();
-const signOutUser = jest.fn();
-const sendReset = jest.fn();
-const sendVerification = jest.fn();
+const mockExportData = jest.fn().mockResolvedValue({
+  success: true,
+  data: 'mock-export-data',
+  filename: 'backup-2024-01-01.json'
+});
 
-jest.mock('@/lib/auth', () => ({
-  signInEmail: (...args: any[]) => signInEmail(...args),
-  signUpEmail: (...args: any[]) => signUpEmail(...args),
-  signOutUser: () => signOutUser(),
-  sendReset: (e: string) => sendReset(e),
-  sendVerification: () => sendVerification(),
+jest.mock('@/lib/export-manager', () => ({
+  ExportManager: {
+    exportData: mockExportData
+  }
 }));
 
-jest.mock('@/lib/firebase', () => ({ auth: {} }));
+jest.mock('@/lib/import-manager', () => ({
+  ImportManager: {
+    previewImport: jest.fn().mockResolvedValue({
+      totalMeals: 3,
+      validMeals: 3,
+      conflicts: [],
+      duplicates: []
+    }),
+    processImport: jest.fn().mockResolvedValue({
+      success: true,
+      processed: 3,
+      imported: 3,
+      conflicts: []
+    })
+  }
+}));
 
-test('allows sign in and sign up', async () => {
-  // Mock anonymous user for this test
-  mockUser.email = null;
-  mockUser.isAnonymous = true;
-  mockUser.emailVerified = false;
-  
-  render(<Account />);
-  fireEvent.change(screen.getByPlaceholderText('Enter your email...'), { target: { value: 'a@b.com' } });
-  fireEvent.change(screen.getByPlaceholderText('Enter your password...'), { target: { value: 'pw' } });
-  await act(async () => {
-    fireEvent.click(screen.getAllByText('Sign In')[1]);
-  });
-  expect(signInEmail).toHaveBeenCalled();
-  fireEvent.click(screen.getByText('Sign Up'));
-  await act(async () => {
-    fireEvent.click(screen.getAllByText('Sign Up')[1]);
-  });
-  expect(signUpEmail).toHaveBeenCalled();
-});
-
-test('allows forgot password', async () => {
-  // Mock anonymous user for this test
-  mockUser.email = null;
-  mockUser.isAnonymous = true;
-  mockUser.emailVerified = false;
-  
-  render(<Account />);
-  fireEvent.change(screen.getByPlaceholderText('Enter your email...'), { target: { value: 'a@b.com' } });
-  await act(async () => {
-    fireEvent.click(screen.getByText('Forgot Password?'));
-  });
-  expect(sendReset).toHaveBeenCalled();
-});
-
-test('verify and sign out', async () => {
-  // Mock signed-in unverified user for this test
-  mockUser.email = 'a@b.com';
-  mockUser.isAnonymous = false;
-  mockUser.emailVerified = false;
-  
-  render(<Account />);
-  
-  // Wait for component to load user state
-  await act(async () => {
-    await new Promise(resolve => setTimeout(resolve, 100));
+describe('Data Management Page', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  await act(async () => {
-    fireEvent.click(screen.getByText('Send Verification Email'));
-    fireEvent.click(screen.getByText('Sign Out'));
+  test('renders data management interface', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    // Wait for async effects to complete
+    await waitFor(() => {
+      expect(screen.getByText('Data Management')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
+    expect(screen.getByText('Enhanced Data Management')).toBeInTheDocument();
+    expect(screen.getByText('Backup Now')).toBeInTheDocument();
   });
-  expect(sendVerification).toHaveBeenCalled();
-  expect(signOutUser).toHaveBeenCalled();
+
+  test('displays backup status correctly', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Backup Recommended')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/5 meals — last backed up Never/)).toBeInTheDocument();
+  });
+
+  test('backup button is clickable', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Backup Now')).toBeInTheDocument();
+    });
+
+    const backupButton = screen.getByText('Backup Now');
+    expect(backupButton).toBeEnabled();
+
+    // Just ensure clicking doesn't crash
+    await act(async () => {
+      fireEvent.click(backupButton);
+    });
+  });
+
+  test('shows enhanced data management section', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Enhanced Data Management')).toBeInTheDocument();
+    });
+
+    // Should show the expandable section
+    expect(screen.getByText('▼')).toBeInTheDocument();
+  });
 });
