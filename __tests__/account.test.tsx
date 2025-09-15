@@ -53,6 +53,24 @@ jest.mock('@/lib/import-manager', () => ({
   }
 }));
 
+// Mock the firestore-backup module
+jest.mock('@/lib/firestore-backup', () => ({
+  backupMealsToCloud: jest.fn().mockResolvedValue({
+    success: true,
+    mealsBackedUp: 5,
+    timestamp: Date.now(),
+    errors: [],
+    userId: 'test-uid'
+  }),
+  getCloudBackupStatus: jest.fn().mockResolvedValue({
+    isAuthenticated: true,
+    userId: 'test-uid',
+    lastCloudBackup: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
+    cloudMealCount: 5,
+    syncNeeded: false
+  })
+}));
+
 describe('Data Management Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -69,8 +87,8 @@ describe('Data Management Page', () => {
     });
 
     expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
-    expect(screen.getByText('Enhanced Data Management')).toBeInTheDocument();
-    expect(screen.getByText('Backup Now')).toBeInTheDocument();
+    expect(screen.getByText('Local Data Management')).toBeInTheDocument();
+    expect(screen.getByText('Backup to Cloud')).toBeInTheDocument();
   });
 
   test('displays backup status correctly', async () => {
@@ -82,13 +100,12 @@ describe('Data Management Page', () => {
       expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
     });
 
-    // Check for backup status elements in the new compact format
+    // Check for cloud backup status elements in the new format
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('training sessions')).toBeInTheDocument();
+    expect(screen.getByText('meals in cloud')).toBeInTheDocument();
     expect(screen.getByText('Last backup:')).toBeInTheDocument();
-    expect(screen.getByText('Never')).toBeInTheDocument();
-    expect(screen.getByText('Auto backup:')).toBeInTheDocument();
-    expect(screen.getByText('Weekly')).toBeInTheDocument();
+    expect(screen.getByText('Status:')).toBeInTheDocument();
+    expect(screen.getByText('Connected')).toBeInTheDocument();
   });
 
   test('backup button is clickable', async () => {
@@ -97,10 +114,10 @@ describe('Data Management Page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Backup Now')).toBeInTheDocument();
+      expect(screen.getByText('Backup to Cloud')).toBeInTheDocument();
     });
 
-    const backupButton = screen.getByText('Backup Now');
+    const backupButton = screen.getByText('Backup to Cloud');
     expect(backupButton).toBeEnabled();
 
     // Just ensure clicking doesn't crash
@@ -115,7 +132,7 @@ describe('Data Management Page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Enhanced Data Management')).toBeInTheDocument();
+      expect(screen.getByText('Local Data Management')).toBeInTheDocument();
     });
 
     // Should show the tabbed interface

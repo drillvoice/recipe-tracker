@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
-import { ExportManager, type ExportOptions, type ExportResult } from "@/lib/export-manager";
-import { ImportManager, type ImportOptions, type ImportResult, type ImportPreview } from "@/lib/import-manager";
-import { DataValidator, type ValidationResult, type IntegrityCheckResult } from "@/lib/data-validator";
-import { getBackupStatus, isBackupNeeded } from "@/lib/offline-storage";
+import { ExportManager, type ExportOptions } from "@/lib/export-manager";
+import { ImportManager, type ImportOptions, type ImportPreview } from "@/lib/import-manager";
+import { DataValidator, type ValidationResult } from "@/lib/data-validator";
+import { getBackupStatus } from "@/lib/offline-storage";
+import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from "@/lib/firestore-backup";
 
 interface BackupStatus {
   lastBackup: number;
@@ -16,6 +17,7 @@ type TabType = 'export' | 'import' | 'verification';
 
 export default function DataManagement() {
   const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null);
+  const [cloudBackupStatus, setCloudBackupStatus] = useState<CloudBackupStatus | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'backup'>('json');
   const [importing, setImporting] = useState(false);
@@ -26,6 +28,7 @@ export default function DataManagement() {
 
   useEffect(() => {
     loadBackupStatus();
+    loadCloudBackupStatus();
     performDataValidation();
   }, []);
 
@@ -35,6 +38,15 @@ export default function DataManagement() {
       setBackupStatus(status);
     } catch (error) {
       console.error('Failed to load backup status:', error);
+    }
+  };
+
+  const loadCloudBackupStatus = async () => {
+    try {
+      const status = await getCloudBackupStatus();
+      setCloudBackupStatus(status);
+    } catch (error) {
+      console.error('Failed to load cloud backup status:', error);
     }
   };
 
@@ -52,32 +64,25 @@ export default function DataManagement() {
     setMessage(null);
 
     try {
-      const options: ExportOptions = {
-        format: 'backup',
-        includeMeals: true,
-        includeSettings: true,
-        includeMetadata: true,
-        addChecksum: true
-      };
-
-      const result = await ExportManager.exportData(options);
+      const result = await backupMealsToCloud();
 
       if (result.success) {
         setMessage({
           type: 'success',
-          text: `Backup created successfully: ${result.filename} (${formatFileSize(result.size)})`
+          text: `Cloud backup successful: ${result.mealsBackedUp} meals backed up to Firestore`
         });
         await loadBackupStatus();
+        await loadCloudBackupStatus();
       } else {
         setMessage({
           type: 'error',
-          text: `Backup failed: ${result.errors.join(', ')}`
+          text: `Cloud backup failed: ${result.errors.join(', ')}`
         });
       }
     } catch (error) {
       setMessage({
         type: 'error',
-        text: `Backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        text: `Cloud backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     } finally {
       setExporting(false);
@@ -270,27 +275,27 @@ export default function DataManagement() {
         <div className="status-header">
           <h2>Cloud Backup</h2>
           <div className="status-indicator">
-            <div className={`status-dot ${backupStatus?.needsBackup ? 'warning' : 'active'}`} />
-            <span className={`status-text ${backupStatus?.needsBackup ? 'warning' : 'active'}`}>
-              {backupStatus?.needsBackup ? 'Warning' : 'Active'}
+            <div className={`status-dot ${!cloudBackupStatus?.isAuthenticated || cloudBackupStatus?.syncNeeded ? 'warning' : 'active'}`} />
+            <span className={`status-text ${!cloudBackupStatus?.isAuthenticated || cloudBackupStatus?.syncNeeded ? 'warning' : 'active'}`}>
+              {!cloudBackupStatus?.isAuthenticated ? 'Not Connected' : cloudBackupStatus?.syncNeeded ? 'Sync Needed' : 'Up to Date'}
             </span>
           </div>
         </div>
 
-        {backupStatus ? (
+        {cloudBackupStatus ? (
           <div className="backup-info-compact">
             <div className="backup-stats">
               <div className="backup-stat">
                 <span>📊</span>
-                <span><strong>{backupStatus.mealCount}</strong> training sessions</span>
+                <span><strong>{cloudBackupStatus.cloudMealCount}</strong> meals in cloud</span>
               </div>
               <div className="backup-stat">
                 <span>⏰</span>
-                <span>Last backup: <strong>{formatTimeAgo(backupStatus.lastBackup)}</strong></span>
+                <span>Last backup: <strong>{formatTimeAgo(cloudBackupStatus.lastCloudBackup)}</strong></span>
               </div>
               <div className="backup-stat">
                 <span>☁️</span>
-                <span>Auto backup: <strong>Weekly</strong></span>
+                <span>Status: <strong>{cloudBackupStatus.isAuthenticated ? 'Connected' : 'Disconnected'}</strong></span>
               </div>
             </div>
             <button
@@ -298,20 +303,20 @@ export default function DataManagement() {
               onClick={handleBackupNow}
               disabled={exporting}
             >
-              {exporting ? 'Creating Backup...' : 'Backup Now'}
+              {exporting ? 'Backing Up...' : 'Backup to Cloud'}
             </button>
           </div>
         ) : (
-          <div className="loading">Loading backup status...</div>
+          <div className="loading">Loading cloud backup status...</div>
         )}
       </section>
 
       {/* Enhanced Data Management with Tabs */}
       <section className="data-section enhanced-tabs">
         <div className="tab-header">
-          <h2>Enhanced Data Management</h2>
+          <h2>Local Data Management</h2>
           <p className="tab-description">
-            Export all your training data (sessions, goals, settings) in JSON format.
+            Export your meal data to files for local backup, import data from files, and verify data integrity.
           </p>
         </div>
 
@@ -544,8 +549,8 @@ export default function DataManagement() {
       {/* Information Note */}
       <div className="info-note">
         <p>
-          <strong>Note:</strong> The enhanced data management system above provides comprehensive backup and restore capabilities.
-          Your data is now safer with automatic weekly backups and advanced import/export options.
+          <strong>Note:</strong> Cloud backup automatically syncs your data to Firestore for safety and cross-device access.
+          Local data management lets you export/import files for additional backup options and data portability.
         </p>
       </div>
     </main>
