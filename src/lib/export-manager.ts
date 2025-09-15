@@ -149,8 +149,9 @@ export class ExportManager {
     meals: SerializableMeal[];
     settings?: AppSettings;
     metadata?: any;
+    cache_meta?: any;
   }> {
-    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: any } = {
+    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: any; cache_meta?: any } = {
       meals: []
     };
 
