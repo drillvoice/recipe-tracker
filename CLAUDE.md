@@ -127,6 +127,13 @@ Follow the established pattern:
 - `### Fixed` - Bug fixes
 - `### Technical` - Internal improvements
 
+### Using @CHANGELOG.md in Prompts
+When making changes, reference the changelog with `@CHANGELOG.md` to:
+- Review recent changes and current version
+- Understand the established changelog format and style
+- Ensure new entries follow the existing pattern
+- Maintain consistency in version numbering and release notes
+
 ## Firebase Configuration
 
 ### Environment Variables Required
