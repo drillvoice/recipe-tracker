@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unified Database Layer**: All components consistently use enhanced IndexedDB schema
 
 ### Fixed
+- **Import Validation Enhancement**: Improved legacy format detection and validation logic for better compatibility
+- **Status Text Display**: Fixed "Up to Date" text wrapping to ensure single-line display next to Cloud Backup
 - **Critical Export/Import Compatibility**: Fixed "unrecognized JSON format" error when importing exported data
 - **Mobile UI Status Positioning**: Fixed Cloud Backup status text positioning on mobile devices
 - **Critical Cloud Backup Issue**: Fixed "0 meals backed up" error by consolidating database sources
