@@ -2,14 +2,12 @@ import { useState, useCallback, useMemo } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Navigation from "@/components/Navigation";
 import IdeasTableRow from "@/components/IdeasTableRow";
-import { TagFilterBar } from "@/components/TagFilterBar";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const { dialogProps, showDialog } = useConfirmDialog();
   const { ideas, isLoading, error, toggleMealVisibility } = useIdeas();
 
@@ -31,18 +29,10 @@ export default function Ideas() {
     }
   }, [toggleMealVisibility]);
 
-  const visibleIdeas = useMemo(() => {
-    let filtered = ideas.filter(idea => showHidden || !idea.hidden);
-
-    // Filter by selected tags (OR logic - show ideas that have any of the selected tags)
-    if (selectedTagIds.length > 0) {
-      filtered = filtered.filter(idea =>
-        idea.tags.some(tagId => selectedTagIds.includes(tagId))
-      );
-    }
-
-    return filtered;
-  }, [ideas, showHidden, selectedTagIds]);
+  const visibleIdeas = useMemo(() =>
+    ideas.filter(idea => showHidden || !idea.hidden),
+    [ideas, showHidden]
+  );
 
   const hiddenCount = useMemo(() =>
     ideas.filter(i => i.hidden).length,
@@ -76,22 +66,15 @@ export default function Ideas() {
       </div>
       
       {showFilters && ideas.length > 0 && (
-        <div className="ideas-filters space-y-4">
-          <TagFilterBar
-            selectedTagIds={selectedTagIds}
-            onTagsChange={setSelectedTagIds}
-          />
-
-          <div className="ideas-filters-row">
-            <label className="filter-toggle">
-              <input
-                type="checkbox"
-                checked={showHidden}
-                onChange={(e) => setShowHidden(e.target.checked)}
-              />
-              <span className="filter-label">Show Hidden</span>
-            </label>
-          </div>
+        <div className="ideas-filters">
+          <label className="filter-toggle">
+            <input
+              type="checkbox"
+              checked={showHidden}
+              onChange={(e) => setShowHidden(e.target.checked)}
+            />
+            <span className="filter-label">Show Hidden</span>
+          </label>
         </div>
       )}
 

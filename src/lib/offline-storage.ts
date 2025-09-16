@@ -9,7 +9,7 @@ export interface Meal {
   uid?: string;
   pending?: boolean;
   hidden?: boolean;
-  tags?: string[]; // Array of tag IDs
+  tags?: string[]; // Array of simple tag strings
 }
 
 // Tag interface for the tagging system

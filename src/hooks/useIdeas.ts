@@ -7,7 +7,7 @@ export interface Idea {
   lastMade: Meal["date"];
   count: number;
   hidden: boolean;
-  tags: string[]; // Array of tag IDs used by this meal name
+  tags: string[]; // Array of simple tag strings
 }
 
 export function useIdeas() {
@@ -29,9 +29,9 @@ export function useIdeas() {
         }
         // Merge tags from this meal (avoid duplicates)
         if (meal.tags) {
-          for (const tagId of meal.tags) {
-            if (!existing.tags.includes(tagId)) {
-              existing.tags.push(tagId);
+          for (const tag of meal.tags) {
+            if (!existing.tags.includes(tag)) {
+              existing.tags.push(tag);
             }
           }
         }
