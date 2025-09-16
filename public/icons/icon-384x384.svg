@@ -1,10 +1,41 @@
+<svg width="384" height="384" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green rounded square background -->
+  <rect width="384" height="384" rx="90" fill="#22c55e"/>
 
-<svg width="384" height="384" viewBox="0 0 384 384" xmlns="http://www.w3.org/2000/svg">
-  <rect width="384" height="384" fill="#2563eb" rx="38.400000000000006"/>
-  <circle cx="115.19999999999999" cy="153.60000000000002" r="57.599999999999994" fill="#ffffff"/>
-  <circle cx="268.79999999999995" cy="153.60000000000002" r="57.599999999999994" fill="#ffffff"/>
-  <path d="M 76.80000000000001 268.79999999999995 Q 192 345.6 307.20000000000005 268.79999999999995"
-        stroke="#ffffff" stroke-width="7.68" fill="none" stroke-linecap="round"/>
-  <text x="192" y="96" text-anchor="middle" font-family="Arial"
-        font-size="30.72" fill="#ffffff">RECIPE</text>
+  <!-- Plate circle (outer ring with segments) -->
+  <g stroke="#f1f5f9" stroke-width="20" fill="none">
+    <!-- Top arc -->
+    <path d="M 170 200 A 86 86 0 0 1 342 200"/>
+    <!-- Right arc -->
+    <path d="M 342 200 A 86 86 0 0 1 300 320"/>
+    <!-- Bottom arc -->
+    <path d="M 300 320 A 86 86 0 0 1 212 320"/>
+    <!-- Left arc -->
+    <path d="M 212 320 A 86 86 0 0 1 170 200"/>
+  </g>
+
+  <!-- Fork (left side, angled) -->
+  <g transform="translate(185, 160) rotate(-30)">
+    <!-- Fork handle -->
+    <rect x="0" y="70" width="12" height="80" rx="6" fill="#f1f5f9"/>
+    <!-- Fork head -->
+    <rect x="-8" y="60" width="28" height="20" rx="10" fill="#f1f5f9"/>
+    <!-- Fork tines -->
+    <rect x="-4" y="20" width="4" height="45" rx="2" fill="#f1f5f9"/>
+    <rect x="2" y="20" width="4" height="45" rx="2" fill="#f1f5f9"/>
+    <rect x="8" y="20" width="4" height="45" rx="2" fill="#f1f5f9"/>
+    <rect x="14" y="20" width="4" height="45" rx="2" fill="#f1f5f9"/>
+  </g>
+
+  <!-- Pen (right side, angled) -->
+  <g transform="translate(290, 180) rotate(30)">
+    <!-- Pen body -->
+    <rect x="0" y="0" width="12" height="120" rx="6" fill="#f1f5f9"/>
+    <!-- Pen tip -->
+    <polygon points="6,120 0,135 12,135" fill="#f1f5f9"/>
+    <!-- Pen clip -->
+    <rect x="8" y="15" width="6" height="20" rx="3" fill="#f1f5f9"/>
+    <!-- Pen tip detail -->
+    <rect x="4" y="118" width="4" height="8" rx="2" fill="#22c55e"/>
+  </g>
 </svg>

@@ -13,9 +13,9 @@ export default function Document() {
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#2563eb" />
+        <meta name="msapplication-TileColor" content="#22c55e" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#2563eb" />
+        <meta name="theme-color" content="#22c55e" />
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
