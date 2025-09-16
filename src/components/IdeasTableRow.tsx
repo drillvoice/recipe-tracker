@@ -6,7 +6,7 @@ import type { Idea } from '@/hooks/useIdeas';
 interface IdeasTableRowProps {
   idea: Idea;
   onConfirmHide: (idea: Idea) => void;
-  onTagsUpdated?: () => void;
+  onTagsUpdated?: (mealName: string, tags: string[]) => void;
 }
 
 const IdeasTableRow = React.memo<IdeasTableRowProps>(({
@@ -16,16 +16,13 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
 }) => {
   const [showTagInput, setShowTagInput] = useState(false);
 
-  const handleTagsChange = (newTags: string[]) => {
-    // For now, just store the tags as simple strings
-    // Later we can integrate with the tag management system
-    console.log('Tags updated for', idea.mealName, ':', newTags);
+  const handleTagsChange = async (newTags: string[]) => {
     if (onTagsUpdated) {
-      onTagsUpdated();
+      await onTagsUpdated(idea.mealName, newTags);
     }
   };
 
-  // Convert tag IDs to simple strings for now
+  // Use the tags from the idea data
   const tagStrings = idea.tags || [];
 
   return (

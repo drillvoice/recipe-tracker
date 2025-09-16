@@ -9,7 +9,7 @@ export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { dialogProps, showDialog } = useConfirmDialog();
-  const { ideas, isLoading, error, toggleMealVisibility } = useIdeas();
+  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
 
   const confirmHide = useCallback((idea: Idea) => {
     showDialog(
@@ -104,10 +104,7 @@ export default function Ideas() {
                   key={idea.mealName}
                   idea={idea}
                   onConfirmHide={confirmHide}
-                  onTagsUpdated={() => {
-                    // This will trigger a re-render to show updated tags
-                    // The useIdeas hook will handle the data refresh
-                  }}
+                  onTagsUpdated={updateMealTags}
                 />
               ))}
             </tbody>

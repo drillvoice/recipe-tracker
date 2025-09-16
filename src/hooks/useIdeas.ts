@@ -11,7 +11,7 @@ export interface Idea {
 }
 
 export function useIdeas() {
-  const { meals, isLoading, error, toggleMealVisibility } = useMeals();
+  const { meals, isLoading, error, toggleMealVisibility, updateMealTags } = useMeals();
 
   const ideas = useMemo(() => {
     const map = new Map<string, Idea>();
@@ -59,6 +59,7 @@ export function useIdeas() {
     ideas,
     isLoading,
     error,
-    toggleMealVisibility
+    toggleMealVisibility,
+    updateMealTags
   };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, type Meal } from '@/lib/offline-storage';
+import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, updateMealTagsByName, type Meal } from '@/lib/offline-storage';
 import { migrateLegacyData, isMigrationNeeded } from '@/lib/database-migration';
 import { Timestamp } from 'firebase/firestore';
 
@@ -80,6 +80,21 @@ export function useMeals() {
     }
   }, []);
 
+  const updateMealTags = useCallback(async (mealName: string, tags: string[]) => {
+    try {
+      await updateMealTagsByName(mealName, tags);
+      // Optimistically update local state instead of full reload
+      setMeals(prevMeals =>
+        prevMeals.map(meal =>
+          meal.mealName === mealName ? { ...meal, tags: [...tags] } : meal
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update meal tags'));
+      throw err;
+    }
+  }, []);
+
   useEffect(() => {
     loadMeals();
   }, [loadMeals]);
@@ -91,6 +106,7 @@ export function useMeals() {
     loadMeals,
     updateMealData,
     deleteMealData,
-    toggleMealVisibility
+    toggleMealVisibility,
+    updateMealTags
   };
 }

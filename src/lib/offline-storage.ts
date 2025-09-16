@@ -274,6 +274,30 @@ export async function hideMealsByName(mealName: string, hidden: boolean): Promis
   await tx.done;
 }
 
+export async function updateMealTagsByName(mealName: string, tags: string[]): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+
+  // Use index for efficient lookup instead of scanning all meals
+  const tx = dbInstance.transaction('meals', 'readwrite');
+  const store = tx.objectStore('meals');
+  const index = store.index('mealName');
+
+  // Get all meals with this name using the index
+  const mealsToUpdate = await index.getAll(mealName);
+
+  // Batch update all matching meals with new tags
+  const updatePromises = mealsToUpdate.map(meal => {
+    meal.tags = [...tags]; // Create a copy of the tags array
+    return store.put(meal);
+  });
+
+  await Promise.all(updatePromises);
+  await tx.done;
+}
+
 // === METADATA OPERATIONS ===
 
 export async function getCacheMetadata(key: string): Promise<CacheMetadata | null> {
