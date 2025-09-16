@@ -115,6 +115,7 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
             date: meal.date, // Firestore Timestamp
             uid: user.uid,
             hidden: meal.hidden || false,
+            tags: meal.tags || [], // Include tags array
             lastUpdated: serverTimestamp()
           };
 

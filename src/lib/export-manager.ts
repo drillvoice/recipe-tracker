@@ -58,6 +58,7 @@ export interface SerializableMeal {
   uid?: string;
   pending?: boolean;
   hidden?: boolean;
+  tags?: string[]; // Array of simple tag strings
 }
 
 export class ExportManager {
@@ -180,7 +181,8 @@ export class ExportManager {
         },
         uid: meal.uid,
         pending: meal.pending,
-        hidden: meal.hidden
+        hidden: meal.hidden,
+        tags: meal.tags // Include tags array
       }));
     }
 
