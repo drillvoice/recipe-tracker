@@ -192,7 +192,7 @@ export default function DataManagement() {
       console.log('Starting import process...');
       const options: ImportOptions = {
         conflictResolution: 'ask',
-        createBackup: true,
+        createBackup: false, // Don't create backup during import to avoid confusion
         dryRun: false
       };
 
@@ -201,9 +201,26 @@ export default function DataManagement() {
       console.log('Import result:', result);
 
       if (result.success) {
+        const totalProcessed = result.summary.mealsImported + result.summary.mealsUpdated;
+        const successParts = [];
+
+        if (result.summary.mealsImported > 0) {
+          successParts.push(`${result.summary.mealsImported} new recipes imported`);
+        }
+        if (result.summary.mealsUpdated > 0) {
+          successParts.push(`${result.summary.mealsUpdated} recipes updated`);
+        }
+        if (result.summary.mealsSkipped > 0) {
+          successParts.push(`${result.summary.mealsSkipped} recipes skipped`);
+        }
+
+        const successText = totalProcessed > 0
+          ? `✅ Import successful! ${successParts.join(', ')}`
+          : '✅ Import completed - no new data to add';
+
         setMessage({
           type: 'success',
-          text: `Import completed: ${result.summary.mealsImported} new meals, ${result.summary.mealsUpdated} updated`
+          text: successText
         });
         setImportPreview(null);
         setImportFileContent(null);
