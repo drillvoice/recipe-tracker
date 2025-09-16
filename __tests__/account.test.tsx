@@ -9,7 +9,20 @@ jest.mock('@/lib/offline-storage', () => ({
     needsBackup: true,
     daysSinceBackup: Infinity
   }),
-  isBackupNeeded: jest.fn().mockReturnValue(true)
+  isBackupNeeded: jest.fn().mockReturnValue(true),
+  getAllMeals: jest.fn().mockResolvedValue([]),
+  getCacheMetadata: jest.fn().mockResolvedValue(null),
+  updateCacheMetadata: jest.fn().mockResolvedValue(undefined),
+  saveMeal: jest.fn().mockResolvedValue(undefined)
+}));
+
+jest.mock('@/lib/database-migration', () => ({
+  migrateLegacyData: jest.fn().mockResolvedValue({
+    success: true,
+    migratedCount: 0,
+    errors: []
+  }),
+  isMigrationNeeded: jest.fn().mockResolvedValue(false)
 }));
 
 jest.mock('@/lib/data-validator', () => ({

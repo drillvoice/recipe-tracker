@@ -10,13 +10,24 @@ const mockDeleteMeal = jest.fn();
 const mockGetAllMeals = jest.fn();
 const mockHideMealsByName = jest.fn();
 
-jest.mock('@/lib/mealsStore', () => ({
+jest.mock('@/lib/offline-storage', () => ({
   saveMeal: (...args: any[]) => mockSaveMeal(...args),
   updateMeal: (...args: any[]) => mockUpdateMeal(...args),
   deleteMeal: (...args: any[]) => mockDeleteMeal(...args),
   getAllMeals: () => mockGetAllMeals(),
   hideMealsByName: (...args: any[]) => mockHideMealsByName(...args),
   getPendingMeals: () => Promise.resolve([]),
+  getCacheMetadata: jest.fn().mockResolvedValue(null),
+  updateCacheMetadata: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/lib/database-migration', () => ({
+  migrateLegacyData: jest.fn().mockResolvedValue({
+    success: true,
+    migratedCount: 0,
+    errors: []
+  }),
+  isMigrationNeeded: jest.fn().mockResolvedValue(false)
 }));
 
 // Mock Firebase
