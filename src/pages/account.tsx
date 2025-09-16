@@ -25,6 +25,7 @@ export default function DataManagement() {
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
+  const [importFileContent, setImportFileContent] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('export');
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
@@ -140,6 +141,7 @@ export default function DataManagement() {
     setImporting(true);
     setMessage(null);
     setImportPreview(null);
+    setImportFileContent(null);
 
     try {
       // Validate file
@@ -158,6 +160,7 @@ export default function DataManagement() {
 
       if (preview.valid) {
         setImportPreview(preview);
+        setImportFileContent(content); // Store content for later import
       } else {
         setMessage({
           type: 'error',
@@ -177,22 +180,16 @@ export default function DataManagement() {
   };
 
   const handleImport = async () => {
-    if (!importPreview) return;
+    if (!importPreview || !importFileContent) {
+      console.log('Missing preview or file content');
+      return;
+    }
 
     setImporting(true);
     setMessage(null);
 
     try {
       console.log('Starting import process...');
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      const file = fileInput?.files?.[0];
-      if (!file) {
-        console.log('No file found');
-        return;
-      }
-
-      console.log('Reading file content...');
-      const content = await ImportManager.readFileContent(file);
       const options: ImportOptions = {
         conflictResolution: 'ask',
         createBackup: true,
@@ -200,7 +197,7 @@ export default function DataManagement() {
       };
 
       console.log('Calling ImportManager.importData...');
-      const result = await ImportManager.importData(content, options);
+      const result = await ImportManager.importData(importFileContent, options);
       console.log('Import result:', result);
 
       if (result.success) {
@@ -209,6 +206,7 @@ export default function DataManagement() {
           text: `Import completed: ${result.summary.mealsImported} new meals, ${result.summary.mealsUpdated} updated`
         });
         setImportPreview(null);
+        setImportFileContent(null);
         await loadBackupStatus();
         await performDataValidation();
       } else {
@@ -476,7 +474,10 @@ export default function DataManagement() {
                     </button>
                     <button
                       className="cancel-button"
-                      onClick={() => setImportPreview(null)}
+                      onClick={() => {
+                        setImportPreview(null);
+                        setImportFileContent(null);
+                      }}
                     >
                       Cancel
                     </button>
