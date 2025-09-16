@@ -44,6 +44,7 @@ const processIdeas = (meals: Meal[]): Idea[] => {
         lastMade: meal.date,
         count: 1,
         hidden: meal.hidden || false,
+        tags: [], // Empty tags array for performance test
       });
     }
   }

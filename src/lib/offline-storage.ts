@@ -9,6 +9,16 @@ export interface Meal {
   uid?: string;
   pending?: boolean;
   hidden?: boolean;
+  tags?: string[]; // Array of tag IDs
+}
+
+// Tag interface for the tagging system
+export interface Tag {
+  id: string;
+  name: string;
+  color: string; // Hex color code
+  createdAt: Date;
+  usageCount: number; // Track how many meals use this tag
 }
 
 // New interfaces for enhanced backup system
@@ -37,7 +47,7 @@ export interface AppSettings {
 
 export interface SyncItem {
   id: string;
-  type: 'meal' | 'setting';
+  type: 'meal' | 'setting' | 'tag';
   operation: 'create' | 'update' | 'delete';
   data: any;
   timestamp: number;
@@ -70,6 +80,14 @@ interface RecipeTrackerDB extends DBSchema {
       'type': string;
     };
   };
+  tags: {
+    key: string;
+    value: Tag;
+    indexes: {
+      'name': string;
+      'usageCount': number;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<RecipeTrackerDB>> | null = null;
@@ -83,7 +101,7 @@ export function resetDbPromise(): void {
 }
 
 const DB_NAME = 'recipe-tracker-enhanced';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 function getDb(): Promise<IDBPDatabase<RecipeTrackerDB>> | null {
   if (dbPromise) return dbPromise;
@@ -115,6 +133,13 @@ function getDb(): Promise<IDBPDatabase<RecipeTrackerDB>> | null {
         const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id' });
         syncStore.createIndex('timestamp', 'timestamp');
         syncStore.createIndex('type', 'type');
+      }
+
+      // Create tags object store for tagging system (v3+)
+      if (!db.objectStoreNames.contains('tags')) {
+        const tagsStore = db.createObjectStore('tags', { keyPath: 'id' });
+        tagsStore.createIndex('name', 'name');
+        tagsStore.createIndex('usageCount', 'usageCount');
       }
 
       // Initialize default metadata and settings on first creation
@@ -411,4 +436,158 @@ export async function markMealSynced(localId: string, newId: string): Promise<vo
     meal.pending = false;
     await dbInstance.put('meals', meal);
   }
+}
+
+// === TAG OPERATIONS ===
+
+export async function getAllTags(): Promise<Tag[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const tags = await (await db).getAll('tags');
+
+  // Convert Date objects that may have been serialized
+  return tags.map(tag => ({
+    ...tag,
+    createdAt: tag.createdAt instanceof Date ? tag.createdAt : new Date(tag.createdAt)
+  }));
+}
+
+export async function getTag(id: string): Promise<Tag | null> {
+  const db = getDb();
+  if (!db) return null;
+
+  const tag = await (await db).get('tags', id);
+  if (!tag) return null;
+
+  return {
+    ...tag,
+    createdAt: tag.createdAt instanceof Date ? tag.createdAt : new Date(tag.createdAt)
+  };
+}
+
+export async function saveTag(tag: Tag): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  await (await db).put('tags', tag);
+}
+
+export async function updateTag(id: string, updates: Partial<Tag>): Promise<Tag | null> {
+  const db = getDb();
+  if (!db) return null;
+
+  const dbInstance = await db;
+  const tag = await dbInstance.get('tags', id);
+  if (tag) {
+    const updatedTag = { ...tag, ...updates };
+    await dbInstance.put('tags', updatedTag);
+    return updatedTag;
+  }
+  return null;
+}
+
+export async function deleteTag(id: string): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+
+  // Use transaction to atomically delete tag and update meals
+  const tx = dbInstance.transaction(['tags', 'meals'], 'readwrite');
+
+  // Delete the tag
+  await tx.objectStore('tags').delete(id);
+
+  // Remove tag from all meals that reference it
+  const mealsStore = tx.objectStore('meals');
+  const meals = await mealsStore.getAll();
+
+  for (const meal of meals) {
+    if (meal.tags && meal.tags.includes(id)) {
+      meal.tags = meal.tags.filter(tagId => tagId !== id);
+      await mealsStore.put(meal);
+    }
+  }
+
+  await tx.done;
+}
+
+export async function updateTagUsageCount(tagId: string, delta: number): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const tag = await dbInstance.get('tags', tagId);
+  if (tag) {
+    tag.usageCount = Math.max(0, tag.usageCount + delta);
+    await dbInstance.put('tags', tag);
+  }
+}
+
+export async function getTagsByName(name: string): Promise<Tag[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const dbInstance = await db;
+  const index = dbInstance.transaction('tags', 'readonly').objectStore('tags').index('name');
+  const tags = await index.getAll(name);
+
+  return tags.map(tag => ({
+    ...tag,
+    createdAt: tag.createdAt instanceof Date ? tag.createdAt : new Date(tag.createdAt)
+  }));
+}
+
+export async function getMealsByTag(tagId: string): Promise<Meal[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const meals = await getAllMeals();
+  return meals.filter(meal => meal.tags && meal.tags.includes(tagId));
+}
+
+export async function addTagToMeal(mealId: string, tagId: string): Promise<boolean> {
+  const db = getDb();
+  if (!db) return false;
+
+  const dbInstance = await db;
+  const meal = await dbInstance.get('meals', mealId);
+
+  if (!meal) return false;
+
+  // Initialize tags array if it doesn't exist
+  if (!meal.tags) {
+    meal.tags = [];
+  }
+
+  // Add tag if not already present
+  if (!meal.tags.includes(tagId)) {
+    meal.tags.push(tagId);
+    await dbInstance.put('meals', meal);
+    await updateTagUsageCount(tagId, 1);
+    return true;
+  }
+
+  return false;
+}
+
+export async function removeTagFromMeal(mealId: string, tagId: string): Promise<boolean> {
+  const db = getDb();
+  if (!db) return false;
+
+  const dbInstance = await db;
+  const meal = await dbInstance.get('meals', mealId);
+
+  if (!meal || !meal.tags) return false;
+
+  const tagIndex = meal.tags.indexOf(tagId);
+  if (tagIndex > -1) {
+    meal.tags.splice(tagIndex, 1);
+    await dbInstance.put('meals', meal);
+    await updateTagUsageCount(tagId, -1);
+    return true;
+  }
+
+  return false;
 }
