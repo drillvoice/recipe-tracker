@@ -29,9 +29,14 @@ export default function Ideas() {
     }
   }, [toggleMealVisibility]);
 
-  const visibleIdeas = useMemo(() => 
+  const visibleIdeas = useMemo(() =>
     ideas.filter(idea => showHidden || !idea.hidden),
     [ideas, showHidden]
+  );
+
+  const hiddenCount = useMemo(() =>
+    ideas.filter(i => i.hidden).length,
+    [ideas]
   );
 
   if (error) {
@@ -79,8 +84,8 @@ export default function Ideas() {
         <>
           <p className="subtitle">
             {visibleIdeas.length} unique meal{visibleIdeas.length === 1 ? "" : "s"}
-            {showHidden && ideas.some(i => i.hidden) && (
-              <span className="hidden-count"> ({ideas.filter(i => i.hidden).length} hidden)</span>
+            {showHidden && hiddenCount > 0 && (
+              <span className="hidden-count"> ({hiddenCount} hidden)</span>
             )}
           </p>
           <table className="ideas-table">

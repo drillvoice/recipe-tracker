@@ -184,12 +184,18 @@ export async function saveMeal(meal: Meal): Promise<void> {
   if (!db) return;
 
   const dbInstance = await db;
-  await dbInstance.put('meals', meal);
 
-  // Update meal count in metadata
-  await updateCacheMetadata('backup_status', {
-    mealCount: await dbInstance.count('meals')
-  });
+  // Use transaction for atomic operation
+  const tx = dbInstance.transaction(['meals', 'cache_meta'], 'readwrite');
+  await tx.objectStore('meals').put(meal);
+
+  // Update meal count in metadata atomically
+  const mealCount = await tx.objectStore('meals').count();
+  const metaStore = tx.objectStore('cache_meta');
+  const existing = await metaStore.get('backup_status') || { key: 'backup_status' };
+  await metaStore.put({ ...existing, mealCount });
+
+  await tx.done;
 }
 
 export async function updateMeal(id: string, updates: Partial<Meal>): Promise<Meal | null> {
@@ -224,14 +230,23 @@ export async function hideMealsByName(mealName: string, hidden: boolean): Promis
   if (!db) return;
 
   const dbInstance = await db;
-  const meals = await dbInstance.getAll('meals');
 
-  for (const meal of meals) {
-    if (meal.mealName === mealName) {
-      meal.hidden = hidden;
-      await dbInstance.put('meals', meal);
-    }
-  }
+  // Use index for efficient lookup instead of scanning all meals
+  const tx = dbInstance.transaction('meals', 'readwrite');
+  const store = tx.objectStore('meals');
+  const index = store.index('mealName');
+
+  // Get all meals with this name using the index
+  const mealsToUpdate = await index.getAll(mealName);
+
+  // Batch update all matching meals
+  const updatePromises = mealsToUpdate.map(meal => {
+    meal.hidden = hidden;
+    return store.put(meal);
+  });
+
+  await Promise.all(updatePromises);
+  await tx.done;
 }
 
 // === METADATA OPERATIONS ===

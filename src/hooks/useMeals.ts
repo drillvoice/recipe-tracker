@@ -36,33 +36,49 @@ export function useMeals() {
 
   const updateMealData = useCallback(async (id: string, updates: { mealName?: string; date?: Timestamp }) => {
     try {
-      await updateMeal(id, updates);
-      await loadMeals();
+      const updatedMeal = await updateMeal(id, updates);
+      if (updatedMeal) {
+        // Optimistically update local state instead of full reload
+        setMeals(prevMeals => {
+          const newMeals = prevMeals.map(meal =>
+            meal.id === id ? updatedMeal : meal
+          );
+          // Re-sort after update
+          newMeals.sort((a, b) => b.date.toMillis() - a.date.toMillis());
+          return newMeals;
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to update meal'));
       throw err;
     }
-  }, [loadMeals]);
+  }, []);
 
   const deleteMealData = useCallback(async (id: string) => {
     try {
       await deleteMeal(id);
-      await loadMeals();
+      // Optimistically update local state instead of full reload
+      setMeals(prevMeals => prevMeals.filter(meal => meal.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to delete meal'));
       throw err;
     }
-  }, [loadMeals]);
+  }, []);
 
   const toggleMealVisibility = useCallback(async (mealName: string, hidden: boolean) => {
     try {
       await hideMealsByName(mealName, hidden);
-      await loadMeals();
+      // Optimistically update local state instead of full reload
+      setMeals(prevMeals =>
+        prevMeals.map(meal =>
+          meal.mealName === mealName ? { ...meal, hidden } : meal
+        )
+      );
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to toggle meal visibility'));
       throw err;
     }
-  }, [loadMeals]);
+  }, []);
 
   useEffect(() => {
     loadMeals();

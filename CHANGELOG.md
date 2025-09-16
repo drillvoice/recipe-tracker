@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] - 2025-09-16
+
+### Changed
+- **Performance Optimization: Eliminated Full Reloads**: useMeals hook now uses optimistic updates instead of full data reloads for update/delete/hide operations
+- **Performance Optimization: IndexedDB Efficiency**: hideMealsByName now uses indexed lookups and batch operations instead of scanning all meals
+- **Performance Optimization: Firebase Batch Writes**: Cloud backup now uses Firestore batch writes (500 operations per batch) instead of individual setDoc calls
+- **Performance Optimization: Atomic Transactions**: saveMeal operations now use atomic IndexedDB transactions for better consistency and performance
+
+### Technical
+- Optimized React state updates with local mutations instead of database reloads
+- Added IndexedDB transaction batching for multi-meal operations
+- Implemented Firebase writeBatch for improved cloud backup performance
+- Added memoization for Ideas page hidden count calculation
+- Reduced unnecessary component re-renders through optimistic updates
+
 ## [0.2.6] - 2025-09-16
 
 ### Fixed

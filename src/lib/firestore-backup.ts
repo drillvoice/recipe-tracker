@@ -4,7 +4,8 @@ import {
   collection,
   getDocs,
   serverTimestamp,
-  getDoc
+  getDoc,
+  writeBatch
 } from 'firebase/firestore';
 import {
   signInAnonymously,
@@ -97,36 +98,50 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
       return result;
     }
 
-    // Upload each meal to Firestore
-    const promises = meals.map(async (meal) => {
+    // Use batch writes for better performance (up to 500 operations per batch)
+    const batchSize = 500;
+    const results: Array<{ success: boolean; mealId: string; error?: string }> = [];
+
+    for (let i = 0; i < meals.length; i += batchSize) {
+      const batch = writeBatch(db);
+      const batchMeals = meals.slice(i, i + batchSize);
+
       try {
-        // Convert meal data for Firestore
-        const mealData = {
-          id: meal.id,
-          mealName: meal.mealName,
-          date: meal.date, // Firestore Timestamp
-          uid: user.uid,
-          hidden: meal.hidden || false,
-          lastUpdated: serverTimestamp()
-        };
+        // Add all meals in this batch
+        batchMeals.forEach(meal => {
+          const mealData = {
+            id: meal.id,
+            mealName: meal.mealName,
+            date: meal.date, // Firestore Timestamp
+            uid: user.uid,
+            hidden: meal.hidden || false,
+            lastUpdated: serverTimestamp()
+          };
 
-        // Save to Firestore under users/{uid}/meals/{mealId}
-        const mealDocRef = doc(db, 'users', user.uid, 'meals', meal.id);
-        await setDoc(mealDocRef, mealData, { merge: true });
+          const mealDocRef = doc(db, 'users', user.uid, 'meals', meal.id);
+          batch.set(mealDocRef, mealData, { merge: true });
+        });
 
-        return { success: true, mealId: meal.id };
+        // Commit the entire batch atomically
+        await batch.commit();
+
+        // Mark all meals in this batch as successful
+        batchMeals.forEach(meal => {
+          results.push({ success: true, mealId: meal.id });
+        });
+
       } catch (error) {
-        console.error(`Failed to backup meal ${meal.id}:`, error);
-        return {
-          success: false,
-          mealId: meal.id,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        };
+        console.error(`Failed to backup batch starting at index ${i}:`, error);
+        // Mark all meals in this batch as failed
+        batchMeals.forEach(meal => {
+          results.push({
+            success: false,
+            mealId: meal.id,
+            error: error instanceof Error ? error.message : 'Batch write failed'
+          });
+        });
       }
-    });
-
-    // Wait for all uploads to complete
-    const results = await Promise.all(promises);
+    }
 
     // Count successes and collect errors
     const successful = results.filter(r => r.success);
