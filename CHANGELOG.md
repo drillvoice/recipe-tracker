@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2025-09-16
+
+### Fixed
+- **Import User Experience**: Removed confusing automatic backup creation during import process
+- **Import Success Messages**: Enhanced with clear statistics showing exactly what was imported
+
+### Changed
+- **Import Backup**: Disabled automatic backup creation to prevent confusing "Save As" dialog during import
+- **Success Feedback**: Import now shows detailed results like "✅ Import successful! 6 new recipes imported"
+
+### Technical
+- Improved import workflow to focus on import action without backup side effects
+- Enhanced success message formatting with emoji indicators and detailed statistics
+
 ## [0.2.3] - 2025-09-16
 
 ### Fixed
