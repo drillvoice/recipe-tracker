@@ -28,6 +28,7 @@ export default function DataManagement() {
   const [importFileContent, setImportFileContent] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('export');
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   useEffect(() => {
     loadBackupStatus();
@@ -139,7 +140,7 @@ export default function DataManagement() {
     if (!file) return;
 
     setImporting(true);
-    setMessage(null);
+    setImportMessage(null);
     setImportPreview(null);
     setImportFileContent(null);
 
@@ -147,7 +148,7 @@ export default function DataManagement() {
       // Validate file
       const validation = ImportManager.validateImportFile(file);
       if (!validation.valid) {
-        setMessage({
+        setImportMessage({
           type: 'error',
           text: `Invalid file: ${validation.errors.join(', ')}`
         });
@@ -162,13 +163,13 @@ export default function DataManagement() {
         setImportPreview(preview);
         setImportFileContent(content); // Store content for later import
       } else {
-        setMessage({
+        setImportMessage({
           type: 'error',
           text: `Invalid import data: ${preview.errors.join(', ')}`
         });
       }
     } catch (error) {
-      setMessage({
+      setImportMessage({
         type: 'error',
         text: `Failed to read file: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
@@ -186,7 +187,7 @@ export default function DataManagement() {
     }
 
     setImporting(true);
-    setMessage(null);
+    setImportMessage(null);
 
     try {
       console.log('Starting import process...');
@@ -218,7 +219,7 @@ export default function DataManagement() {
           ? `✅ Import successful! ${successParts.join(', ')}`
           : '✅ Import completed - no new data to add';
 
-        setMessage({
+        setImportMessage({
           type: 'success',
           text: successText
         });
@@ -228,14 +229,14 @@ export default function DataManagement() {
         await performDataValidation();
       } else {
         console.log('Import failed with errors:', result.errors);
-        setMessage({
+        setImportMessage({
           type: 'error',
           text: `Import failed: ${result.errors.join(', ')}`
         });
       }
     } catch (error) {
       console.error('Import exception:', error);
-      setMessage({
+      setImportMessage({
         type: 'error',
         text: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
@@ -437,6 +438,13 @@ export default function DataManagement() {
                 </div>
               )}
 
+              {importMessage && (
+                <div className={`message-card ${importMessage.type}`} style={{ margin: '16px 0' }}>
+                  <p>{importMessage.text}</p>
+                  <button onClick={() => setImportMessage(null)} className="message-close">×</button>
+                </div>
+              )}
+
               {importPreview && (
                 <div className="import-preview">
                   <h4 className="preview-title">Import Preview</h4>
@@ -494,6 +502,7 @@ export default function DataManagement() {
                       onClick={() => {
                         setImportPreview(null);
                         setImportFileContent(null);
+                        setImportMessage(null);
                       }}
                     >
                       Cancel
