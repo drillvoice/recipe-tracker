@@ -7,14 +7,15 @@ export interface Idea {
   lastMade: Meal["date"];
   count: number;
   hidden: boolean;
+  tags: string[]; // Array of simple tag strings
 }
 
 export function useIdeas() {
-  const { meals, isLoading, error, toggleMealVisibility } = useMeals();
+  const { meals, isLoading, error, toggleMealVisibility, updateMealTags } = useMeals();
 
   const ideas = useMemo(() => {
     const map = new Map<string, Idea>();
-    
+
     for (const meal of meals) {
       const existing = map.get(meal.mealName);
       if (existing) {
@@ -26,16 +27,25 @@ export function useIdeas() {
         if (meal.hidden) {
           existing.hidden = true;
         }
+        // Merge tags from this meal (avoid duplicates)
+        if (meal.tags) {
+          for (const tag of meal.tags) {
+            if (!existing.tags.includes(tag)) {
+              existing.tags.push(tag);
+            }
+          }
+        }
       } else {
         map.set(meal.mealName, {
           mealName: meal.mealName,
           lastMade: meal.date,
           count: 1,
           hidden: meal.hidden || false,
+          tags: meal.tags ? [...meal.tags] : [], // Copy tags array
         });
       }
     }
-    
+
     const arr = Array.from(map.values());
     arr.sort(
       (a, b) =>
@@ -49,6 +59,7 @@ export function useIdeas() {
     ideas,
     isLoading,
     error,
-    toggleMealVisibility
+    toggleMealVisibility,
+    updateMealTags
   };
 }

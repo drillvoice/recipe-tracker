@@ -45,9 +45,10 @@ The enhanced schema includes four object stores:
 ### Key Libraries & Modules
 
 **Storage Layer (`src/lib/`)**:
-- `offline-storage.ts`: Enhanced IndexedDB operations with metadata tracking
+- `offline-storage.ts`: Enhanced IndexedDB operations with metadata tracking (PRIMARY)
 - `firestore-backup.ts`: Cloud backup operations to Firestore
-- `mealsStore.ts`: Legacy compatibility layer (being phased out)
+- `mealsStore.ts`: Legacy compatibility layer (DEPRECATED - being phased out)
+- `database-migration.ts`: Handles migration from legacy to enhanced storage
 
 **Data Management**:
 - `export-manager.ts`: Multi-format export (JSON, CSV, Backup with checksums)
@@ -172,3 +173,26 @@ users/{uid}/
 - Optional email/password account linking
 - All data scoped to authenticated user's UID
 - No sensitive data in client-side code or commits
+- Comprehensive Content Security Policy in next.config.js
+- Security headers (HSTS, X-Frame-Options, etc.) configured
+
+## Critical Development Notes
+
+### Storage System Migration (IMPORTANT)
+**ALWAYS use `@/lib/offline-storage` imports, NOT `@/lib/mealsStore`**
+- The app underwent critical migration from legacy mealsStore to enhanced offline-storage
+- All new code MUST import from `offline-storage.ts`
+- Tests MUST mock `@/lib/offline-storage`, not `@/lib/mealsStore`
+- This prevents critical data loss bugs where meals are saved to one database but read from another
+
+### Test Environment Setup
+- `jest.setup.ts` includes required polyfills (window.matchMedia for PWA tests)
+- All tests must mock both `@/lib/offline-storage` AND `@/lib/database-migration`
+- Integration tests require comprehensive mocking of storage functions
+
+### PWA Features
+- Progressive Web App with service worker (`public/sw.js`)
+- Web App Manifest for installability (`public/manifest.json`)
+- File System Access API for native file saving
+- Offline-first architecture with comprehensive caching strategies
+- When pushing updates, update @CHANGELOG.md and increment the version number appropriately.

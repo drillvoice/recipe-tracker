@@ -9,7 +9,7 @@ export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { dialogProps, showDialog } = useConfirmDialog();
-  const { ideas, isLoading, error, toggleMealVisibility } = useIdeas();
+  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
 
   const confirmHide = useCallback((idea: Idea) => {
     showDialog(
@@ -94,6 +94,7 @@ export default function Ideas() {
                 <th>Meal</th>
                 <th>Last Made</th>
                 <th>Count</th>
+                <th>Tags</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -103,6 +104,7 @@ export default function Ideas() {
                   key={idea.mealName}
                   idea={idea}
                   onConfirmHide={confirmHide}
+                  onTagsUpdated={updateMealTags}
                 />
               ))}
             </tbody>
