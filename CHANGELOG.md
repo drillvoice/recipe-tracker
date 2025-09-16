@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2025-09-16
+
+### Fixed
+- **Import Data Functionality**: Fixed critical bug where import failed with "no file found" error
+- **File Content Management**: Import now stores file content during preview instead of re-reading cleared file input
+- **Backup Export Version**: Fixed hardcoded version number in backup exports to use current app version
+
+### Technical
+- Enhanced import workflow to properly handle file content between preview and import stages
+- Added comprehensive debugging logs for import troubleshooting
+- Improved state management for import preview and file content
+
 ## [0.2.2] - 2025-09-16
 
 ### Fixed
