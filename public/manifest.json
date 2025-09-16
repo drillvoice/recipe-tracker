@@ -1,7 +1,7 @@
 {
-  "name": "Recipe Tracker",
-  "short_name": "Recipes",
-  "description": "Track your meals with offline-first cloud backup",
+  "name": "DishDiary",
+  "short_name": "DishDiary",
+  "description": "Your personal cooking diary - track meals and rediscover favorites",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

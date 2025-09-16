@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Head from "next/head";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
@@ -118,10 +119,14 @@ export default function Meals() {
   }
 
   return (
-    <main className="container">
-      <Navigation currentPage="add" />
-      <h1>Add Meal</h1>
-      <p className="subtitle">Track what you're cooking today</p>
+    <>
+      <Head>
+        <title>DishDiary - Add Meal</title>
+      </Head>
+      <main className="container">
+        <Navigation currentPage="add" />
+        <h1>DishDiary</h1>
+        <p className="subtitle">Track what you're cooking today</p>
       <div className="form">
         <label>
           Meal Name
@@ -182,6 +187,7 @@ export default function Meals() {
         v0.2.8
       </div>
     </main>
+    </>
   );
 }
 

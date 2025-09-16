@@ -63,7 +63,7 @@ export interface SerializableMeal {
 
 export class ExportManager {
   private static readonly VERSION = '0.2.8';
-  private static readonly SOURCE = 'recipe-tracker-enhanced';
+  private static readonly SOURCE = 'dish-diary';
 
   /**
    * Export data in the specified format

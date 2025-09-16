@@ -35,7 +35,7 @@ test('renders add meal form', async () => {
   await act(async () => {
     render(<Page />);
   });
-  expect(screen.getByRole('heading', { name: 'Add Meal' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'DishDiary' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Add Meal' })).toBeInTheDocument();
   expect(screen.getByPlaceholderText('Enter meal name...')).toBeInTheDocument();
 });
