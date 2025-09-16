@@ -335,6 +335,27 @@ export async function getMealCount(): Promise<number> {
   return metadata?.mealCount || 0;
 }
 
+export async function getAllTagStrings(): Promise<string[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const dbInstance = await db;
+  const meals = await dbInstance.getAll('meals');
+
+  const tagSet = new Set<string>();
+  meals.forEach(meal => {
+    if (meal.tags && Array.isArray(meal.tags)) {
+      meal.tags.forEach(tag => {
+        if (tag && typeof tag === 'string' && tag.trim()) {
+          tagSet.add(tag.trim());
+        }
+      });
+    }
+  });
+
+  return Array.from(tagSet).sort();
+}
+
 // === SETTINGS OPERATIONS ===
 
 export async function getSettings(): Promise<AppSettings> {

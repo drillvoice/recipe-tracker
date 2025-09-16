@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAllTagStrings } from '@/lib/offline-storage';
 
 interface TagManagementModalProps {
   isOpen: boolean;
@@ -17,12 +18,57 @@ export function TagManagementModal({
 }: TagManagementModalProps) {
   const [tags, setTags] = useState<string[]>([...currentTags]);
   const [newTag, setNewTag] = useState('');
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Load all existing tags when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadAllTags();
+    }
+  }, [isOpen]);
+
+  async function loadAllTags() {
+    try {
+      const existingTags = await getAllTagStrings();
+      setAllTags(existingTags);
+    } catch (error) {
+      console.error('Failed to load existing tags:', error);
+    }
+  }
+
+  const handleTagInputChange = (value: string) => {
+    setNewTag(value);
+    if (value.trim() === '') {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Filter existing tags that match the input and aren't already added
+    const filtered = allTags.filter(tag =>
+      tag.toLowerCase().includes(value.toLowerCase()) &&
+      !tags.includes(tag)
+    );
+    setFilteredSuggestions(filtered);
+    setShowSuggestions(filtered.length > 0);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setTags([...tags, suggestion]);
+    setNewTag('');
+    setShowSuggestions(false);
+    setFilteredSuggestions([]);
+  };
 
   const handleAddTag = () => {
     const trimmedTag = newTag.trim();
     if (trimmedTag && !tags.includes(trimmedTag)) {
       setTags([...tags, trimmedTag]);
       setNewTag('');
+      setShowSuggestions(false);
+      setFilteredSuggestions([]);
     }
   };
 
@@ -38,6 +84,8 @@ export function TagManagementModal({
   const handleCancel = () => {
     setTags([...currentTags]); // Reset to original tags
     setNewTag('');
+    setShowSuggestions(false);
+    setFilteredSuggestions([]);
     onClose();
   };
 
@@ -84,15 +132,43 @@ export function TagManagementModal({
           <div className="add-tag-section">
             <h4>Add New Tag</h4>
             <div className="add-tag-input">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter tag name..."
-                className="tag-input"
-                autoFocus
-              />
+              <div className="tag-autocomplete-container">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => handleTagInputChange(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  onFocus={() => {
+                    if (newTag.trim() && filteredSuggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay hiding to allow clicks on suggestions
+                    setTimeout(() => setShowSuggestions(false), 150);
+                  }}
+                  placeholder="Enter tag name..."
+                  className="tag-input"
+                  autoFocus
+                />
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div className="tag-suggestions-dropdown">
+                    {filteredSuggestions.slice(0, 5).map(suggestion => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className="tag-suggestion-item"
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent input blur
+                          handleSuggestionClick(suggestion);
+                        }}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleAddTag}
                 disabled={!newTag.trim()}
@@ -221,18 +297,60 @@ export function TagManagementModal({
           gap: 8px;
         }
 
-        .tag-input {
+        .tag-autocomplete-container {
+          position: relative;
           flex: 1;
+        }
+
+        .tag-input {
+          width: 100%;
           padding: 8px 12px;
           border: 1px solid #d1d5db;
           border-radius: 6px;
           font-size: 14px;
           outline: none;
+          box-sizing: border-box;
         }
 
         .tag-input:focus {
           border-color: #3b82f6;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .tag-suggestions-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #d1d5db;
+          border-top: none;
+          border-radius: 0 0 6px 6px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          max-height: 150px;
+          overflow-y: auto;
+          z-index: 1001;
+        }
+
+        .tag-suggestion-item {
+          width: 100%;
+          padding: 8px 12px;
+          background: none;
+          border: none;
+          text-align: left;
+          cursor: pointer;
+          color: #374151;
+          font-size: 14px;
+          transition: background-color 0.15s;
+          display: block;
+        }
+
+        .tag-suggestion-item:hover {
+          background: #f3f4f6;
+        }
+
+        .tag-suggestion-item:active {
+          background: #e5e7eb;
         }
 
         .add-tag-btn {
@@ -244,6 +362,7 @@ export function TagManagementModal({
           font-size: 14px;
           cursor: pointer;
           white-space: nowrap;
+          flex-shrink: 0;
         }
 
         .add-tag-btn:disabled {
