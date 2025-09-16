@@ -22,7 +22,8 @@
       "Bash(npm run build:*)",
       "Bash(npm update:*)",
       "Bash(npm run dev:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
