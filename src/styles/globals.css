@@ -1871,3 +1871,78 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+/* Tag Management Styles */
+.tags-cell {
+  width: 200px;
+  max-width: 200px;
+  padding: 0.75rem;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  min-height: 24px;
+}
+
+.tag-chip-small {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.more-tags {
+  display: inline-block;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.no-tags {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Make count column narrower to save space for tags */
+.ideas-table th:nth-child(3),
+.ideas-table td:nth-child(3) {
+  width: 60px;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .tags-cell {
+    width: 140px;
+    max-width: 140px;
+    padding: 0.5rem;
+  }
+
+  .tag-chip-small {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.25rem;
+  }
+
+  .more-tags,
+  .no-tags {
+    font-size: 0.625rem;
+  }
+
+  .ideas-table th:nth-child(3),
+  .ideas-table td:nth-child(3) {
+    width: 50px;
+    padding: 0.5rem 0.25rem;
+  }
+}
