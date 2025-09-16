@@ -12,7 +12,7 @@ import {
   type User
 } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { getAllMeals } from './mealsStore';
+import { getAllMeals } from './offline-storage';
 import { setLastBackupTimestamp } from './offline-storage';
 
 export interface CloudBackupResult {

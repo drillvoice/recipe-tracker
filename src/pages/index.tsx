@@ -4,12 +4,10 @@ import { collection, addDoc, Timestamp } from "firebase/firestore";
 import {
   saveMeal,
   getAllMeals,
-  type Meal,
-} from "@/lib/offline-storage";
-import {
   getPendingMeals,
   markMealSynced,
-} from "@/lib/mealsStore";
+  type Meal,
+} from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
@@ -181,7 +179,7 @@ export default function Meals() {
       {message && <p className="success-message">{message}</p>}
       
       <div className="version-indicator">
-        v0.2.5
+        v0.2.6
       </div>
     </main>
   );

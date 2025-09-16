@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2025-09-16
+
+### Fixed
+- **CRITICAL: Cloud Backup Data Loss Bug**: Fixed cloud backup failing to backup meals by updating firestore-backup.ts to use enhanced storage system instead of legacy database
+- **Database Consistency**: Unified all imports to use enhanced offline-storage.ts instead of legacy mealsStore.ts across codebase
+- **Backup Reliability**: Cloud backup now correctly includes all locally stored meals including hidden meals
+
+### Technical
+- Updated firestore-backup.ts to import from @/lib/offline-storage instead of @/lib/mealsStore
+- Updated test files (history.test.tsx, ideas.test.tsx) to mock enhanced storage system
+- Consolidated index.tsx imports to use single storage system for consistency
+- This fixes the critical issue where meals were saved to enhanced database but cloud backup read from legacy database
+
 ## [0.2.5] - 2025-09-16
 
 ### Changed

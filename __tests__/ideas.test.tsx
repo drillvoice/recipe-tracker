@@ -7,11 +7,11 @@ import { render, screen, act } from '@testing-library/react';
   commonAncestorContainer: document.createElement('div')
 });
 
-jest.mock('@/lib/mealsStore', () => ({
+jest.mock('@/lib/offline-storage', () => ({
   getAllMeals: jest.fn(),
 }));
 
-import { getAllMeals } from '@/lib/mealsStore';
+import { getAllMeals } from '@/lib/offline-storage';
 
 const Page = require('@/pages/ideas').default;
 
