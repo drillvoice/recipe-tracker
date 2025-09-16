@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2025-09-16
+
+### Changed
+- **Import Message Position**: Success/error messages now appear in Import Data tab instead of top of page
+- **Contextual Feedback**: Import messages display directly under file drop zone where user is working
+
+### Technical
+- Added dedicated import message state separate from global messages
+- Enhanced UX by providing feedback closer to user interaction area
+
 ## [0.2.4] - 2025-09-16
 
 ### Fixed
