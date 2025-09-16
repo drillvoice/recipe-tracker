@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.8] - 2025-09-16
+
+### Fixed
+- **Tagging UI Layout Issues**: Fixed table layout breaking beyond navigation width when adding tags
+- **Mobile Tag Interface**: Replaced problematic inline input with clean modal approach for better mobile UX
+- **Inconsistent Tag Styling**: Added proper tag chip styling matching app design language with consistent colors and borders
+
+### Changed
+- **Tag Display Optimization**: Limited tag display to maximum 2 tags with "+X more" overflow indicator to prevent layout breaking
+- **Column Space Management**: Made count column narrower (60px desktop, 50px mobile) to save space for tags
+- **Modal-Based Tag Management**: Complete tag management now handled through responsive modal with proper add/remove functionality
+
+### Added
+- **TagManagementModal Component**: New modal component with full styling and responsive design
+- **Compact Tag Styling**: Added CSS classes for tag-chip-small, more-tags, no-tags with proper responsive scaling
+- **Mobile-Responsive Tags**: Enhanced mobile experience with smaller tag chips and optimized column widths
+
+### Technical
+- Added 50+ lines of responsive CSS for tag management system
+- Implemented modal-based approach preventing table layout overflow
+- Enhanced mobile responsiveness for tag interface across all screen sizes
+
 ## [0.2.7] - 2025-09-16
 
 ### Changed
