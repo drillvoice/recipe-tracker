@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 
 // Mock all external dependencies for consistent visual testing
-jest.mock('@/lib/mealsStore', () => ({
+jest.mock('@/lib/offline-storage', () => ({
   saveMeal: jest.fn(),
   updateMeal: jest.fn(),
   deleteMeal: jest.fn(),
@@ -14,7 +14,8 @@ jest.mock('@/lib/mealsStore', () => ({
         toMillis: () => new Date('2024-03-15T10:30:00Z').getTime(),
       },
       uid: 'test-uid',
-      hidden: false
+      hidden: false,
+      tags: ['Italian', 'Dinner']
     },
     {
       id: '2',
@@ -24,7 +25,8 @@ jest.mock('@/lib/mealsStore', () => ({
         toMillis: () => new Date('2024-03-14T18:45:00Z').getTime(),
       },
       uid: 'test-uid',
-      hidden: false
+      hidden: false,
+      tags: ['Salad']
     },
     {
       id: '3',
@@ -34,7 +36,8 @@ jest.mock('@/lib/mealsStore', () => ({
         toMillis: () => new Date('2024-03-13T12:00:00Z').getTime(),
       },
       uid: 'test-uid',
-      hidden: true
+      hidden: true,
+      tags: []
     }
   ]),
   hideMealsByName: jest.fn(),
@@ -173,7 +176,7 @@ describe.skip('Visual Regression Tests', () => {
     test('Empty state renders consistently', async () => {
       // Override mock to return empty data
       const mockGetAllMealsEmpty = jest.fn().mockResolvedValue([]);
-      jest.doMock('@/lib/mealsStore', () => ({
+      jest.doMock('@/lib/offline-storage', () => ({
         getAllMeals: mockGetAllMealsEmpty,
         saveMeal: jest.fn(),
         updateMeal: jest.fn(),

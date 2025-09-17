@@ -4,7 +4,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import HistoryTableRow from "@/components/HistoryTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
-import type { Meal } from "@/lib/mealsStore";
+import type { Meal } from "@/lib/offline-storage";
 
 interface HistoryAccordionProps {
   isOpen: boolean;

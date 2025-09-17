@@ -1,6 +1,6 @@
 import React from 'react';
 import ActionButton from '@/components/ActionButton';
-import type { Meal } from '@/lib/mealsStore';
+import type { Meal } from '@/lib/offline-storage';
 
 interface HistoryTableRowProps {
   meal: Meal;
