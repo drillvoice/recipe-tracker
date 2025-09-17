@@ -120,16 +120,37 @@ export default function DataManagement() {
           text: `Export completed: ${result.filename} (${result.itemCount} meals, ${formatFileSize(result.size)}). ${result.saveLocationDescription || 'File saved successfully.'}`
         });
       } else {
-        setMessage({
-          type: 'error',
-          text: `Export failed: ${result.errors.join(', ')}`
-        });
+        // Check if user cancelled the export
+        const errorMessages = result.errors.join(', ');
+        const userCancelled = errorMessages.includes('User cancelled') ||
+                             errorMessages.includes('cancelled') ||
+                             errorMessages.includes('aborted');
+
+        if (userCancelled) {
+          // Don't show an error message for user cancellation - just clear any existing message
+          setMessage(null);
+        } else {
+          setMessage({
+            type: 'error',
+            text: `Export failed: ${errorMessages}`
+          });
+        }
       }
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: `Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const userCancelled = errorMessage.includes('cancelled') ||
+                           errorMessage.includes('aborted') ||
+                           errorMessage.includes('User cancelled');
+
+      if (!userCancelled) {
+        setMessage({
+          type: 'error',
+          text: `Export failed: ${errorMessage}`
+        });
+      } else {
+        // Clear any existing message for user cancellation
+        setMessage(null);
+      }
     } finally {
       setExporting(false);
     }
@@ -228,18 +249,40 @@ export default function DataManagement() {
         await loadBackupStatus();
         await performDataValidation();
       } else {
-        console.log('Import failed with errors:', result.errors);
-        setImportMessage({
-          type: 'error',
-          text: `Import failed: ${result.errors.join(', ')}`
-        });
+        // Check if user cancelled the import
+        const errorMessages = result.errors.join(', ');
+        const userCancelled = errorMessages.includes('User cancelled') ||
+                             errorMessages.includes('cancelled') ||
+                             errorMessages.includes('aborted');
+
+        if (userCancelled) {
+          console.log('Import cancelled by user');
+          // Don't show an error message for user cancellation
+          setImportMessage(null);
+        } else {
+          console.log('Import failed with errors:', result.errors);
+          setImportMessage({
+            type: 'error',
+            text: `Import failed: ${errorMessages}`
+          });
+        }
       }
     } catch (error) {
       console.error('Import exception:', error);
-      setImportMessage({
-        type: 'error',
-        text: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const userCancelled = errorMessage.includes('cancelled') ||
+                           errorMessage.includes('aborted') ||
+                           errorMessage.includes('User cancelled');
+
+      if (!userCancelled) {
+        setImportMessage({
+          type: 'error',
+          text: `Import failed: ${errorMessage}`
+        });
+      } else {
+        // Clear any existing message for user cancellation
+        setImportMessage(null);
+      }
     } finally {
       setImporting(false);
     }
