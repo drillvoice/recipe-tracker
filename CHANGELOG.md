@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-09-17
+
+### Added
+- **Complete Tag Management System**: Comprehensive tag organization with alphabetical sorting and usage statistics
+- **8-Color Pastel Palette**: Professional color system (yellow, peach, pink, lavender, blue, mint, beige, gray)
+- **Category-Based Color Inheritance**: Create categories that automatically color all assigned tags
+- **Individual Tag Color Overrides**: Custom colors that override category defaults for specific tags
+- **Tag Details Modal**: Full editing interface for tag names, categories, and colors
+- **Category Management Modal**: CRUD operations for creating and managing tag categories
+- **Visual Tag Integration**: Existing tag chips now display assigned colors throughout the app
+
+### Changed
+- **Tags Page Transformation**: Converted from placeholder to fully functional tag management interface
+- **Enhanced Tag Display**: Tag chips in Ideas table now show category/custom colors
+- **Professional Grid Layout**: Responsive tag cards showing usage counts and category assignments
+
+### Technical
+- Added TagManager class with localStorage persistence for tag management data
+- Created TagDetailsModal and CategoryManagementModal components with full TypeScript typing
+- Implemented 360+ lines of responsive CSS for tag management interface
+- Added color inheritance system (category → tag → custom override)
+- Enhanced IdeasTableRow with color integration for existing tag chips
+
 ## [0.2.9] - 2025-09-17
 
 ### Added

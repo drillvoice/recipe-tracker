@@ -194,7 +194,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.2.9
+        v0.3.0
       </div>
     </main>
     </>
