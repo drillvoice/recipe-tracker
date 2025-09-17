@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ActionButton from '@/components/ActionButton';
-import { TagManager, type TagCategory, TAG_COLORS } from '@/lib/tag-manager';
+import {
+  TagManager,
+  TAG_COLORS,
+  TAG_MANAGEMENT_UPDATED_EVENT,
+  type TagCategory,
+  type TagManagementData
+} from '@/lib/tag-manager';
 import type { Idea } from '@/hooks/useIdeas';
 
 interface IdeasTableRowProps {
@@ -9,39 +15,93 @@ interface IdeasTableRowProps {
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
 }
 
-const IdeasTableRow = React.memo<IdeasTableRowProps>(({
+const IdeasTableRow = React.memo<IdeasTableRowProps>(({ 
   idea,
-  onConfirmHide,
-  onTagsUpdated
+  onConfirmHide
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
+  const [tagMetadata, setTagMetadata] = useState<TagManagementData['tags']>({});
 
-  // Load categories for tag coloring
-  React.useEffect(() => {
-    const data = TagManager.getTagManagementData();
-    setCategories(data.categories);
+  // Load categories and tag metadata once and refresh when tag settings change
+  useEffect(() => {
+    const loadTagManagementData = () => {
+      const data = TagManager.getTagManagementData();
+      setCategories(data.categories);
+      setTagMetadata(data.tags);
+    };
+
+    loadTagManagementData();
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleTagManagementUpdate = () => {
+      loadTagManagementData();
+    };
+
+    window.addEventListener(
+      TAG_MANAGEMENT_UPDATED_EVENT,
+      handleTagManagementUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        TAG_MANAGEMENT_UPDATED_EVENT,
+        handleTagManagementUpdate
+      );
+    };
   }, []);
 
-  const getTagColor = (tagName: string): string => {
-    const data = TagManager.getTagManagementData();
-    const tagData = data.tags[tagName];
+  const getTagColor = useCallback(
+    (tagName: string): string => {
+      const metadata = tagMetadata[tagName];
 
-    if (tagData?.customColor) {
-      return TAG_COLORS[tagData.customColor];
-    }
-
-    if (tagData?.category) {
-      const category = categories.find(c => c.id === tagData.category);
-      if (category) {
-        return TAG_COLORS[category.color];
+      const customColor = metadata?.customColor;
+      if (customColor && TAG_COLORS[customColor]) {
+        return TAG_COLORS[customColor];
       }
-    }
 
-    return TAG_COLORS.gray;
-  };
+      const categoryId = metadata?.category;
+      if (categoryId) {
+        const category = categories.find(c => c.id === categoryId);
+        if (category) {
+          return TAG_COLORS[category.color];
+        }
+      }
+
+      return TAG_COLORS.gray;
+    },
+    [categories, tagMetadata]
+  );
 
   // Use the tags from the idea data
-  const tagStrings = idea.tags || [];
+  const tagStrings = useMemo(() => idea.tags ?? [], [idea.tags]);
+  const renderedTagChips = useMemo(
+    () =>
+      tagStrings.slice(0, 2).map(tag => {
+        const backgroundColor = getTagColor(tag);
+        const textColor =
+          backgroundColor === TAG_COLORS.yellow ||
+          backgroundColor === TAG_COLORS.beige
+            ? '#374151'
+            : '#1f2937';
+
+        return (
+          <span
+            key={tag}
+            className="tag-chip-small"
+            style={{
+              backgroundColor,
+              color: textColor
+            }}
+          >
+            {tag}
+          </span>
+        );
+      }),
+    [tagStrings, getTagColor]
+  );
 
   return (
     <>
@@ -60,18 +120,7 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
         </td>
         <td className="tags-cell">
           <div className="tags-container">
-            {tagStrings.slice(0, 2).map(tag => (
-              <span
-                key={tag}
-                className="tag-chip-small"
-                style={{
-                  backgroundColor: getTagColor(tag),
-                  color: getTagColor(tag) === TAG_COLORS.yellow || getTagColor(tag) === TAG_COLORS.beige ? '#374151' : '#1f2937'
-                }}
-              >
-                {tag}
-              </span>
-            ))}
+            {renderedTagChips}
             {tagStrings.length > 2 && (
               <span className="more-tags">+{tagStrings.length - 2}</span>
             )}

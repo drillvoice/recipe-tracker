@@ -42,6 +42,8 @@ export const DEFAULT_CATEGORIES: TagCategory[] = [
   { id: 'dietary', name: 'Dietary', color: 'lavender', createdAt: Date.now() }
 ];
 
+export const TAG_MANAGEMENT_UPDATED_EVENT = 'tag-management-updated';
+
 export class TagManager {
   private static readonly STORAGE_KEY = 'dish-diary-tag-management';
 
@@ -66,6 +68,11 @@ export class TagManager {
   static saveTagManagementData(data: TagManagementData): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent(TAG_MANAGEMENT_UPDATED_EVENT, { detail: data })
+        );
+      }
     } catch (error) {
       console.error('Error saving tag management data:', error);
     }
