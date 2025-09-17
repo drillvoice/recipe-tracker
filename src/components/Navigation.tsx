@@ -1,29 +1,29 @@
 import Link from "next/link";
 
 interface NavigationProps {
-  currentPage: 'add' | 'history' | 'ideas' | 'account';
+  currentPage: 'add' | 'ideas' | 'tags' | 'account';
 }
 
 export default function Navigation({ currentPage }: NavigationProps) {
   return (
     <nav className="top-nav">
-      <Link 
-        href="/" 
+      <Link
+        href="/"
         className={`nav-item ${currentPage === 'add' ? 'active' : ''}`}
       >
         + Add
       </Link>
-      <Link 
-        href="/history" 
-        className={`nav-item ${currentPage === 'history' ? 'active' : ''}`}
-      >
-        History
-      </Link>
-      <Link 
-        href="/ideas" 
+      <Link
+        href="/ideas"
         className={`nav-item ${currentPage === 'ideas' ? 'active' : ''}`}
       >
         Ideas
+      </Link>
+      <Link
+        href="/tags"
+        className={`nav-item ${currentPage === 'tags' ? 'active' : ''}`}
+      >
+        Tags
       </Link>
       <Link
         href="/account"

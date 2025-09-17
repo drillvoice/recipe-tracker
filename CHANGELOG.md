@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] - 2025-09-17
+
+### Added
+- **History Accordion on Add Page**: History now appears as collapsible accordion below meal entry form
+- **Auto-Opening Visual Confirmation**: History accordion automatically opens when new meal is added for instant visual feedback
+- **Tags Navigation Item**: Added placeholder Tags page to navigation menu
+
+### Changed
+- **BREAKING**: Removed standalone History page - all history functionality moved to main Add Meal page
+- **Navigation Simplified**: Reduced from 4 to 3 main navigation items (+ Add, Ideas, Tags, Data)
+- **Streamlined UX Flow**: Users can now add meals and immediately see them appear in history below without page navigation
+
+### Technical
+- Created HistoryAccordion component with complete edit/delete functionality
+- Added accordion CSS styling with hover states and animations
+- Updated Navigation component type definitions
+- Removed history.tsx page and updated all references
+- Fixed test files to remove History page dependencies
+
+### Infrastructure
+- Updated DynamicPageLoader to support new page structure
+- Cleaned up test files with skipped/obsolete history tests
+- All existing functionality preserved in new accordion format
+
 ## [0.2.8] - 2025-09-16
 
 ### Fixed

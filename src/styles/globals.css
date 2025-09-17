@@ -1946,3 +1946,47 @@ h1 {
     padding: 0.5rem 0.25rem;
   }
 }
+
+/* History Accordion Styles */
+.history-accordion {
+  margin-top: 2rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.history-accordion-header {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  text-align: left;
+  color: #374151;
+}
+
+.history-accordion-header:hover {
+  background: #f9fafb;
+}
+
+.accordion-icon {
+  color: #6b7280;
+  font-size: 0.875rem;
+  transition: transform 0.15s;
+}
+
+.history-accordion-content {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.history-accordion-content .history-table {
+  margin-top: 0.5rem;
+}

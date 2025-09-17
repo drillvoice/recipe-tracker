@@ -55,8 +55,8 @@ jest.mock('firebase/auth', () => ({
 
 // Import components after mocking
 const AddPage = require('@/pages/index').default;
-const HistoryPage = require('@/pages/history').default;
 const IdeasPage = require('@/pages/ideas').default;
+const TagsPage = require('@/pages/tags').default;
 const AccountPage = require('@/pages/account').default;
 
 /**
@@ -129,20 +129,20 @@ describe.skip('Visual Regression Tests', () => {
       expect(container.firstChild).toMatchSnapshot('add-meal-page');
     });
 
-    test('History page renders consistently', async () => {
-      const { container } = render(<HistoryPage />);
-      
+    test('Tags page renders consistently', async () => {
+      const { container } = render(<TagsPage />);
+
       // Wait for async data loading
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Basic structure checks
       expect(container.querySelector('.container')).toBeInTheDocument();
       expect(container.querySelector('.top-nav')).toBeInTheDocument();
-      
-      // Should have table when data is present
+
+      // Should have placeholder content
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      expect(container.firstChild).toMatchSnapshot('history-page');
+
+      expect(container.firstChild).toMatchSnapshot('tags-page');
     });
 
     test('Ideas page renders consistently', async () => {
@@ -181,12 +181,12 @@ describe.skip('Visual Regression Tests', () => {
         hideMealsByName: jest.fn(),
       }));
       
-      const { container } = render(<HistoryPage />);
-      
+      const { container } = render(<TagsPage />);
+
       // Wait for loading to complete
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      expect(container.firstChild).toMatchSnapshot('history-empty-state');
+
+      expect(container.firstChild).toMatchSnapshot('tags-empty-state');
     });
 
     test('Loading state renders consistently', () => {

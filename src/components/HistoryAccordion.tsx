@@ -1,13 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Timestamp } from "firebase/firestore";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import Navigation from "@/components/Navigation";
 import HistoryTableRow from "@/components/HistoryTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/mealsStore";
 
-export default function History() {
+interface HistoryAccordionProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMealName, setEditMealName] = useState("");
   const [editDate, setEditDate] = useState("");
@@ -28,7 +32,7 @@ export default function History() {
 
   const saveEdit = useCallback(async () => {
     if (!editingId) return;
-    
+
     try {
       await updateMealData(editingId, {
         mealName: editMealName,
@@ -66,54 +70,62 @@ export default function History() {
 
   if (error) {
     return (
-      <main className="container">
-        <Navigation currentPage="history" />
-        <h1>History</h1>
-        <p className="error-message">Error loading meals: {error.message}</p>
-      </main>
+      <div className="history-accordion">
+        <button className="history-accordion-header" onClick={onToggle}>
+          <span>History</span>
+          <span className="accordion-icon">{isOpen ? "▼" : "▶"}</span>
+        </button>
+        {isOpen && (
+          <div className="history-accordion-content">
+            <p className="error-message">Error loading meals: {error.message}</p>
+          </div>
+        )}
+      </div>
     );
   }
 
   return (
-    <main className="container">
-      <Navigation currentPage="history" />
-      <h1>History</h1>
-      {isLoading ? (
-        <p>Loading meals...</p>
-      ) : meals.length > 0 ? (
-        <>
-          <p className="subtitle">
-            {meals.length} meal{meals.length === 1 ? "" : "s"} tracked
-          </p>
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Meal</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {meals.map(meal => (
-                <HistoryTableRow
-                  key={meal.id}
-                  meal={meal}
-                  editingId={editingId}
-                  editMealName={editMealName}
-                  editDate={editDate}
-                  onStartEdit={startEdit}
-                  onCancelEdit={cancelEdit}
-                  onSaveEdit={saveEdit}
-                  onConfirmDelete={confirmDelete}
-                  onEditMealNameChange={handleEditMealNameChange}
-                  onEditDateChange={handleEditDateChange}
-                />
-              ))}
-            </tbody>
-          </table>
-        </>
-      ) : (
-        <p>No meals recorded.</p>
+    <div className="history-accordion">
+      <button className="history-accordion-header" onClick={onToggle}>
+        <span>History ({meals.length} meal{meals.length === 1 ? "" : "s"})</span>
+        <span className="accordion-icon">{isOpen ? "▼" : "▶"}</span>
+      </button>
+
+      {isOpen && (
+        <div className="history-accordion-content">
+          {isLoading ? (
+            <p>Loading meals...</p>
+          ) : meals.length > 0 ? (
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Meal</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {meals.map(meal => (
+                  <HistoryTableRow
+                    key={meal.id}
+                    meal={meal}
+                    editingId={editingId}
+                    editMealName={editMealName}
+                    editDate={editDate}
+                    onStartEdit={startEdit}
+                    onCancelEdit={cancelEdit}
+                    onSaveEdit={saveEdit}
+                    onConfirmDelete={confirmDelete}
+                    onEditMealNameChange={handleEditMealNameChange}
+                    onEditDateChange={handleEditDateChange}
+                  />
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No meals recorded.</p>
+          )}
+        </div>
       )}
 
       <ConfirmDialog
@@ -121,6 +133,6 @@ export default function History() {
         confirmText="Delete"
         variant="danger"
       />
-    </main>
+    </div>
   );
 }

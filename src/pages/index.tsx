@@ -10,6 +10,7 @@ import {
   type Meal,
 } from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
+import HistoryAccordion from "@/components/HistoryAccordion";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 
@@ -23,6 +24,7 @@ export default function Meals() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [historyAccordionOpen, setHistoryAccordionOpen] = useState(false);
 
   useEffect(() => {
     syncPendingMeals();
@@ -105,7 +107,10 @@ export default function Meals() {
       setDate(new Date().toISOString().substring(0, 10));
       setMessage("Meal saved successfully");
       setTimeout(() => setMessage(null), 3000);
-      
+
+      // Open history accordion to show visual confirmation
+      setHistoryAccordionOpen(true);
+
       setSuggestions(prev =>
         Array.from(new Set([...prev, validation.data.mealName]))
       );
@@ -182,9 +187,14 @@ export default function Meals() {
       )}
       
       {message && <p className="success-message">{message}</p>}
-      
+
+      <HistoryAccordion
+        isOpen={historyAccordionOpen}
+        onToggle={() => setHistoryAccordionOpen(!historyAccordionOpen)}
+      />
+
       <div className="version-indicator">
-        v0.2.8
+        v0.2.9
       </div>
     </main>
     </>
