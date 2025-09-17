@@ -1,6 +1,6 @@
-const CACHE_NAME = 'recipe-tracker-v1';
-const STATIC_CACHE_NAME = 'recipe-tracker-static-v1';
-const DYNAMIC_CACHE_NAME = 'recipe-tracker-dynamic-v1';
+const CACHE_NAME = 'dish-diary-v2';
+const STATIC_CACHE_NAME = 'dish-diary-static-v2';
+const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 
 // Files to cache for offline use
 const STATIC_FILES = [
@@ -9,7 +9,14 @@ const STATIC_FILES = [
   '/ideas',
   '/account',
   '/manifest.json',
-  '/icons/icon-192x192.svg'
+  '/icons/icon-72x72.svg',
+  '/icons/icon-96x96.svg',
+  '/icons/icon-128x128.svg',
+  '/icons/icon-144x144.svg',
+  '/icons/icon-152x152.svg',
+  '/icons/icon-192x192.svg',
+  '/icons/icon-384x384.svg',
+  '/icons/icon-512x512.svg'
 ];
 
 // Install event - cache static resources
