@@ -1,6 +1,6 @@
 import { measurePerformance, measureAsyncPerformance } from '@/utils/performance';
 import { Timestamp } from 'firebase/firestore';
-import type { Meal } from '@/lib/mealsStore';
+import type { Meal } from '@/lib/offline-storage';
 import type { Idea } from '@/hooks/useIdeas';
 
 // Mock data generators
@@ -9,7 +9,8 @@ const generateMockMeal = (id: number, mealName?: string): Meal => ({
   mealName: mealName || `Meal ${id}`,
   date: Timestamp.fromDate(new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000)),
   uid: 'test-uid',
-  hidden: Math.random() > 0.8 // 20% chance of being hidden
+  hidden: Math.random() > 0.8, // 20% chance of being hidden
+  tags: mealName ? mealName.split(' ').slice(0, 2) : ['Meal'],
 });
 
 const generateMockMeals = (count: number): Meal[] => {

@@ -11,11 +11,11 @@ jest.mock('@/lib/firebase', () => ({
   db: {},
 }));
 
-jest.mock('@/lib/mealsStore', () => ({
+jest.mock('@/lib/offline-storage', () => ({
   saveMeal: jest.fn().mockResolvedValue(undefined),
   getPendingMeals: jest.fn().mockResolvedValue([]),
   getAllMeals: jest.fn().mockResolvedValue([
-    { id: '1', mealName: 'Burritos', date: {} } as any,
+    { id: '1', mealName: 'Burritos', date: {}, tags: ['Dinner'] } as any,
   ]),
   markMealSynced: jest.fn().mockResolvedValue(undefined),
 }));
