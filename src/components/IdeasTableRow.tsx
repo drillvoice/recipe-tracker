@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ActionButton from '@/components/ActionButton';
-import { TagManagementModal } from '@/components/TagManagementModal';
+import { TagManager, type TagCategory, TAG_COLORS } from '@/lib/tag-manager';
 import type { Idea } from '@/hooks/useIdeas';
 
 interface IdeasTableRowProps {
@@ -14,13 +14,30 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   onConfirmHide,
   onTagsUpdated
 }) => {
-  const [showTagModal, setShowTagModal] = useState(false);
+  const [categories, setCategories] = useState<TagCategory[]>([]);
 
-  const handleTagsUpdate = async (newTags: string[]) => {
-    if (onTagsUpdated) {
-      await onTagsUpdated(idea.mealName, newTags);
+  // Load categories for tag coloring
+  React.useEffect(() => {
+    const data = TagManager.getTagManagementData();
+    setCategories(data.categories);
+  }, []);
+
+  const getTagColor = (tagName: string): string => {
+    const data = TagManager.getTagManagementData();
+    const tagData = data.tags[tagName];
+
+    if (tagData?.customColor) {
+      return TAG_COLORS[tagData.customColor];
     }
-    setShowTagModal(false);
+
+    if (tagData?.category) {
+      const category = categories.find(c => c.id === tagData.category);
+      if (category) {
+        return TAG_COLORS[category.color];
+      }
+    }
+
+    return TAG_COLORS.gray;
   };
 
   // Use the tags from the idea data
@@ -44,7 +61,14 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
         <td className="tags-cell">
           <div className="tags-container">
             {tagStrings.slice(0, 2).map(tag => (
-              <span key={tag} className="tag-chip-small">
+              <span
+                key={tag}
+                className="tag-chip-small"
+                style={{
+                  backgroundColor: getTagColor(tag),
+                  color: getTagColor(tag) === TAG_COLORS.yellow || getTagColor(tag) === TAG_COLORS.beige ? '#374151' : '#1f2937'
+                }}
+              >
                 {tag}
               </span>
             ))}
@@ -59,12 +83,6 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
         <td>
           <div className="action-buttons">
             <ActionButton
-              icon="🏷️"
-              onClick={() => setShowTagModal(true)}
-              title="Manage tags"
-              variant="default"
-            />
-            <ActionButton
               icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
               onClick={() => onConfirmHide(idea)}
               title={idea.hidden ? "Show meal" : "Hide meal"}
@@ -73,14 +91,6 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           </div>
         </td>
       </tr>
-
-      <TagManagementModal
-        isOpen={showTagModal}
-        onClose={() => setShowTagModal(false)}
-        mealName={idea.mealName}
-        currentTags={tagStrings}
-        onTagsUpdate={handleTagsUpdate}
-      />
     </>
   );
 });
