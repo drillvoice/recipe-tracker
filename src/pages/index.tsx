@@ -131,7 +131,7 @@ export default function Meals() {
       <main className="container">
         <Navigation currentPage="add" />
         <h1>DishDiary</h1>
-        <p className="subtitle">Track what you're cooking today</p>
+        <p className="subtitle">What's cooking, good looking?🍳</p>
       <div className="form">
         <label>
           Meal Name
@@ -194,7 +194,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.3.0
+        v0.3.1
       </div>
     </main>
     </>

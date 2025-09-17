@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { getAllMeals, getSettings, getCacheMetadata, type Meal, type AppSettings } from './offline-storage';
 import { PWAFileManager } from './pwa-file-manager';
+import { TagManager, type TagManagementData } from './tag-manager';
 
 export type ExportFormat = 'json' | 'csv' | 'backup';
 
@@ -38,6 +39,8 @@ export interface BackupMetadata {
   itemCounts: {
     meals: number;
     settings: number;
+    categories: number;
+    tagMgmtTags: number;
   };
 }
 
@@ -46,6 +49,7 @@ export interface BackupData {
   meals: SerializableMeal[];
   settings?: AppSettings;
   cache_meta?: any[];
+  tagManagement?: TagManagementData;
 }
 
 export interface SerializableMeal {
@@ -62,7 +66,7 @@ export interface SerializableMeal {
 }
 
 export class ExportManager {
-  private static readonly VERSION = '0.3.0';
+  private static readonly VERSION = '0.3.1';
   private static readonly SOURCE = 'dish-diary';
 
   /**
@@ -151,8 +155,9 @@ export class ExportManager {
     settings?: AppSettings;
     metadata?: any;
     cache_meta?: any;
+    tagManagement?: TagManagementData;
   }> {
-    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: any; cache_meta?: any } = {
+    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: any; cache_meta?: any; tagManagement?: TagManagementData } = {
       meals: []
     };
 
@@ -196,6 +201,9 @@ export class ExportManager {
       data.cache_meta = await getCacheMetadata('backup_status');
     }
 
+    // Always include tag management data in exports (it's essential for app functionality)
+    data.tagManagement = TagManager.getTagManagementData();
+
     return data;
   }
 
@@ -211,7 +219,9 @@ export class ExportManager {
         format: 'json',
         itemCounts: {
           meals: data.meals.length,
-          settings: data.settings ? 1 : 0
+          settings: data.settings ? 1 : 0,
+          categories: data.tagManagement?.categories?.length || 0,
+          tagMgmtTags: Object.keys(data.tagManagement?.tags || {}).length
         }
       },
       ...data
@@ -267,7 +277,9 @@ export class ExportManager {
         format: 'backup',
         itemCounts: {
           meals: data.meals.length,
-          settings: data.settings ? 1 : 0
+          settings: data.settings ? 1 : 0,
+          categories: data.tagManagement?.categories?.length || 0,
+          tagMgmtTags: Object.keys(data.tagManagement?.tags || {}).length
         }
       },
       meals: data.meals
@@ -279,6 +291,10 @@ export class ExportManager {
 
     if (data.metadata) {
       backupData.cache_meta = [data.metadata];
+    }
+
+    if (data.tagManagement) {
+      backupData.tagManagement = data.tagManagement;
     }
 
     const content = JSON.stringify(backupData, null, 0); // Compact JSON for backup

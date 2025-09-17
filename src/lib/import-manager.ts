@@ -8,6 +8,7 @@ import {
   type AppSettings
 } from './offline-storage';
 import { ExportManager, type BackupData, type SerializableMeal } from './export-manager';
+import { TagManager } from './tag-manager';
 
 export type ConflictResolutionStrategy = 'skip' | 'overwrite' | 'merge' | 'ask';
 
@@ -34,6 +35,7 @@ export interface ImportResult {
     mealsSkipped: number;
     mealsUpdated: number;
     settingsImported: boolean;
+    tagManagementImported: boolean;
     conflictsDetected: number;
     conflictsResolved: number;
   };
@@ -166,6 +168,7 @@ export class ImportManager {
         mealsSkipped: 0,
         mealsUpdated: 0,
         settingsImported: false,
+        tagManagementImported: false,
         conflictsDetected: 0,
         conflictsResolved: 0
       },
@@ -225,6 +228,16 @@ export class ImportManager {
           result.summary.settingsImported = true;
         } catch (error) {
           result.errors.push(`Failed to import settings: ${error}`);
+        }
+      }
+
+      // Process tag management data
+      if (parsed.data.tagManagement && !options.dryRun) {
+        try {
+          TagManager.saveTagManagementData(parsed.data.tagManagement);
+          result.summary.tagManagementImported = true;
+        } catch (error) {
+          result.errors.push(`Failed to import tag management data: ${error}`);
         }
       }
 

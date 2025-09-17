@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-09-17
+
+### Changed
+- **Inline Tag Editing**: Tag details now appear directly under clicked tag instead of bottom modal
+- **Compact Interface**: Significantly reduced vertical space with streamlined form layout
+- **Immediate Edit Access**: All editing options (name, category, color, delete) available instantly without extra clicks
+- **Enhanced UX Flow**: Click to expand editing, click again to collapse - no modal overlays
+
+### Technical
+- Replaced modal-based tag editing with inline expandable panels
+- Added compact CSS styling for space-efficient design
+- Implemented two-column form layout (name/category) for better space usage
+- Enhanced mobile responsiveness with optimized button sizes and layouts
+- Dish count and last used date now display on single line with bullet separator
+
 ## [0.3.0] - 2025-09-17
 
 ### Added

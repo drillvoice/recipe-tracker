@@ -495,7 +495,9 @@ describe('Backup System Integration Tests', () => {
           format: 'backup',
           itemCounts: {
             meals: 3,
-            settings: 1
+            settings: 1,
+            categories: 0,
+            tagMgmtTags: 0
           }
         },
         meals: [
