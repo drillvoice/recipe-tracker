@@ -13,6 +13,7 @@ import Navigation from "@/components/Navigation";
 import HistoryAccordion from "@/components/HistoryAccordion";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
+import { TaglineManager } from "@/lib/tagline-manager";
 
 export default function Meals() {
   const [mealName, setMealName] = useState("");
@@ -25,11 +26,28 @@ export default function Meals() {
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [historyAccordionOpen, setHistoryAccordionOpen] = useState(false);
+  const [currentTagline, setCurrentTagline] = useState<string>("");
 
   useEffect(() => {
     syncPendingMeals();
     loadSuggestions();
   }, []);
+
+  // Initialize and manage tagline rotation
+  useEffect(() => {
+    // Set initial tagline
+    setCurrentTagline(TaglineManager.getCurrentTagline());
+
+    // Check for tagline updates every hour
+    const checkTaglineInterval = setInterval(() => {
+      const newTagline = TaglineManager.getCurrentTagline();
+      if (newTagline !== currentTagline) {
+        setCurrentTagline(newTagline);
+      }
+    }, 60 * 60 * 1000); // Check every hour
+
+    return () => clearInterval(checkTaglineInterval);
+  }, [currentTagline]);
 
   async function loadSuggestions() {
     const all = await getAllMeals();
@@ -131,7 +149,7 @@ export default function Meals() {
       <main className="container">
         <Navigation currentPage="add" />
         <h1>DishDiary</h1>
-        <p className="subtitle">What's cooking, good looking?🍳</p>
+        <p className="subtitle tagline-text">{currentTagline || "What's cooking, good looking?🍳"}</p>
       <div className="form">
         <label>
           Meal Name
@@ -194,7 +212,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.3.1
+        v0.3.2
       </div>
     </main>
     </>

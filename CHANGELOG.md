@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-09-17
+
+### Added
+- **Dynamic Tagline System**: Home screen now cycles through 7 fun taglines with randomized timing
+- **Smart Rotation Logic**: Each tagline displays for 1-7 days with random sequencing to avoid predictability
+- **Smooth Animations**: Gentle fade-in effects and hover animations for tagline transitions
+- **Persistent State**: Tagline rotation state saved in localStorage for consistent experience
+
+### Changed
+- **Enhanced Home Screen**: Replaced static subtitle with dynamic rotating taglines including:
+  - "What's cooking, good looking?🍳"
+  - "Track it, taste it, treasure it 🍛"
+  - "What's for dinner, winner? 🏆🍴"
+  - "Feast your eyes, chef surprise 👀👨‍🍳"
+  - "Spice it up, buttercup 🌶️😉"
+  - "You're the snack, what's the meal? 😋🍴"
+  - "Hot dish alert: it's you 🫦🍳"
+
+### Technical
+- Added TaglineManager class with randomized timing (1-7 days per tagline)
+- Implemented cycle completion tracking to ensure all taglines are shown before repeating
+- Added hourly tagline update checks with smooth state transitions
+- CSS animations for tagline appearance and hover effects
+
 ## [0.3.1] - 2025-09-17
 
 ### Changed
