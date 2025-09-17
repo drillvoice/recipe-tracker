@@ -43,7 +43,7 @@ export default function Ideas() {
     return (
       <main className="container">
         <Navigation currentPage="ideas" />
-        <h1>Ideas</h1>
+        <h1>Dishes</h1>
         <p className="error-message">Error loading meals: {error.message}</p>
       </main>
     );
@@ -53,7 +53,7 @@ export default function Ideas() {
     <main className="container">
       <Navigation currentPage="ideas" />
       <div className="page-header">
-        <h1>Ideas</h1>
+        <h1>Dishes</h1>
         {ideas.length > 0 && (
           <button 
             className="filter-button"
@@ -83,7 +83,7 @@ export default function Ideas() {
       ) : visibleIdeas.length > 0 ? (
         <>
           <p className="subtitle">
-            {visibleIdeas.length} unique meal{visibleIdeas.length === 1 ? "" : "s"}
+            {visibleIdeas.length} unique dish{visibleIdeas.length === 1 ? "" : "es"}
             {showHidden && hiddenCount > 0 && (
               <span className="hidden-count"> ({hiddenCount} hidden)</span>
             )}
@@ -91,7 +91,7 @@ export default function Ideas() {
           <table className="ideas-table">
             <thead>
               <tr>
-                <th>Meal</th>
+                <th>Dish</th>
                 <th>Last Made</th>
                 <th>Count</th>
                 <th>Tags</th>

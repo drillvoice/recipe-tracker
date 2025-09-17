@@ -100,7 +100,7 @@ export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionP
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Meal</th>
+                  <th>Dish</th>
                   <th>Actions</th>
                 </tr>
               </thead>

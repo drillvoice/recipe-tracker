@@ -11,13 +11,13 @@ export default function Navigation({ currentPage }: NavigationProps) {
         href="/"
         className={`nav-item ${currentPage === 'add' ? 'active' : ''}`}
       >
-        + Add
+        Diary
       </Link>
       <Link
         href="/ideas"
         className={`nav-item ${currentPage === 'ideas' ? 'active' : ''}`}
       >
-        Ideas
+        Dishes
       </Link>
       <Link
         href="/tags"
