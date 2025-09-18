@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2025-09-18
+
+### Changed
+- **Ideas Tag Rendering**: Memoized tag metadata in `IdeasTableRow` to eliminate repeated `localStorage` reads and parsing during renders.
+- **History Meal Types**: History components now rely on the enhanced `Meal` model from offline storage so tag data stays consistent across the app.
+
+### Technical
+- Centralized tag metadata refresh logic for idea rows to react to tag management updates without extra storage lookups.
+- Removed legacy `lib/mealsStore` dependencies from history views in favor of the authoritative offline storage types.
+
 ## [0.3.2] - 2025-09-17
 
 ### Added
