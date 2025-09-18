@@ -50,9 +50,10 @@ test('renders unique meals with counts', async () => {
   const rows = screen.getAllByRole('row').slice(1); // skip header
   expect(rows).toHaveLength(2);
   expect(rows[0]).toHaveTextContent('Chicken Stir Fry');
-  expect(rows[0]).toHaveTextContent('2x');
   expect(rows[1]).toHaveTextContent('Pasta Carbonara');
-  expect(rows[1]).toHaveTextContent('1x');
+
+  // Check that info buttons are present instead of count columns
+  expect(screen.getAllByTitle('Show details')).toHaveLength(2);
 });
 
 test('shows message when there are no meals', async () => {

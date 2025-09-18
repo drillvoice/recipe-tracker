@@ -5,15 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.3] - 2025-09-18
+## [0.3.4] - 2025-09-18
 
 ### Changed
-- **Ideas Tag Rendering**: Memoized tag metadata in `IdeasTableRow` to eliminate repeated `localStorage` reads and parsing during renders.
-- **History Meal Types**: History components now rely on the enhanced `Meal` model from offline storage so tag data stays consistent across the app.
+- **BREAKING**: Redesigned Ideas/Dishes page interface with expandable rows for cleaner UI
+- **Simplified Table Layout**: Removed Count and Actions columns, added single Info column
+- **Compact Date Format**: Changed "Sep 18" format to "18/9" for space efficiency
+- **Expandable Details**: Click info icon (ℹ️) to reveal count, tag management, and visibility options
+- **Show All Tags**: Removed 2-tag limit with "+X more", now displays all tags in main view
+- **Improved Tag Management**: Tag addition now appears in expanded section with better organization
+
+### Added
+- **Expandable Row System**: Similar to Tags page, click info icon to expand dish details
+- **Organized Detail Sections**: Count, tag management, and visibility controls grouped logically
+- **Enhanced Visual Design**: Expanded rows with blue left border and structured layout
 
 ### Technical
-- Centralized tag metadata refresh logic for idea rows to react to tag management updates without extra storage lookups.
-- Removed legacy `lib/mealsStore` dependencies from history views in favor of the authoritative offline storage types.
+- New CSS classes for expanded row styling (.expanded-row, .expanded-content, etc.)
+- Updated test expectations to match new table structure
+- Improved component organization with section-based layout
 
 ## [0.3.2] - 2025-09-17
 

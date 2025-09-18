@@ -2391,3 +2391,57 @@ h1 {
     transform: translateY(0);
   }
 }
+
+/* Expanded row styles for Ideas table */
+.expanded-row {
+  background: #f8fafc;
+}
+
+.expanded-content {
+  padding: 1rem;
+  border-left: 3px solid #3b82f6;
+  margin-left: 0.5rem;
+}
+
+.expanded-section {
+  margin-bottom: 1rem;
+}
+
+.expanded-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-title {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.count-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.tag-management-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.visibility-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visibility-status {
+  color: #6b7280;
+  font-size: 0.875rem;
+}

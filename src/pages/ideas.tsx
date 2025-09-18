@@ -93,9 +93,8 @@ export default function Ideas() {
               <tr>
                 <th>Dish</th>
                 <th>Last Made</th>
-                <th>Count</th>
                 <th>Tags</th>
-                <th>Actions</th>
+                <th>Info</th>
               </tr>
             </thead>
             <tbody>
