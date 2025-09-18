@@ -58,7 +58,7 @@ jest.mock('firebase/auth', () => ({
 
 // Import components after mocking
 const AddPage = require('@/pages/index').default;
-const IdeasPage = require('@/pages/ideas').default;
+const DishesPage = require('@/pages/dishes').default;
 const TagsPage = require('@/pages/tags').default;
 const AccountPage = require('@/pages/account').default;
 
@@ -149,7 +149,7 @@ describe.skip('Visual Regression Tests', () => {
     });
 
     test('Ideas page renders consistently', async () => {
-      const { container } = render(<IdeasPage />);
+      const { container } = render(<DishesPage />);
       
       // Wait for async data loading
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -199,7 +199,7 @@ describe.skip('Visual Regression Tests', () => {
           <div className="top-nav">
             <a className="nav-item" href="/">+ Add</a>
             <a className="nav-item active" href="/history">History</a>
-            <a className="nav-item" href="/ideas">Ideas</a>
+            <a className="nav-item" href="/dishes">Dishes</a>
             <a className="nav-item" href="/account">Account</a>
           </div>
           <h1>History</h1>
@@ -218,7 +218,7 @@ describe.skip('Visual Regression Tests', () => {
           <div className="top-nav">
             <a className="nav-item" href="/">+ Add</a>
             <a className="nav-item active" href="/history">History</a>
-            <a className="nav-item" href="/ideas">Ideas</a>
+            <a className="nav-item" href="/dishes">Dishes</a>
             <a className="nav-item" href="/account">Account</a>
           </div>
           <h1>History</h1>

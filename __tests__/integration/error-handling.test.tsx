@@ -45,7 +45,7 @@ jest.mock('firebase/auth', () => ({
   }
 }));
 
-const IdeasPage = require('@/pages/ideas').default;
+const DishesPage = require('@/pages/dishes').default;
 const TagsPage = require('@/pages/tags').default;
 
 describe.skip('Error Handling Integration Tests', () => {
@@ -72,7 +72,7 @@ describe.skip('Error Handling Integration Tests', () => {
       
       mockGetAllMeals.mockReturnValue(controlledPromise);
       
-      render(<IdeasPage />);
+      render(<DishesPage />);
       
       // Should show loading initially
       expect(screen.getByText('Loading meals...')).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe.skip('Error Handling Integration Tests', () => {
       mockGetAllMeals.mockResolvedValue(testMeals);
       mockHideMealsByName.mockRejectedValue(new Error('Hide operation failed'));
       
-      render(<IdeasPage />);
+      render(<DishesPage />);
       
       // Wait for meal to load
       await waitFor(() => {
@@ -293,7 +293,7 @@ describe.skip('Error Handling Integration Tests', () => {
       mockGetAllMeals.mockResolvedValue(largeMealSet);
       
       const start = performance.now();
-      render(<IdeasPage />);
+      render(<DishesPage />);
       
       // Should load and process large dataset reasonably quickly
       await waitFor(() => {

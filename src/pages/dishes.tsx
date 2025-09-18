@@ -14,12 +14,16 @@ export default function Ideas() {
   const confirmHide = useCallback((idea: Idea) => {
     showDialog(
       idea.hidden ? "Show Meal" : "Hide Meal",
-      idea.hidden 
+      idea.hidden
         ? `Show "${idea.mealName}" in ideas list?`
         : `Hide "${idea.mealName}" from ideas list?`,
       () => handleToggleHidden(idea.mealName, !idea.hidden)
     );
   }, [showDialog]);
+
+  const directToggleHidden = useCallback(async (idea: Idea) => {
+    await handleToggleHidden(idea.mealName, !idea.hidden);
+  }, []);
 
   const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
     try {
@@ -42,7 +46,7 @@ export default function Ideas() {
   if (error) {
     return (
       <main className="container">
-        <Navigation currentPage="ideas" />
+        <Navigation currentPage="dishes" />
         <h1>Dishes</h1>
         <p className="error-message">Error loading meals: {error.message}</p>
       </main>
@@ -51,7 +55,7 @@ export default function Ideas() {
 
   return (
     <main className="container">
-      <Navigation currentPage="ideas" />
+      <Navigation currentPage="dishes" />
       <div className="page-header">
         <h1>Dishes</h1>
         {ideas.length > 0 && (
@@ -103,6 +107,7 @@ export default function Ideas() {
                   key={idea.mealName}
                   idea={idea}
                   onConfirmHide={confirmHide}
+                  onDirectHide={directToggleHidden}
                   onTagsUpdated={updateMealTags}
                 />
               ))}

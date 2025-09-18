@@ -144,7 +144,7 @@ export default function Meals() {
   return (
     <>
       <Head>
-        <title>DishDiary - Add Meal</title>
+        <title>DishDiary - Add Dish</title>
       </Head>
       <main className="container">
         <Navigation currentPage="add" />
@@ -152,7 +152,7 @@ export default function Meals() {
         <p className="subtitle tagline-text">{currentTagline || "What's cooking, good looking?🍳"}</p>
       <div className="form">
         <label>
-          Meal Name
+          Dish name
           <div className="autocomplete-container">
             <input
               placeholder="Enter meal name..."
@@ -193,7 +193,7 @@ export default function Meals() {
             onChange={e => setDate(e.target.value)}
           />
         </label>
-        <button onClick={addMeal}>Add Meal</button>
+        <button onClick={addMeal}>Add Dish</button>
       </div>
       
       {errors.length > 0 && (
@@ -212,7 +212,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.3.2
+        v0.3.5
       </div>
     </main>
     </>

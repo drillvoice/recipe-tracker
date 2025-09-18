@@ -6,7 +6,7 @@ const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 const STATIC_FILES = [
   '/',
   '/history',
-  '/ideas',
+  '/dishes',
   '/account',
   '/manifest.json',
   '/icons/icon-72x72.svg',

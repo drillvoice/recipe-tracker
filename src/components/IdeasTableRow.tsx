@@ -12,12 +12,14 @@ import type { Idea } from '@/hooks/useIdeas';
 interface IdeasTableRowProps {
   idea: Idea;
   onConfirmHide: (idea: Idea) => void;
+  onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
 }
 
 const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   idea,
   onConfirmHide,
+  onDirectHide,
   onTagsUpdated
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
@@ -109,9 +111,14 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   }, [idea, onConfirmHide]);
 
   const handleConfirmHide = useCallback(() => {
-    onConfirmHide(idea);
+    // Use direct hide to bypass additional confirmation
+    if (onDirectHide) {
+      onDirectHide(idea);
+    } else {
+      onConfirmHide(idea);
+    }
     setShowHideConfirm(false);
-  }, [idea, onConfirmHide]);
+  }, [idea, onConfirmHide, onDirectHide]);
 
   const handleCancelHide = useCallback(() => {
     setShowHideConfirm(false);

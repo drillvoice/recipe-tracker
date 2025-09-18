@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 
 // Lazy load page components
-const Ideas = lazy(() => import('@/pages/ideas'));
+const Dishes = lazy(() => import('@/pages/dishes'));
 const Tags = lazy(() => import('@/pages/tags'));
 const Account = lazy(() => import('@/pages/account'));
 
@@ -28,15 +28,15 @@ const PageLoadingFallback = () => (
 );
 
 interface DynamicPageLoaderProps {
-  page: 'ideas' | 'tags' | 'account';
+  page: 'dishes' | 'tags' | 'account';
 }
 
 const DynamicPageLoader: React.FC<DynamicPageLoaderProps> = ({ page }) => {
   let Component;
   
   switch (page) {
-    case 'ideas':
-      Component = Ideas;
+    case 'dishes':
+      Component = Dishes;
       break;
     case 'tags':
       Component = Tags;

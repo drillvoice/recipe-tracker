@@ -46,7 +46,7 @@ export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionP
 
   const confirmDelete = useCallback((meal: Meal) => {
     showDialog(
-      "Delete Meal",
+      "Delete Dish",
       `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
       () => handleDelete(meal.id)
     );
@@ -77,7 +77,7 @@ export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionP
         </button>
         {isOpen && (
           <div className="history-accordion-content">
-            <p className="error-message">Error loading meals: {error.message}</p>
+            <p className="error-message">Error loading dishes: {error.message}</p>
           </div>
         )}
       </div>
@@ -87,14 +87,14 @@ export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionP
   return (
     <div className="history-accordion">
       <button className="history-accordion-header" onClick={onToggle}>
-        <span>History ({meals.length} meal{meals.length === 1 ? "" : "s"})</span>
+        <span>History ({meals.length} dish{meals.length === 1 ? "" : "es"})</span>
         <span className="accordion-icon">{isOpen ? "▼" : "▶"}</span>
       </button>
 
       {isOpen && (
         <div className="history-accordion-content">
           {isLoading ? (
-            <p>Loading meals...</p>
+            <p>Loading dishes...</p>
           ) : meals.length > 0 ? (
             <table className="history-table">
               <thead>
@@ -123,7 +123,7 @@ export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionP
               </tbody>
             </table>
           ) : (
-            <p>No meals recorded.</p>
+            <p>No dishes recorded.</p>
           )}
         </div>
       )}

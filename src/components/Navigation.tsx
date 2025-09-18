@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface NavigationProps {
-  currentPage: 'add' | 'ideas' | 'tags' | 'account';
+  currentPage: 'add' | 'dishes' | 'tags' | 'account';
 }
 
 export default function Navigation({ currentPage }: NavigationProps) {
@@ -14,8 +14,8 @@ export default function Navigation({ currentPage }: NavigationProps) {
         Diary
       </Link>
       <Link
-        href="/ideas"
-        className={`nav-item ${currentPage === 'ideas' ? 'active' : ''}`}
+        href="/dishes"
+        className={`nav-item ${currentPage === 'dishes' ? 'active' : ''}`}
       >
         Dishes
       </Link>

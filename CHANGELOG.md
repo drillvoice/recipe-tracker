@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2025-09-18
+
+### Changed
+- **BREAKING**: Complete terminology update from "meals/ideas" to "dishes" throughout the application
+- **Home Screen**: Updated "Meal Name" to "Dish name" and "Add Meal" to "Add Dish"
+- **History Interface**: All references changed from "meals" to "dishes"
+- **Navigation**: Ideas page renamed to Dishes in navigation and routing
+- **File Structure**: Renamed ideas.tsx to dishes.tsx with all imports updated
+
+### Technical
+- Updated Navigation component interface from 'ideas' to 'dishes'
+- Updated all test files to reference new page structure
+- Updated service worker cache paths from /ideas to /dishes
+- Updated DynamicPageLoader component for new routing
+- All file references and imports updated consistently
+
 ## [0.3.4] - 2025-09-18
 
 ### Changed

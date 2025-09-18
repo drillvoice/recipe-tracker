@@ -13,7 +13,7 @@ jest.mock('@/lib/offline-storage', () => ({
 
 import { getAllMeals } from '@/lib/offline-storage';
 
-const Page = require('@/pages/ideas').default;
+const Page = require('@/pages/dishes').default;
 
 test('renders unique meals with counts', async () => {
   (getAllMeals as jest.Mock).mockResolvedValue([
