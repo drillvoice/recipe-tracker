@@ -2488,3 +2488,130 @@ h1 {
   background: #e0f2fe;
   border-color: #7dd3fc;
 }
+
+/* Clickable dish name */
+.dish-name-cell {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.dish-name-cell:hover {
+  background: #f9fafb;
+}
+
+/* Improved tag input styling */
+.tag-input-field {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: white;
+  transition: border-color 0.15s;
+  flex: 1;
+  min-width: 0;
+}
+
+.tag-input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smaller tag management buttons */
+.tag-save-btn, .tag-cancel-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-save-btn {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.tag-save-btn:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.tag-save-btn:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.tag-cancel-btn {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.tag-cancel-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Hide confirmation styling */
+.hide-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hide-confirm-text {
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.confirm-hide-btn, .cancel-hide-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.confirm-hide-btn {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.confirm-hide-btn:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.cancel-hide-btn {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.cancel-hide-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Column width adjustments */
+.ideas-table th:nth-child(1) { /* Dish name */
+  width: 30%;
+}
+
+.ideas-table th:nth-child(2) { /* Last Made */
+  width: 15%;
+}
+
+.ideas-table th:nth-child(3) { /* Tags */
+  width: 45%;
+}
+
+.ideas-table th:nth-child(4) { /* Info */
+  width: 10%;
+}

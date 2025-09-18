@@ -25,6 +25,7 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
+  const [showHideConfirm, setShowHideConfirm] = useState(false);
 
   // Load categories and tag metadata once and refresh when tag settings change
   useEffect(() => {
@@ -96,6 +97,25 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
     setNewTagInput('');
     setShowTagInput(false);
   }, []);
+
+  const handleHideClick = useCallback(() => {
+    if (idea.hidden) {
+      // If already hidden, show directly without confirmation
+      onConfirmHide(idea);
+    } else {
+      // If visible, show confirmation
+      setShowHideConfirm(true);
+    }
+  }, [idea, onConfirmHide]);
+
+  const handleConfirmHide = useCallback(() => {
+    onConfirmHide(idea);
+    setShowHideConfirm(false);
+  }, [idea, onConfirmHide]);
+
+  const handleCancelHide = useCallback(() => {
+    setShowHideConfirm(false);
+  }, []);
   const renderedTagChips = useMemo(
     () =>
       tagStrings.map(tag => {
@@ -125,7 +145,12 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   return (
     <>
       <tr key={idea.mealName} className={idea.hidden ? 'hidden-meal' : ''}>
-        <td>{idea.mealName}</td>
+        <td
+          className="dish-name-cell"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {idea.mealName}
+        </td>
         <td>
           {idea.lastMade
             .toDate()
@@ -186,19 +211,19 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
                           }
                         }}
                         placeholder="Enter tag name..."
-                        className="form-input"
+                        className="tag-input-field"
                         autoFocus
                       />
                       <button
                         onClick={handleAddTag}
                         disabled={!newTagInput.trim()}
-                        className="primary-button"
+                        className="tag-save-btn"
                       >
                         Save
                       </button>
                       <button
                         onClick={handleCancelTag}
-                        className="secondary-button"
+                        className="tag-cancel-btn"
                       >
                         Cancel
                       </button>
@@ -209,12 +234,30 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
 
               <div className="expanded-section">
                 <div className="visibility-section">
-                  <button
-                    onClick={() => onConfirmHide(idea)}
-                    className={idea.hidden ? "show-button" : "hide-button"}
-                  >
-                    {idea.hidden ? "Show" : "Hide"}
-                  </button>
+                  {!showHideConfirm ? (
+                    <button
+                      onClick={handleHideClick}
+                      className={idea.hidden ? "show-button" : "hide-button"}
+                    >
+                      {idea.hidden ? "Show" : "Hide"}
+                    </button>
+                  ) : (
+                    <div className="hide-confirmation">
+                      <span className="hide-confirm-text">Hide "{idea.mealName}"?</span>
+                      <button
+                        onClick={handleConfirmHide}
+                        className="confirm-hide-btn"
+                      >
+                        Yes, Hide
+                      </button>
+                      <button
+                        onClick={handleCancelHide}
+                        className="cancel-hide-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
