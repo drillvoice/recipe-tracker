@@ -97,7 +97,7 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   }, []);
   const renderedTagChips = useMemo(
     () =>
-      tagStrings.slice(0, 2).map(tag => {
+      tagStrings.map(tag => {
         const backgroundColor = getTagColor(tag);
         const textColor =
           backgroundColor === TAG_COLORS.yellow ||
@@ -139,9 +139,6 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
         <td className="tags-cell">
           <div className="tags-container">
             {renderedTagChips}
-            {tagStrings.length > 2 && (
-              <span className="more-tags">+{tagStrings.length - 2}</span>
-            )}
             {tagStrings.length === 0 && (
               <span className="no-tags">—</span>
             )}
@@ -182,19 +179,19 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
                   }
                 }}
                 placeholder="Enter tag name..."
-                className="tag-input-field"
+                className="form-input"
                 autoFocus
               />
               <button
                 onClick={handleAddTag}
                 disabled={!newTagInput.trim()}
-                className="tag-save-button"
+                className="primary-button"
               >
                 Save
               </button>
               <button
                 onClick={handleCancelTag}
-                className="tag-cancel-button"
+                className="secondary-button"
               >
                 Cancel
               </button>
