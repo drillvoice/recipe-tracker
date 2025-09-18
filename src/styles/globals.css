@@ -2441,7 +2441,50 @@ h1 {
   gap: 0.75rem;
 }
 
-.visibility-status {
-  color: #6b7280;
+.add-tag-button {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-tag-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.hide-button {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hide-button:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.show-button {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.show-button:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
 }

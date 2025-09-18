@@ -164,17 +164,14 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
 
               <div className="expanded-section">
                 <div className="tag-management-section">
-                  <div className="section-header">
-                    <span className="section-title">Tags</span>
-                    <ActionButton
-                      icon="🏷️"
-                      onClick={() => setShowTagInput(!showTagInput)}
-                      title="Add tag"
-                      variant="default"
-                    />
-                  </div>
-
-                  {showTagInput && (
+                  {!showTagInput ? (
+                    <button
+                      onClick={() => setShowTagInput(true)}
+                      className="add-tag-button"
+                    >
+                      + Add Tag
+                    </button>
+                  ) : (
                     <div className="inline-tag-input">
                       <input
                         type="text"
@@ -212,16 +209,12 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
 
               <div className="expanded-section">
                 <div className="visibility-section">
-                  <span className="section-title">Visibility</span>
-                  <ActionButton
-                    icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
+                  <button
                     onClick={() => onConfirmHide(idea)}
-                    title={idea.hidden ? "Show meal" : "Hide meal"}
-                    variant="default"
-                  />
-                  <span className="visibility-status">
-                    {idea.hidden ? "Hidden from list" : "Visible in list"}
-                  </span>
+                    className={idea.hidden ? "show-button" : "hide-button"}
+                  >
+                    {idea.hidden ? "Show" : "Hide"}
+                  </button>
                 </div>
               </div>
             </div>
