@@ -15,12 +15,15 @@ interface IdeasTableRowProps {
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
 }
 
-const IdeasTableRow = React.memo<IdeasTableRowProps>(({ 
+const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   idea,
-  onConfirmHide
+  onConfirmHide,
+  onTagsUpdated
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
   const [tagMetadata, setTagMetadata] = useState<TagManagementData['tags']>({});
+  const [showTagInput, setShowTagInput] = useState(false);
+  const [newTagInput, setNewTagInput] = useState('');
 
   // Load categories and tag metadata once and refresh when tag settings change
   useEffect(() => {
@@ -77,6 +80,21 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
 
   // Use the tags from the idea data
   const tagStrings = useMemo(() => idea.tags ?? [], [idea.tags]);
+
+  const handleAddTag = useCallback(() => {
+    const trimmedTag = newTagInput.trim();
+    if (trimmedTag && !tagStrings.includes(trimmedTag)) {
+      const updatedTags = [...tagStrings, trimmedTag];
+      onTagsUpdated?.(idea.mealName, updatedTags);
+    }
+    setNewTagInput('');
+    setShowTagInput(false);
+  }, [newTagInput, tagStrings, idea.mealName, onTagsUpdated]);
+
+  const handleCancelTag = useCallback(() => {
+    setNewTagInput('');
+    setShowTagInput(false);
+  }, []);
   const renderedTagChips = useMemo(
     () =>
       tagStrings.slice(0, 2).map(tag => {
@@ -132,6 +150,12 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
         <td>
           <div className="action-buttons">
             <ActionButton
+              icon="🏷️"
+              onClick={() => setShowTagInput(!showTagInput)}
+              title="Add tag"
+              variant="default"
+            />
+            <ActionButton
               icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
               onClick={() => onConfirmHide(idea)}
               title={idea.hidden ? "Show meal" : "Hide meal"}
@@ -140,6 +164,44 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           </div>
         </td>
       </tr>
+
+      {showTagInput && (
+        <tr className="tag-input-row">
+          <td colSpan={5}>
+            <div className="inline-tag-input">
+              <input
+                type="text"
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  } else if (e.key === 'Escape') {
+                    handleCancelTag();
+                  }
+                }}
+                placeholder="Enter tag name..."
+                className="tag-input-field"
+                autoFocus
+              />
+              <button
+                onClick={handleAddTag}
+                disabled={!newTagInput.trim()}
+                className="tag-save-button"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleCancelTag}
+                className="tag-cancel-button"
+              >
+                Cancel
+              </button>
+            </div>
+          </td>
+        </tr>
+      )}
     </>
   );
 });
