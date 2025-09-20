@@ -9,14 +9,22 @@ import type { Meal } from "@/lib/offline-storage";
 interface HistoryAccordionProps {
   isOpen: boolean;
   onToggle: () => void;
+  refreshTrigger?: number; // Optional prop to trigger refresh
 }
 
-export default function HistoryAccordion({ isOpen, onToggle }: HistoryAccordionProps) {
+export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: HistoryAccordionProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMealName, setEditMealName] = useState("");
   const [editDate, setEditDate] = useState("");
   const { dialogProps, showDialog } = useConfirmDialog();
-  const { meals, isLoading, error, updateMealData, deleteMealData } = useMeals();
+  const { meals, isLoading, error, loadMeals, updateMealData, deleteMealData } = useMeals();
+
+  // Refresh meals when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      loadMeals();
+    }
+  }, [refreshTrigger, loadMeals]);
 
   const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);

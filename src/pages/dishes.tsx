@@ -11,20 +11,6 @@ export default function Ideas() {
   const { dialogProps, showDialog } = useConfirmDialog();
   const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
 
-  const confirmHide = useCallback((idea: Idea) => {
-    showDialog(
-      idea.hidden ? "Show Meal" : "Hide Meal",
-      idea.hidden
-        ? `Show "${idea.mealName}" in ideas list?`
-        : `Hide "${idea.mealName}" from ideas list?`,
-      () => handleToggleHidden(idea.mealName, !idea.hidden)
-    );
-  }, [showDialog]);
-
-  const directToggleHidden = useCallback(async (idea: Idea) => {
-    await handleToggleHidden(idea.mealName, !idea.hidden);
-  }, []);
-
   const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
     try {
       await toggleMealVisibility(mealName, hidden);
@@ -32,6 +18,24 @@ export default function Ideas() {
       console.error('Error toggling meal visibility:', error);
     }
   }, [toggleMealVisibility]);
+
+  const confirmHide = useCallback((idea: Idea) => {
+    if (idea.hidden) {
+      // Show directly without confirmation
+      handleToggleHidden(idea.mealName, false);
+    } else {
+      // Show confirmation when hiding
+      showDialog(
+        "Hide Meal",
+        `Hide "${idea.mealName}" from ideas list?`,
+        () => handleToggleHidden(idea.mealName, true)
+      );
+    }
+  }, [showDialog, handleToggleHidden]);
+
+  const directToggleHidden = useCallback(async (idea: Idea) => {
+    await handleToggleHidden(idea.mealName, !idea.hidden);
+  }, [handleToggleHidden]);
 
   const visibleIdeas = useMemo(() =>
     ideas.filter(idea => showHidden || !idea.hidden),
@@ -58,8 +62,8 @@ export default function Ideas() {
       <Navigation currentPage="dishes" />
       <div className="page-header">
         <h1>Dishes</h1>
-        {ideas.length > 0 && (
-          <button 
+        {hiddenCount > 0 && (
+          <button
             className="filter-button"
             onClick={() => setShowFilters(!showFilters)}
             title="Filter options"
@@ -69,7 +73,7 @@ export default function Ideas() {
         )}
       </div>
       
-      {showFilters && ideas.length > 0 && (
+      {showFilters && hiddenCount > 0 && (
         <div className="ideas-filters">
           <label className="filter-toggle">
             <input

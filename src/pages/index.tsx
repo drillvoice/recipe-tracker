@@ -27,6 +27,7 @@ export default function Meals() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [historyAccordionOpen, setHistoryAccordionOpen] = useState(false);
   const [currentTagline, setCurrentTagline] = useState<string>("");
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   useEffect(() => {
     syncPendingMeals();
@@ -129,6 +130,9 @@ export default function Meals() {
       // Open history accordion to show visual confirmation
       setHistoryAccordionOpen(true);
 
+      // Trigger history refresh
+      setRefreshTrigger(Date.now());
+
       setSuggestions(prev =>
         Array.from(new Set([...prev, validation.data.mealName]))
       );
@@ -209,10 +213,11 @@ export default function Meals() {
       <HistoryAccordion
         isOpen={historyAccordionOpen}
         onToggle={() => setHistoryAccordionOpen(!historyAccordionOpen)}
+        refreshTrigger={refreshTrigger}
       />
 
       <div className="version-indicator">
-        v0.3.5
+        v0.3.6
       </div>
     </main>
     </>

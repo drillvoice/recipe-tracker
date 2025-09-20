@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6] - 2025-09-20
+
+### Fixed
+- **History Auto-Refresh**: Fixed history not updating instantly after adding new meal - now shows new dishes immediately without manual refresh
+- **Streamlined Show/Hide UX**: Removed unnecessary confirmation modal when showing hidden dishes - now shows directly as it's easily reversible
+- **Smart Filter Visibility**: Magnifying glass filter button now only appears when there are actually hidden dishes to show
+
+### Changed
+- **Improved UX Flow**: Filter options only visible when relevant, reducing UI clutter for new users
+- **Instant Visual Feedback**: Adding dishes now immediately reflects in history accordion without page refresh
+
+### Technical
+- Added refresh trigger system between main page and HistoryAccordion component
+- Enhanced useMeals hook integration for real-time data updates
+- Optimized filter button conditional rendering logic
+
 ## [0.3.5] - 2025-09-18
 
 ### Changed
