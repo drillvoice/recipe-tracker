@@ -327,6 +327,52 @@ h1 {
   background: #e5e7eb;
 }
 
+/* Tag autocomplete styling (similar to dish autocomplete) */
+.tag-autocomplete-container {
+  position: relative;
+  width: 100%;
+}
+
+.tag-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.tag-suggestion-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+  transition: background-color 0.15s;
+}
+
+.tag-suggestion-item:hover {
+  background: #f9fafb;
+}
+
+.tag-suggestion-item:focus {
+  background: #f3f4f6;
+  outline: none;
+}
+
+.tag-suggestion-item:last-child {
+  border-bottom: none;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;

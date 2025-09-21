@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] - 2025-09-21
+
+### Added
+- **Tag Autocomplete**: Added smart autocomplete to tag input in Dishes page with substring matching for existing tags
+- **Intelligent Tag Suggestions**: Type any part of a tag name (including emoji-prefixed tags) to see matching suggestions
+- **Enhanced Tag Management**: Streamlined tag addition with autocomplete dropdown showing up to 5 relevant suggestions
+
+### Technical
+- Implemented memoized tag extraction from all dishes for optimal performance
+- Added substring-based filtering (not just prefix matching) for better tag discovery
+- Created reusable tag autocomplete UI components with proper focus/blur handling
+- Enhanced IdeasTableRow component with autocomplete functionality and CSS styling
+
 ## [0.3.6] - 2025-09-20
 
 ### Fixed

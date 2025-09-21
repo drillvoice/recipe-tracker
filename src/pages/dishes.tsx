@@ -113,6 +113,7 @@ export default function Ideas() {
                   onConfirmHide={confirmHide}
                   onDirectHide={directToggleHidden}
                   onTagsUpdated={updateMealTags}
+                  allIdeas={ideas}
                 />
               ))}
             </tbody>

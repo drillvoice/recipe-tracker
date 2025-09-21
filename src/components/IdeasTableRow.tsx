@@ -14,13 +14,15 @@ interface IdeasTableRowProps {
   onConfirmHide: (idea: Idea) => void;
   onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
+  allIdeas?: Idea[]; // For extracting all existing tags for autocomplete
 }
 
 const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   idea,
   onConfirmHide,
   onDirectHide,
-  onTagsUpdated
+  onTagsUpdated,
+  allIdeas = []
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
   const [tagMetadata, setTagMetadata] = useState<TagManagementData['tags']>({});
@@ -28,6 +30,8 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [showHideConfirm, setShowHideConfirm] = useState(false);
+  const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([]);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
   // Load categories and tag metadata once and refresh when tag settings change
   useEffect(() => {
@@ -85,6 +89,46 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   // Use the tags from the idea data
   const tagStrings = useMemo(() => idea.tags ?? [], [idea.tags]);
 
+  // Extract all unique tags from all ideas for autocomplete suggestions
+  const allExistingTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const ideaItem of allIdeas) {
+      if (ideaItem.tags) {
+        for (const tag of ideaItem.tags) {
+          tagSet.add(tag);
+        }
+      }
+    }
+    return Array.from(tagSet).sort();
+  }, [allIdeas]);
+
+  // Handle tag input changes with autocomplete filtering
+  const handleTagInputChange = useCallback((value: string) => {
+    setNewTagInput(value);
+
+    if (value.trim() === "") {
+      setFilteredTagSuggestions([]);
+      setShowTagSuggestions(false);
+      return;
+    }
+
+    // Filter tags using substring matching (case-insensitive)
+    const filtered = allExistingTags.filter(tag =>
+      tag.toLowerCase().includes(value.toLowerCase()) &&
+      !tagStrings.includes(tag) // Don't suggest tags already applied to this dish
+    );
+
+    setFilteredTagSuggestions(filtered);
+    setShowTagSuggestions(filtered.length > 0);
+  }, [allExistingTags, tagStrings]);
+
+  // Select a suggestion from the autocomplete dropdown
+  const selectTagSuggestion = useCallback((suggestion: string) => {
+    setNewTagInput(suggestion);
+    setShowTagSuggestions(false);
+    setFilteredTagSuggestions([]);
+  }, []);
+
   const handleAddTag = useCallback(() => {
     const trimmedTag = newTagInput.trim();
     if (trimmedTag && !tagStrings.includes(trimmedTag)) {
@@ -98,6 +142,8 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   const handleCancelTag = useCallback(() => {
     setNewTagInput('');
     setShowTagInput(false);
+    setShowTagSuggestions(false);
+    setFilteredTagSuggestions([]);
   }, []);
 
   const handleHideClick = useCallback(() => {
@@ -205,22 +251,48 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
                     </button>
                   ) : (
                     <div className="inline-tag-input">
-                      <input
-                        type="text"
-                        value={newTagInput}
-                        onChange={(e) => setNewTagInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddTag();
-                          } else if (e.key === 'Escape') {
-                            handleCancelTag();
-                          }
-                        }}
-                        placeholder="Enter tag name..."
-                        className="tag-input-field"
-                        autoFocus
-                      />
+                      <div className="tag-autocomplete-container">
+                        <input
+                          type="text"
+                          value={newTagInput}
+                          onChange={(e) => handleTagInputChange(e.target.value)}
+                          onFocus={() => {
+                            if (newTagInput.trim() && filteredTagSuggestions.length > 0) {
+                              setShowTagSuggestions(true);
+                            }
+                          }}
+                          onBlur={() => {
+                            // Delay hiding to allow clicks on suggestions
+                            setTimeout(() => setShowTagSuggestions(false), 150);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddTag();
+                            } else if (e.key === 'Escape') {
+                              handleCancelTag();
+                            }
+                          }}
+                          placeholder="Enter tag name..."
+                          className="tag-input-field"
+                          autoFocus
+                        />
+                        {showTagSuggestions && filteredTagSuggestions.length > 0 && (
+                          <div className="tag-suggestions-dropdown">
+                            {filteredTagSuggestions.slice(0, 5).map(suggestion => (
+                              <button
+                                key={suggestion}
+                                type="button"
+                                className="tag-suggestion-item"
+                                onClick={() => selectTagSuggestion(suggestion)}
+                                onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={handleAddTag}
                         disabled={!newTagInput.trim()}
