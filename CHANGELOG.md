@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.8] - 2025-09-23
+
+### Maintenance
+- Removed unused `eslint-plugin-next` dependency now that the flat config relies on explicit plugin imports only.
+- Aligned `jest-util` with the rest of the Jest 29 toolchain to avoid future compatibility surprises.
+- Updated `@typescript-eslint/parser` to stay in lockstep with the matching ESLint plugin release.
+
+### Dependencies
+- Upgraded Firebase SDK to `12.3.0`, including the accompanying security rules testing utilities.
+- Bumped Zod to `4.1.11` for the latest schema validation fixes.
+- Updated `ts-jest` to `29.4.4` to pick up TypeScript 5.9 compatibility improvements.
+- Refreshed low-level utilities such as `debug@4.4.3` and `error-ex@1.3.4` as part of the dependency sweep.
+
 ## [0.3.7] - 2025-09-21
 
 ### Added
