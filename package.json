@@ -19,7 +19,7 @@
     "next": "^15.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "zod": "^4.1.8"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
@@ -42,7 +42,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "jest-util": "^30.0.5",
     "lint-staged": "^16.1.6",
-    "ts-jest": "^29.4.1",
+    "ts-jest": "^29.4.4",
     "typescript": "5.9.2"
   },
   "lint-staged": {
