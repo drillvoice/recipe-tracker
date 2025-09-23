@@ -1945,6 +1945,23 @@ h1 {
   white-space: nowrap;
 }
 
+.tag-chip-small.interactive-tag-chip {
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
+}
+
+.tag-chip-small.interactive-tag-chip:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.tag-chip-small.interactive-tag-chip:active {
+  transform: scale(0.97);
+}
+
 .more-tags {
   display: inline-block;
   color: #6b7280;
@@ -1958,6 +1975,93 @@ h1 {
   color: #9ca3af;
   font-size: 0.75rem;
   font-style: italic;
+}
+
+/* Tag actions modal */
+.tag-actions-modal {
+  max-width: 380px;
+  width: 100%;
+}
+
+.tag-actions-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tag-actions-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tag-actions-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.tag-actions-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.tag-actions-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  width: fit-content;
+}
+
+.tag-actions-options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.tag-actions-options button {
+  flex: 1;
+}
+
+.tag-rename-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tag-rename-form input {
+  width: 100%;
+}
+
+.tag-action-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
+
+.tag-delete-confirm {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tag-delete-confirm p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #7f1d1d;
 }
 
 /* Make count column narrower to save space for tags */
@@ -1984,6 +2088,18 @@ h1 {
   .more-tags,
   .no-tags {
     font-size: 0.625rem;
+  }
+
+  .tag-actions-modal {
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .tag-actions-options {
+    flex-direction: column;
+  }
+
+  .tag-actions-options button {
+    width: 100%;
   }
 
   .ideas-table th:nth-child(3),

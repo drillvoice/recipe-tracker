@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ActionButton from '@/components/ActionButton';
+import TagActionsModal from '@/components/TagActionsModal';
 import {
   TagManager,
   TAG_COLORS,
@@ -32,6 +33,98 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   const [showHideConfirm, setShowHideConfirm] = useState(false);
   const [filteredTagSuggestions, setFilteredTagSuggestions] = useState<string[]>([]);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearLongPress();
+    };
+  }, [clearLongPress]);
+
+  const handleTagModalClose = useCallback(() => {
+    clearLongPress();
+    setIsTagModalOpen(false);
+    setSelectedTag(null);
+  }, [clearLongPress]);
+
+  const handleTagUpdate = useCallback((mealName: string, updatedTags: string[]) => {
+    onTagsUpdated?.(mealName, updatedTags);
+    handleTagModalClose();
+  }, [handleTagModalClose, onTagsUpdated]);
+
+  const openTagModal = useCallback((tag: string) => {
+    if (!onTagsUpdated) {
+      return;
+    }
+
+    setSelectedTag(tag);
+    setIsTagModalOpen(true);
+  }, [onTagsUpdated]);
+
+  const startLongPress = useCallback((tag: string) => {
+    if (!onTagsUpdated) {
+      return;
+    }
+
+    clearLongPress();
+    longPressTimeoutRef.current = setTimeout(() => {
+      longPressTimeoutRef.current = null;
+      openTagModal(tag);
+    }, 500);
+  }, [clearLongPress, onTagsUpdated, openTagModal]);
+
+  const handlePointerDown = useCallback((tag: string) => (event: React.PointerEvent<HTMLSpanElement>) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    startLongPress(tag);
+  }, [startLongPress]);
+
+  const handlePointerUp = useCallback(() => {
+    clearLongPress();
+  }, [clearLongPress]);
+
+  const handlePointerLeave = useCallback(() => {
+    clearLongPress();
+  }, [clearLongPress]);
+
+  const handleContextMenu = useCallback((tag: string) => (event: React.MouseEvent<HTMLSpanElement>) => {
+    if (!onTagsUpdated) {
+      return;
+    }
+
+    event.preventDefault();
+    clearLongPress();
+    openTagModal(tag);
+  }, [clearLongPress, onTagsUpdated, openTagModal]);
+
+  const handleKeyDown = useCallback((tag: string) => (event: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (!onTagsUpdated) {
+      return;
+    }
+
+    if (
+      event.key === 'Enter' ||
+      event.key === ' ' ||
+      event.key === 'Space' ||
+      event.key === 'Spacebar' ||
+      event.key === 'ContextMenu' ||
+      (event.key === 'F10' && event.shiftKey)
+    ) {
+      event.preventDefault();
+      openTagModal(tag);
+    }
+  }, [onTagsUpdated, openTagModal]);
 
   // Load categories and tag metadata once and refresh when tag settings change
   useEffect(() => {
@@ -178,25 +271,56 @@ const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           backgroundColor === TAG_COLORS.beige
             ? '#374151'
             : '#1f2937';
+        const interactive = Boolean(onTagsUpdated);
 
         return (
           <span
             key={tag}
-            className="tag-chip-small"
+            className={`tag-chip-small${interactive ? ' interactive-tag-chip' : ''}`}
             style={{
               backgroundColor,
               color: textColor
             }}
+            role={interactive ? 'button' : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-label={interactive ? `Show options for tag ${tag}` : undefined}
+            aria-haspopup={interactive ? 'dialog' : undefined}
+            title={interactive ? 'Press and hold, right-click, or use the keyboard for tag actions' : undefined}
+            onPointerDown={interactive ? handlePointerDown(tag) : undefined}
+            onPointerUp={interactive ? handlePointerUp : undefined}
+            onPointerLeave={interactive ? handlePointerLeave : undefined}
+            onPointerCancel={interactive ? handlePointerUp : undefined}
+            onContextMenu={interactive ? handleContextMenu(tag) : undefined}
+            onKeyDown={interactive ? handleKeyDown(tag) : undefined}
           >
             {tag}
           </span>
         );
       }),
-    [tagStrings, getTagColor]
+    [
+      getTagColor,
+      handleContextMenu,
+      handleKeyDown,
+      handlePointerDown,
+      handlePointerLeave,
+      handlePointerUp,
+      onTagsUpdated,
+      tagStrings
+    ]
   );
 
   return (
     <>
+      {isTagModalOpen && selectedTag && onTagsUpdated && (
+        <TagActionsModal
+          mealName={idea.mealName}
+          tag={selectedTag}
+          tags={tagStrings}
+          onClose={handleTagModalClose}
+          onTagsUpdated={handleTagUpdate}
+        />
+      )}
+
       <tr key={idea.mealName} className={idea.hidden ? 'hidden-meal' : ''}>
         <td
           className="dish-name-cell"
