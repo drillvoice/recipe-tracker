@@ -171,6 +171,15 @@ export default function Meals() {
                 // Delay hiding to allow clicks on suggestions
                 setTimeout(() => setShowSuggestions(false), 150);
               }}
+              onKeyDown={event => {
+                if (event.key === "Enter") {
+                  if (showSuggestions && filteredSuggestions.length > 0) {
+                    return;
+                  }
+                  event.preventDefault();
+                  addMeal();
+                }
+              }}
             />
             {showSuggestions && filteredSuggestions.length > 0 && (
               <div className="suggestions-dropdown">
