@@ -406,11 +406,18 @@ class NotificationManager {
    */
   static async scheduleTestNotification(): Promise<boolean> {
     try {
+      console.log('🔄 Starting test notification scheduling...');
+
+      console.log('🔐 Checking authentication...');
       const user = await ensureAuthenticatedUser();
+      console.log('✅ User authenticated:', user.uid);
+
+      console.log('🔔 Getting FCM token...');
       const ensuredToken = await getFCMToken();
+      console.log('✅ FCM token obtained:', ensuredToken ? 'Yes' : 'No');
 
       if (!ensuredToken) {
-        console.error('No FCM token available for test notification');
+        console.error('❌ No FCM token available for test notification');
         return false;
       }
 
@@ -419,29 +426,30 @@ class NotificationManager {
       const testTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+      console.log('💾 Writing to Firestore...');
       const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
       const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
       const platform = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
 
-      await setDoc(
-        reminderRef,
-        {
-          active: true,
-          reminderTime: `${testTime.getHours().toString().padStart(2, '0')}:${testTime.getMinutes().toString().padStart(2, '0')}`,
-          reminderHour: testTime.getHours(),
-          reminderMinute: testTime.getMinutes(),
-          timezone,
-          token: ensuredToken,
-          nextNotificationAt: Timestamp.fromDate(testTime),
-          lastKnownPermission: permission,
-          updatedAt: serverTimestamp(),
-          platform,
-          isTest: true, // Mark as test notification
-        },
-        { merge: true }
-      );
+      const docData = {
+        active: true,
+        reminderTime: `${testTime.getHours().toString().padStart(2, '0')}:${testTime.getMinutes().toString().padStart(2, '0')}`,
+        reminderHour: testTime.getHours(),
+        reminderMinute: testTime.getMinutes(),
+        timezone,
+        token: ensuredToken,
+        nextNotificationAt: Timestamp.fromDate(testTime),
+        lastKnownPermission: permission,
+        updatedAt: serverTimestamp(),
+        platform,
+        isTest: true, // Mark as test notification
+      };
 
-      console.log(`Test notification scheduled for ${testTime.toLocaleString()} (15 minutes from now)`);
+      console.log('📄 Document data:', docData);
+      await setDoc(reminderRef, docData, { merge: true });
+      console.log('✅ Successfully wrote to Firestore');
+
+      console.log(`🎯 Test notification scheduled for ${testTime.toLocaleString()} (15 minutes from now)`);
       return true;
     } catch (error) {
       console.error('Error scheduling test notification:', error);
