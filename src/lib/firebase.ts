@@ -72,7 +72,11 @@ export async function getFCMToken(): Promise<string | null> {
       return null;
     }
 
-    const token = await getToken(messaging, { vapidKey });
+    const registration = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
     console.log("FCM token retrieved:", token ? "✓" : "✗");
     return token;
   } catch (error) {
