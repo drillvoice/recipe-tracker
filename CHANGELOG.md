@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.9] - 2025-09-24
+
+### Added
+- **Dinner Reminder Push Notifications**: Implemented full push notification flow with Firebase Cloud Messaging so users receive an actionable 8 pm reminder even when the app is closed.
+- **Notification Settings UI**: Added Data page controls to toggle dinner reminders, adjust reminder time, and manage browser notification permissions.
+
+### Technical
+- Introduced `NotificationManager` infrastructure, background-capable service worker logic, and service API for sharing Firebase configuration across the app and worker.
+- Persisted reminder preferences in `localStorage` and enhanced service worker handling to support Add Meal/Dismiss actions from notifications.
+
 ## [0.3.8] - 2025-09-23
 
 ### Maintenance
