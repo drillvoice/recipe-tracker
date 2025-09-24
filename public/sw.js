@@ -177,47 +177,110 @@ async function doBackgroundSync() {
   // This will be implemented when we add background sync for meal uploads
 }
 
-// Push notifications (future enhancement)
+// Push notifications for dinner reminders
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received:', event);
 
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.log('[SW] No JSON payload, using default');
+  }
+
+  const title = payload.title || '🍽️ Dinner Time!';
+  const body = payload.body || 'What did you eat for dinner today?';
+  const type = payload.type || 'dinner-reminder';
+
   const options = {
-    body: event.data ? event.data.text() : 'Recipe Tracker notification',
-    icon: '/icons/icon-192x192.svg',
-    badge: '/icons/icon-96x96.svg',
-    vibrate: [100, 50, 100],
+    body,
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    tag: type,
     data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
+      type,
+      url: payload.url || '/',
+      timestamp: Date.now(),
+      ...payload.data
     },
     actions: [
       {
-        action: 'explore',
-        title: 'Open App',
-        icon: '/icons/icon-96x96.svg'
+        action: 'add-meal',
+        title: '📝 Add Meal'
       },
       {
-        action: 'close',
-        title: 'Close',
-        icon: '/icons/icon-96x96.svg'
+        action: 'dismiss',
+        title: '✕ Dismiss'
       }
     ]
   };
 
   event.waitUntil(
-    self.registration.showNotification('Recipe Tracker', options)
+    self.registration.showNotification(title, options)
   );
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification click received.');
+  console.log('[SW] Notification click received:', event.action);
 
   event.notification.close();
 
-  if (event.action === 'explore') {
+  const notificationData = event.notification.data || {};
+  const notificationType = notificationData.type || 'unknown';
+
+  // Handle dinner reminder actions
+  if (notificationType === 'dinner-reminder') {
+    if (event.action === 'add-meal') {
+      // Open app to main page where users can add meals
+      event.waitUntil(
+        clients.matchAll({ type: 'window' }).then((clientList) => {
+          // If app is already open, focus it
+          for (const client of clientList) {
+            if (client.url.includes(location.origin) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          // If app is not open, open it
+          if (clients.openWindow) {
+            return clients.openWindow('/');
+          }
+        })
+      );
+    } else if (event.action === 'dismiss') {
+      // Just close the notification (already done above)
+      console.log('[SW] Dinner reminder dismissed');
+    } else {
+      // Clicked on notification body (not action button)
+      event.waitUntil(
+        clients.matchAll({ type: 'window' }).then((clientList) => {
+          for (const client of clientList) {
+            if (client.url.includes(location.origin) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          if (clients.openWindow) {
+            return clients.openWindow('/');
+          }
+        })
+      );
+    }
+  }
+  // Handle test notifications
+  else if (notificationType === 'test') {
     event.waitUntil(
-      clients.openWindow('/')
+      clients.matchAll({ type: 'window' }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(location.origin) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
     );
   }
 });

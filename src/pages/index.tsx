@@ -14,6 +14,7 @@ import HistoryAccordion from "@/components/HistoryAccordion";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 import { TaglineManager } from "@/lib/tagline-manager";
+import NotificationManager from "@/lib/notification-manager";
 
 export default function Meals() {
   const [mealName, setMealName] = useState("");
@@ -32,7 +33,18 @@ export default function Meals() {
   useEffect(() => {
     syncPendingMeals();
     loadSuggestions();
+    initializeNotifications();
   }, []);
+
+  // Initialize notification system
+  async function initializeNotifications() {
+    try {
+      await NotificationManager.initialize();
+      console.log('Notification system initialized');
+    } catch (error) {
+      console.error('Failed to initialize notifications:', error);
+    }
+  }
 
   // Initialize and manage tagline rotation
   useEffect(() => {
