@@ -7,12 +7,9 @@ import {
   getDoc,
   writeBatch
 } from 'firebase/firestore';
-import {
-  signInAnonymously,
-  onAuthStateChanged,
-  type User
-} from 'firebase/auth';
-import { auth, db } from './firebase';
+import type { User } from 'firebase/auth';
+import { db } from './firebase';
+import { ensureAuthenticatedUser, getCurrentUser } from './firebase-auth';
 import { getAllMeals } from './offline-storage';
 import { setLastBackupTimestamp } from './offline-storage';
 
@@ -32,46 +29,11 @@ export interface CloudBackupStatus {
   syncNeeded: boolean;
 }
 
-let currentUser: User | null = null;
-
-// Initialize authentication listener
-if (typeof window !== 'undefined') {
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-  });
-}
-
 /**
  * Ensures user is authenticated (anonymously if needed)
  */
 export async function ensureAuthentication(): Promise<User> {
-  return new Promise((resolve, reject) => {
-    // If already authenticated, return current user
-    if (currentUser) {
-      resolve(currentUser);
-      return;
-    }
-
-    // Set up auth state listener
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        unsubscribe();
-        resolve(user);
-      } else {
-        // No user, sign in anonymously
-        try {
-          const result = await signInAnonymously(auth);
-          currentUser = result.user;
-          unsubscribe();
-          resolve(result.user);
-        } catch (error) {
-          unsubscribe();
-          reject(error);
-        }
-      }
-    });
-  });
+  return ensureAuthenticatedUser();
 }
 
 /**
@@ -188,6 +150,7 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
 
   try {
     // Check if user is authenticated
+    const currentUser = getCurrentUser();
     if (!currentUser) {
       return status;
     }

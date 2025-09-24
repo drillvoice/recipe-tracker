@@ -1,6 +1,14 @@
 // notification-manager.ts - Push notification management for dinner reminders
 
-import { getFCMToken, isFCMSupported } from './firebase';
+import { getFCMToken, isFCMSupported, db } from './firebase';
+import { ensureAuthenticatedUser } from './firebase-auth';
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  Timestamp,
+  deleteField,
+} from 'firebase/firestore';
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -22,8 +30,6 @@ class NotificationManager {
     enabled: true,
     reminderTime: '20:00', // 8pm default
   };
-
-  private static schedulerTimeout: NodeJS.Timeout | null = null;
 
   /**
    * Check if notifications are supported in this browser
@@ -162,37 +168,36 @@ class NotificationManager {
     const settings = this.getSettings();
 
     // Clear any existing scheduler
-    this.clearScheduler();
-
     if (!settings.enabled || Notification.permission !== 'granted') {
       console.log('Notifications disabled or permission not granted');
       return false;
     }
 
     try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       const nextTime = this.getNextNotificationTime(settings);
-      const delay = nextTime.getTime() - Date.now();
+      console.log(`Next dinner reminder scheduled for: ${nextTime.toLocaleString()} (${timezone})`);
 
-      console.log(`Next dinner reminder scheduled for: ${nextTime.toLocaleString()} (in ${Math.round(delay / 1000 / 60)} minutes)`);
+      const persisted = await this.persistRemoteSchedule({
+        nextTime,
+        settings,
+        timezone,
+      });
 
-      // Save scheduler info for persistence across sessions
-      localStorage.setItem(this.SCHEDULER_KEY, JSON.stringify({
-        nextTime: nextTime.toISOString(),
-        settings: settings
-      }));
+      if (persisted) {
+        localStorage.setItem(this.SCHEDULER_KEY, JSON.stringify({
+          nextTime: nextTime.toISOString(),
+          reminderTime: settings.reminderTime,
+          timezone,
+        }));
 
-      // Use setTimeout for client-side scheduling
-      this.schedulerTimeout = setTimeout(async () => {
-        await this.showDinnerReminder();
-        // Schedule the next one (24 hours later)
-        await this.scheduleNextReminder();
-      }, delay);
+        settings.lastScheduled = nextTime.toISOString();
+        this.saveSettings(settings);
+      } else {
+        console.warn('Remote reminder schedule could not be persisted.');
+      }
 
-      // Update last scheduled time
-      settings.lastScheduled = nextTime.toISOString();
-      this.saveSettings(settings);
-
-      return true;
+      return persisted;
     } catch (error) {
       console.error('Error scheduling notification:', error);
       return false;
@@ -202,48 +207,80 @@ class NotificationManager {
   /**
    * Clear the current scheduler
    */
-  static clearScheduler(): void {
-    if (this.schedulerTimeout) {
-      clearTimeout(this.schedulerTimeout);
-      this.schedulerTimeout = null;
-    }
+  static async clearScheduler(): Promise<void> {
     localStorage.removeItem(this.SCHEDULER_KEY);
+
+    try {
+      const user = await ensureAuthenticatedUser();
+      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'dinner');
+      const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+
+      await setDoc(
+        reminderRef,
+        {
+          active: false,
+          updatedAt: serverTimestamp(),
+          lastKnownPermission: permission,
+          nextNotificationAt: deleteField(),
+          disabledAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error('Error clearing remote reminder subscription:', error);
+    }
   }
 
   /**
    * Restore scheduler from localStorage (for session persistence)
    */
-  static restoreScheduler(): void {
+  static async restoreScheduler(settings: NotificationSettings): Promise<boolean> {
     try {
       const stored = localStorage.getItem(this.SCHEDULER_KEY);
-      if (!stored) return;
-
-      const { nextTime, settings } = JSON.parse(stored);
-      const scheduledTime = new Date(nextTime);
-      const now = new Date();
-
-      // If the scheduled time has passed, show the notification immediately
-      // and schedule the next one
-      if (scheduledTime <= now) {
-        console.log('Missed notification time, showing now and rescheduling');
-        this.showDinnerReminder();
-        this.scheduleNextReminder();
-        return;
+      if (!stored) {
+        return false;
       }
 
-      // If the scheduled time is still in the future, restore the timer
-      const delay = scheduledTime.getTime() - now.getTime();
-      console.log(`Restoring scheduler for ${scheduledTime.toLocaleString()}`);
+      const { nextTime, reminderTime, timezone } = JSON.parse(stored) as {
+        nextTime?: string;
+        reminderTime?: string;
+        timezone?: string;
+      };
 
-      this.schedulerTimeout = setTimeout(async () => {
-        await this.showDinnerReminder();
-        await this.scheduleNextReminder();
-      }, delay);
+      if (!nextTime || !reminderTime || !timezone) {
+        return false;
+      }
 
+      if (reminderTime !== settings.reminderTime) {
+        return false;
+      }
+
+      const currentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      if (timezone !== currentTimezone) {
+        return false;
+      }
+
+      const scheduledTime = new Date(nextTime);
+      if (Number.isNaN(scheduledTime.getTime()) || scheduledTime <= new Date()) {
+        return false;
+      }
+
+      const token = await getFCMToken();
+      if (!token) {
+        return false;
+      }
+
+      const persisted = await this.persistRemoteSchedule({
+        nextTime: scheduledTime,
+        settings,
+        timezone,
+        token,
+      });
+
+      return persisted;
     } catch (error) {
       console.error('Error restoring scheduler:', error);
-      // If restoration fails, just schedule a new one
-      this.scheduleNextReminder();
+      return false;
     }
   }
 
@@ -307,15 +344,59 @@ class NotificationManager {
 
     // Schedule reminder if permissions are granted and enabled
     if (Notification.permission === 'granted' && settings.enabled) {
-      // Try to restore existing scheduler first
-      this.restoreScheduler();
-
-      // If no scheduler was restored, create a new one
-      if (!this.schedulerTimeout) {
+      const restored = await this.restoreScheduler(settings);
+      if (!restored) {
         await this.scheduleNextReminder();
       }
     } else {
       console.log('Notifications not enabled or permission not granted');
+    }
+  }
+
+  private static async persistRemoteSchedule({
+    nextTime,
+    settings,
+    timezone,
+    token,
+  }: {
+    nextTime: Date;
+    settings: NotificationSettings;
+    timezone: string;
+    token?: string | null;
+  }): Promise<boolean> {
+    try {
+      const ensuredToken = token ?? (await getFCMToken());
+      if (!ensuredToken) {
+        console.warn('Unable to persist reminder subscription without FCM token');
+        return false;
+      }
+
+      const user = await ensureAuthenticatedUser();
+      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'dinner');
+      const [hours, minutes] = settings.reminderTime.split(':').map(Number);
+      const platform = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+      const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+
+      await setDoc(
+        reminderRef,
+        {
+          active: true,
+          reminderTime: settings.reminderTime,
+          reminderHour: Number.isFinite(hours) ? hours : null,
+          reminderMinute: Number.isFinite(minutes) ? minutes : null,
+          timezone,
+          token: ensuredToken,
+          nextNotificationAt: Timestamp.fromDate(nextTime),
+          lastKnownPermission: permission,
+          updatedAt: serverTimestamp(),
+          platform,
+        },
+        { merge: true }
+      );
+      return true;
+    } catch (error) {
+      console.error('Error persisting remote reminder schedule:', error);
+      return false;
     }
   }
 }
