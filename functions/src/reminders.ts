@@ -88,6 +88,53 @@ function describeError(error: unknown): string {
   return String(error);
 }
 
+async function hasLoggedMealToday(userId: string, timezone: string): Promise<boolean> {
+  try {
+    // Get today's date in the user's timezone
+    const userToday = DateTime.now().setZone(timezone);
+    if (!userToday.isValid) {
+      functions.logger.warn("Invalid timezone for meal check", { userId, timezone });
+      return false; // If timezone is invalid, don't skip reminder
+    }
+
+    // Create start and end of day timestamps in user's timezone, then convert to UTC
+    const startOfDay = userToday.startOf('day').toUTC();
+    const endOfDay = userToday.endOf('day').toUTC();
+
+    const startTimestamp = admin.firestore.Timestamp.fromDate(startOfDay.toJSDate());
+    const endTimestamp = admin.firestore.Timestamp.fromDate(endOfDay.toJSDate());
+
+    // Query meals for today
+    const mealsQuery = firestore
+      .collection('users')
+      .doc(userId)
+      .collection('meals')
+      .where('date', '>=', startTimestamp)
+      .where('date', '<=', endTimestamp)
+      .limit(1); // We only need to know if any meal exists
+
+    const snapshot = await mealsQuery.get();
+    const hasMeals = !snapshot.empty;
+
+    functions.logger.info("Meal check for today", {
+      userId,
+      timezone,
+      userToday: userToday.toISODate(),
+      hasMeals,
+      mealCount: snapshot.size
+    });
+
+    return hasMeals;
+  } catch (error) {
+    functions.logger.error("Error checking today's meals", {
+      error: describeError(error),
+      userId,
+      timezone
+    });
+    return false; // If error, don't skip reminder (fail safe)
+  }
+}
+
 export const sendDueDinnerReminders = functions.scheduler
   .onSchedule("every 5 minutes", async () => {
     const now = DateTime.utc();
@@ -142,6 +189,27 @@ export const sendDueDinnerReminders = functions.scheduler
             nextNotificationAt: fieldValue.delete(),
           });
           continue;
+        }
+
+        // Check if user has already logged a meal today (skip test notifications)
+        const isTestNotification = docSnap.ref.path.includes('test-dinner');
+        if (!isTestNotification) {
+          const hasLoggedToday = await hasLoggedMealToday(userId, timezone);
+          if (hasLoggedToday) {
+            functions.logger.info("Skipping reminder - user already logged meal today", {
+              userId,
+              docPath: docSnap.ref.path,
+              timezone,
+            });
+            // Update next notification time but mark as skipped
+            await docSnap.ref.update({
+              lastNotificationAttemptAt: nowTimestamp,
+              nextNotificationAt: admin.firestore.Timestamp.fromDate(nextDate),
+              deliveryStatus: "skipped-meal-logged",
+              updatedAt: fieldValue.serverTimestamp(),
+            });
+            continue;
+          }
         }
 
         try {
