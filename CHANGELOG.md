@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-09-25
+
+### Added
+- **Firebase Cloud Functions Infrastructure**: Complete setup for server-side dinner reminder scheduling with `sendDueDinnerReminders` function
+- **GitHub Actions Deployment**: Automated deployment workflow for Firebase Cloud Functions on push to main
+- **Production-Ready Reminder Scheduling**: Cloud-based reminder system that works independently of client app state
+
+### Changed
+- **BREAKING**: Upgraded Firebase Functions runtime from Node.js 18 to Node.js 20 for better performance and security
+- **Firebase Functions v6**: Updated to latest firebase-functions SDK with new scheduler syntax (`functions.scheduler.onSchedule`)
+- **Enhanced Notification Infrastructure**: Server-side reminder dispatch with proper error handling and retry logic
+
+### Technical
+- Added comprehensive Cloud Functions package with TypeScript support and proper dependency management
+- Implemented automated CI/CD pipeline for serverless function deployments
+- Enhanced notification system architecture with cloud-based scheduling for 24/7 operation
+- Added Firestore integration for notification subscription management and delivery tracking
+
 ## [0.3.9] - 2025-09-24
 
 ### Added

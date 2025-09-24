@@ -88,10 +88,8 @@ function describeError(error: unknown): string {
   return String(error);
 }
 
-export const sendDueDinnerReminders = functions.pubsub
-  .schedule("every 5 minutes")
-  .timeZone("Etc/UTC")
-  .onRun(async () => {
+export const sendDueDinnerReminders = functions.scheduler
+  .onSchedule("every 5 minutes", async () => {
     const now = DateTime.utc();
     const nowTimestamp = admin.firestore.Timestamp.fromDate(now.toJSDate());
     let processed = 0;

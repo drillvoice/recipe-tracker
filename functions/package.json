@@ -7,16 +7,17 @@
     "test": "npm run build"
   },
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "dependencies": {
     "firebase-admin": "^11.10.1",
-    "firebase-functions": "^4.4.1",
+    "firebase-functions": "^6.4.0",
     "luxon": "^3.4.4"
   },
   "devDependencies": {
+    "@types/luxon": "^3.7.1",
     "@types/node": "^20.10.5",
-    "firebase-functions-test": "^0.4.0",
+    "firebase-functions-test": "^3.4.1",
     "typescript": "^5.3.3"
   }
 }
