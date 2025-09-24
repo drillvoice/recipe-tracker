@@ -2661,3 +2661,248 @@ h1 {
 .ideas-table th:nth-child(4) { /* Info */
   width: 10%;
 }
+
+/* ======================================
+   NOTIFICATION SETTINGS STYLES
+   ====================================== */
+
+/* Notification Controls */
+.notification-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.notification-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notification-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.notification-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notification-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.notification-stat span:first-child {
+  width: 1.5rem;
+  text-align: center;
+}
+
+/* Notification Controls Grid */
+.notification-controls-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.notification-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Toggle Switch */
+.notification-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border-radius: 24px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.notification-toggle input:checked + .toggle-slider {
+  background: #10b981;
+}
+
+.notification-toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.notification-toggle input:disabled + .toggle-slider {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.notification-toggle input:disabled + .toggle-slider::before {
+  background: #e5e7eb;
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: #374151;
+  user-select: none;
+}
+
+.notification-toggle:has(input:disabled) .toggle-label {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Time Input */
+.time-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.time-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.time-input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background: white;
+  color: #374151;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  max-width: 150px;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.time-note {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Notification Actions */
+.notification-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.test-notification-button {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.875rem;
+}
+
+.test-notification-button:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  transform: translateY(-1px);
+}
+
+.test-notification-button:disabled {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Warning Messages */
+.notification-warning {
+  background: #fef3cd;
+  border: 1px solid #f59e0b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.notification-warning p {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .notification-stats {
+    gap: 0.75rem;
+  }
+
+  .notification-stat {
+    font-size: 0.8rem;
+  }
+
+  .notification-controls-grid {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .notification-toggle {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .time-input {
+    max-width: 100%;
+  }
+
+  .notification-actions {
+    justify-content: stretch;
+  }
+
+  .test-notification-button {
+    width: 100%;
+    text-align: center;
+  }
+}

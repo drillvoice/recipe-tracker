@@ -8,6 +8,7 @@ import { getBackupStatus as getEnhancedBackupStatus } from "@/lib/offline-storag
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from "@/lib/firestore-backup";
 import InstallPrompt from "@/components/InstallPrompt";
 import PWAStatus from "@/components/PWAStatus";
+import NotificationManager, { type NotificationSettings, type NotificationStatus } from "@/lib/notification-manager";
 
 interface BackupStatus {
   lastBackup: number;
@@ -29,12 +30,26 @@ export default function DataManagement() {
   const [activeTab, setActiveTab] = useState<TabType>('export');
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<NotificationStatus | null>(null);
 
   useEffect(() => {
     loadBackupStatus();
     loadCloudBackupStatus();
     performDataValidation();
+    loadNotificationData();
   }, []);
+
+  const loadNotificationData = async () => {
+    try {
+      const settings = NotificationManager.getSettings();
+      const status = await NotificationManager.getStatus();
+      setNotificationSettings(settings);
+      setNotificationStatus(status);
+    } catch (error) {
+      console.error('Failed to load notification data:', error);
+    }
+  };
 
   const loadBackupStatus = async () => {
     try {
@@ -306,6 +321,79 @@ export default function DataManagement() {
     }
   };
 
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (!notificationSettings) return;
+
+    const newSettings = { ...notificationSettings, enabled };
+
+    if (enabled) {
+      // Request permission if not already granted
+      const permission = await NotificationManager.requestPermission();
+      if (permission !== 'granted') {
+        setMessage({
+          type: 'error',
+          text: 'Notification permission is required to enable dinner reminders. Please check your browser settings.'
+        });
+        return;
+      }
+    }
+
+    NotificationManager.saveSettings(newSettings);
+    setNotificationSettings(newSettings);
+
+    // Reschedule or clear notifications based on new setting
+    if (enabled) {
+      await NotificationManager.scheduleNextReminder();
+      setMessage({
+        type: 'success',
+        text: `Dinner reminders enabled! You'll receive a notification daily at ${newSettings.reminderTime} (${formatTimeAsReadable(newSettings.reminderTime)}).`
+      });
+    } else {
+      NotificationManager.clearScheduler();
+      setMessage({
+        type: 'info',
+        text: 'Dinner reminders disabled. You can re-enable them anytime.'
+      });
+    }
+
+    // Refresh status
+    await loadNotificationData();
+  };
+
+  const handleTimeChange = async (time: string) => {
+    if (!notificationSettings) return;
+
+    const newSettings = { ...notificationSettings, reminderTime: time };
+    NotificationManager.saveSettings(newSettings);
+    setNotificationSettings(newSettings);
+
+    // Reschedule if notifications are enabled
+    if (newSettings.enabled && notificationStatus?.permission === 'granted') {
+      await NotificationManager.scheduleNextReminder();
+      setMessage({
+        type: 'success',
+        text: `Reminder time updated to ${formatTimeAsReadable(time)}. Next reminder scheduled accordingly.`
+      });
+    }
+
+    await loadNotificationData();
+  };
+
+  const handleTestNotification = async () => {
+    const success = await NotificationManager.showTestNotification();
+    if (success) {
+      setMessage({
+        type: 'success',
+        text: 'Test notification sent! Check your notifications.'
+      });
+    } else {
+      setMessage({
+        type: 'error',
+        text: 'Failed to send test notification. Please check your notification permissions.'
+      });
+    }
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -334,6 +422,13 @@ export default function DataManagement() {
     }
   };
 
+  const formatTimeAsReadable = (time24: string): string => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
   return (
     <main className="container">
       <Navigation currentPage="account" />
@@ -348,6 +443,120 @@ export default function DataManagement() {
           <button onClick={() => setMessage(null)} className="message-close">×</button>
         </div>
       )}
+
+      {/* Notification Settings Section */}
+      <section className="data-section">
+        <div className="status-header">
+          <h2>🔔 Dinner Reminders</h2>
+          <div className="status-indicator">
+            <div className={`status-dot ${
+              notificationSettings?.enabled && notificationStatus?.permission === 'granted'
+                ? 'active'
+                : 'warning'
+            }`} />
+            <span className={`status-text ${
+              notificationSettings?.enabled && notificationStatus?.permission === 'granted'
+                ? 'active'
+                : 'warning'
+            }`}>
+              {!notificationStatus?.supported
+                ? 'Not Supported'
+                : notificationStatus?.permission === 'denied'
+                ? 'Permission Denied'
+                : notificationSettings?.enabled && notificationStatus?.permission === 'granted'
+                ? 'Active'
+                : 'Disabled'
+              }
+            </span>
+          </div>
+        </div>
+
+        {notificationSettings && notificationStatus ? (
+          <div className="notification-controls">
+            <div className="notification-info">
+              <p className="notification-description">
+                Get reminded to log your dinner each day. Never forget to track your meals!
+              </p>
+
+              <div className="notification-stats">
+                <div className="notification-stat">
+                  <span>🔔</span>
+                  <span>Browser Support: <strong>{notificationStatus.supported ? 'Yes' : 'No'}</strong></span>
+                </div>
+                <div className="notification-stat">
+                  <span>✅</span>
+                  <span>Permission: <strong>{notificationStatus.permission}</strong></span>
+                </div>
+                {notificationSettings.enabled && (
+                  <div className="notification-stat">
+                    <span>⏰</span>
+                    <span>Daily at: <strong>{formatTimeAsReadable(notificationSettings.reminderTime)}</strong></span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="notification-controls-grid">
+              <div className="notification-setting">
+                <label className="notification-toggle">
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.enabled}
+                    onChange={(e) => handleNotificationToggle(e.target.checked)}
+                    disabled={!notificationStatus.supported}
+                  />
+                  <span className="toggle-slider"></span>
+                  <span className="toggle-label">Enable daily dinner reminders</span>
+                </label>
+              </div>
+
+              {notificationSettings.enabled && notificationStatus.permission === 'granted' && (
+                <div className="notification-setting">
+                  <label htmlFor="reminder-time" className="time-label">
+                    Reminder Time:
+                  </label>
+                  <div className="time-input-group">
+                    <input
+                      id="reminder-time"
+                      type="time"
+                      value={notificationSettings.reminderTime}
+                      onChange={(e) => handleTimeChange(e.target.value)}
+                      min="18:00"
+                      max="22:00"
+                      className="time-input"
+                    />
+                    <span className="time-note">Between 6 PM - 10 PM</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="notification-actions">
+                <button
+                  onClick={handleTestNotification}
+                  className="test-notification-button"
+                  disabled={!notificationStatus.supported || notificationStatus.permission !== 'granted'}
+                >
+                  🧪 Test Notification
+                </button>
+              </div>
+            </div>
+
+            {!notificationStatus.supported && (
+              <div className="notification-warning">
+                <p>⚠️ Push notifications are not supported in this browser. Try Chrome, Firefox, or Edge for the best experience.</p>
+              </div>
+            )}
+
+            {notificationStatus.supported && notificationStatus.permission === 'denied' && (
+              <div className="notification-warning">
+                <p>⚠️ Notification permission was denied. To enable reminders, please allow notifications in your browser settings and refresh the page.</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="loading">Loading notification settings...</div>
+        )}
+      </section>
 
       {/* Compact Cloud Backup Section */}
       <section className="data-section">
