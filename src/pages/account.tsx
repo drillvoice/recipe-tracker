@@ -349,7 +349,7 @@ export default function DataManagement() {
         text: `Dinner reminders enabled! You'll receive a notification daily at ${newSettings.reminderTime} (${formatTimeAsReadable(newSettings.reminderTime)}).`
       });
     } else {
-      NotificationManager.clearScheduler();
+      await NotificationManager.clearScheduler();
       setMessage({
         type: 'info',
         text: 'Dinner reminders disabled. You can re-enable them anytime.'

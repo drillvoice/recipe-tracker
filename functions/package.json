@@ -1,0 +1,22 @@
+{
+  "name": "recipe-tracker-functions",
+  "description": "Cloud Functions for Recipe Tracker reminders",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.10.1",
+    "firebase-functions": "^4.4.1",
+    "luxon": "^3.4.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "firebase-functions-test": "^0.4.0",
+    "typescript": "^5.3.3"
+  }
+}
