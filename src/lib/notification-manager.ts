@@ -399,6 +399,79 @@ class NotificationManager {
       return false;
     }
   }
+
+  /**
+   * Test function: Schedule a notification for 15 minutes from now
+   * This is a temporary debugging tool to test the subscription feature
+   */
+  static async scheduleTestNotification(): Promise<boolean> {
+    try {
+      const user = await ensureAuthenticatedUser();
+      const ensuredToken = await getFCMToken();
+
+      if (!ensuredToken) {
+        console.error('No FCM token available for test notification');
+        return false;
+      }
+
+      // Calculate 15 minutes from now
+      const now = new Date();
+      const testTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
+      const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+      const platform = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+
+      await setDoc(
+        reminderRef,
+        {
+          active: true,
+          reminderTime: `${testTime.getHours().toString().padStart(2, '0')}:${testTime.getMinutes().toString().padStart(2, '0')}`,
+          reminderHour: testTime.getHours(),
+          reminderMinute: testTime.getMinutes(),
+          timezone,
+          token: ensuredToken,
+          nextNotificationAt: Timestamp.fromDate(testTime),
+          lastKnownPermission: permission,
+          updatedAt: serverTimestamp(),
+          platform,
+          isTest: true, // Mark as test notification
+        },
+        { merge: true }
+      );
+
+      console.log(`Test notification scheduled for ${testTime.toLocaleString()} (15 minutes from now)`);
+      return true;
+    } catch (error) {
+      console.error('Error scheduling test notification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear test notification subscription
+   */
+  static async clearTestNotification(): Promise<void> {
+    try {
+      const user = await ensureAuthenticatedUser();
+      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
+
+      await setDoc(
+        reminderRef,
+        {
+          active: false,
+          updatedAt: serverTimestamp(),
+          nextNotificationAt: deleteField(),
+          disabledAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      console.log('Test notification cleared');
+    } catch (error) {
+      console.error('Error clearing test notification:', error);
+    }
+  }
 }
 
 export default NotificationManager;

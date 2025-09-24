@@ -394,6 +394,29 @@ export default function DataManagement() {
     }
   };
 
+  const handleScheduledTestNotification = async () => {
+    const success = await NotificationManager.scheduleTestNotification();
+    if (success) {
+      setMessage({
+        type: 'success',
+        text: '🕐 Test notification scheduled for 15 minutes from now! The server will send it automatically.'
+      });
+    } else {
+      setMessage({
+        type: 'error',
+        text: 'Failed to schedule test notification. Please check your authentication and permissions.'
+      });
+    }
+  };
+
+  const handleClearTestNotification = async () => {
+    await NotificationManager.clearTestNotification();
+    setMessage({
+      type: 'success',
+      text: 'Test notification cleared.'
+    });
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -537,6 +560,20 @@ export default function DataManagement() {
                   disabled={!notificationStatus.supported || notificationStatus.permission !== 'granted'}
                 >
                   🧪 Test Notification
+                </button>
+                <button
+                  onClick={handleScheduledTestNotification}
+                  className="test-notification-button scheduled-test"
+                  disabled={!notificationStatus.supported || notificationStatus.permission !== 'granted'}
+                >
+                  🕐 Test Server Notification (15min)
+                </button>
+                <button
+                  onClick={handleClearTestNotification}
+                  className="test-notification-button clear-test"
+                  disabled={!notificationStatus.supported}
+                >
+                  ❌ Clear Test
                 </button>
               </div>
             </div>
