@@ -66,14 +66,14 @@ npm test
 
 ## Firebase Hosting Deployment
 1. Install the [Firebase CLI](https://firebase.google.com/docs/cli) and log in.
-2. Build and export the static site:
+2. Build the static site with the Firebase-specific target:
    ```bash
-   npm run build
-   npx next export -o public
+   npm run build:firebase
    ```
+   The command sets `NEXT_DEPLOY_TARGET=firebase-hosting` so `next build` emits the `out` directory required by Firebase Hosting.
 3. Deploy to Firebase Hosting:
    ```bash
-   firebase deploy
+   firebase deploy --only hosting
    ```
 
 ## Roadmap
@@ -101,3 +101,7 @@ Firestore persistence is enabled in `src/lib/firebase.ts`. Writes are queued loc
    ```
 4. Seed sample data by adding meals in the UI while offline and reconnecting.
 5. To verify cross-device sync, sign in with the same account on two browsers and add meals; they should appear on both after sync.
+
+## Deployment
+- **Vercel:** Use the default Next.js build (`npm run build`). No additional configuration is required.
+- **Firebase Hosting:** Run `npm run build:firebase` to generate the static `out` directory expected by the Firebase Hosting workflow.

@@ -1,6 +1,6 @@
 // notification-manager.ts - Push notification management for dinner reminders
 
-import { getFCMToken, isFCMSupported, db } from './firebase';
+import { getFCMToken, isFCMSupported, db, isFirebaseConfigured } from './firebase';
 import { ensureAuthenticatedUser } from './firebase-auth';
 import {
   doc,
@@ -211,8 +211,19 @@ class NotificationManager {
     localStorage.removeItem(this.SCHEDULER_KEY);
 
     try {
+      if (!isFirebaseConfigured) {
+        console.warn('Skipping remote reminder persistence because Firebase is not configured.');
+        return;
+      }
+
       const user = await ensureAuthenticatedUser();
-      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'dinner');
+      const database = db;
+      if (!database || !isFirebaseConfigured) {
+        console.warn('Skipping remote reminder persistence because Firebase is not configured.');
+        return;
+      }
+
+      const reminderRef = doc(database, 'users', user.uid, 'notificationSubscriptions', 'dinner');
       const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
 
       await setDoc(
@@ -365,6 +376,11 @@ class NotificationManager {
     token?: string | null;
   }): Promise<boolean> {
     try {
+      if (!isFirebaseConfigured) {
+        console.warn('Skipping remote reminder persistence because Firebase is not configured.');
+        return false;
+      }
+
       const ensuredToken = token ?? (await getFCMToken());
       if (!ensuredToken) {
         console.warn('Unable to persist reminder subscription without FCM token');
@@ -372,7 +388,13 @@ class NotificationManager {
       }
 
       const user = await ensureAuthenticatedUser();
-      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'dinner');
+      const database = db;
+      if (!database || !isFirebaseConfigured) {
+        console.warn('Skipping remote reminder persistence because Firebase is not configured.');
+        return false;
+      }
+
+      const reminderRef = doc(database, 'users', user.uid, 'notificationSubscriptions', 'dinner');
       const [hours, minutes] = settings.reminderTime.split(':').map(Number);
       const platform = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
       const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
@@ -406,6 +428,11 @@ class NotificationManager {
    */
   static async scheduleTestNotification(): Promise<boolean> {
     try {
+      if (!isFirebaseConfigured) {
+        console.warn('Skipping test reminder persistence because Firebase is not configured.');
+        return false;
+      }
+
       console.log('🔄 Starting test notification scheduling...');
 
       console.log('🔐 Checking authentication...');
@@ -427,7 +454,13 @@ class NotificationManager {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       console.log('💾 Writing to Firestore...');
-      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
+      const database = db;
+      if (!database || !isFirebaseConfigured) {
+        console.warn('Skipping test reminder persistence because Firebase is not configured.');
+        return false;
+      }
+
+      const reminderRef = doc(database, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
       const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
       const platform = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
 
@@ -462,8 +495,19 @@ class NotificationManager {
    */
   static async clearTestNotification(): Promise<void> {
     try {
+      if (!isFirebaseConfigured) {
+        console.warn('Skipping reminder disable because Firebase is not configured.');
+        return;
+      }
+
       const user = await ensureAuthenticatedUser();
-      const reminderRef = doc(db, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
+      const database = db;
+      if (!database || !isFirebaseConfigured) {
+        console.warn('Skipping reminder disable because Firebase is not configured.');
+        return;
+      }
+
+      const reminderRef = doc(database, 'users', user.uid, 'notificationSubscriptions', 'test-dinner');
 
       await setDoc(
         reminderRef,

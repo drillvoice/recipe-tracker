@@ -30,13 +30,17 @@ test('initializes firebase with persistence', async () => {
   process.env.NEXT_PUBLIC_FIREBASE_APP_ID = 'appid';
   process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = 'measure';
 
-  const { auth, db } = require('@/lib/firebase');
+  const { auth, db, ensureAuthPersistence, isFirebaseConfigured } = require('@/lib/firebase');
 
   expect(initializeApp).toHaveBeenCalled();
   expect(getAuth).toHaveBeenCalledWith('app');
-  expect(setPersistence).toHaveBeenCalledWith('auth', 'local');
   expect(getFirestore).toHaveBeenCalledWith('app');
   expect(enableIndexedDbPersistence).toHaveBeenCalledWith('db');
   expect(auth).toBe('auth');
   expect(db).toBe('db');
+
+  expect(isFirebaseConfigured).toBe(true);
+
+  await ensureAuthPersistence();
+  expect(setPersistence).toHaveBeenCalledWith('auth', 'local');
 });
