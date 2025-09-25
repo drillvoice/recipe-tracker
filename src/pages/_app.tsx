@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { useEffect } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, ensureAuthPersistence, isFirebaseConfigured } from "@/lib/firebase";
 import { signInAnonymously } from "firebase/auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerServiceWorker } from "@/lib/pwa-utils";
@@ -9,7 +9,16 @@ import { registerServiceWorker } from "@/lib/pwa-utils";
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     // Initialize Firebase auth
-    signInAnonymously(auth).catch(() => {});
+    if (!isFirebaseConfigured || !auth) {
+      console.warn("Firebase auth is not configured. Skipping anonymous sign-in.");
+    } else {
+      const firebaseAuth = auth;
+      ensureAuthPersistence()
+        .then(() => signInAnonymously(firebaseAuth))
+        .catch((error) => {
+          console.warn("Firebase auth initialization skipped:", error);
+        });
+    }
 
     // Register service worker for PWA functionality
     registerServiceWorker().then((registration) => {

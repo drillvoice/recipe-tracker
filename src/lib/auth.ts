@@ -5,17 +5,26 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  type Auth,
 } from "firebase/auth";
 import { auth } from "./firebase";
 
+function requireAuth(): Auth {
+  if (!auth) {
+    throw new Error("Firebase auth is not configured.");
+  }
+  return auth;
+}
+
 export async function linkAnonymousWithEmailPassword(email: string, password: string) {
-  if (!auth.currentUser) throw new Error("No current user");
+  const firebaseAuth = requireAuth();
+  if (!firebaseAuth.currentUser) throw new Error("No current user");
   const credential = EmailAuthProvider.credential(email, password);
   try {
-    return await linkWithCredential(auth.currentUser, credential);
+    return await linkWithCredential(firebaseAuth.currentUser, credential);
   } catch (err: any) {
     if (err.code === "auth/credential-already-in-use") {
-      return await signInWithEmailAndPassword(auth, email, password);
+      return await signInWithEmailAndPassword(firebaseAuth, email, password);
     }
     throw err;
   }
@@ -30,22 +39,24 @@ export async function signUpEmail(email: string, password: string) {
 }
 
 export async function signInEmail(email: string, password: string) {
-  if (auth.currentUser && auth.currentUser.isAnonymous) {
+  const firebaseAuth = requireAuth();
+  if (firebaseAuth.currentUser && firebaseAuth.currentUser.isAnonymous) {
     return linkAnonymousWithEmailPassword(email, password);
   }
-  return signInWithEmailAndPassword(auth, email, password);
+  return signInWithEmailAndPassword(firebaseAuth, email, password);
 }
 
 export function signOutUser() {
-  return signOut(auth);
+  return signOut(requireAuth());
 }
 
 export function sendReset(email: string) {
-  return sendPasswordResetEmail(auth, email);
+  return sendPasswordResetEmail(requireAuth(), email);
 }
 
 export function sendVerification() {
-  if (!auth.currentUser) throw new Error("No current user");
-  return sendEmailVerification(auth.currentUser);
+  const firebaseAuth = requireAuth();
+  if (!firebaseAuth.currentUser) throw new Error("No current user");
+  return sendEmailVerification(firebaseAuth.currentUser);
 }
 

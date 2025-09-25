@@ -1,6 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
-jest.mock('@/lib/firebase', () => ({ auth: {} }));
+const mockEnsureAuthPersistence = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('@/lib/firebase', () => ({
+  auth: {},
+  ensureAuthPersistence: mockEnsureAuthPersistence,
+  isFirebaseConfigured: true,
+}));
 
 const mockSignInAnonymously = jest.fn().mockResolvedValue({});
 jest.mock('firebase/auth', () => ({ signInAnonymously: mockSignInAnonymously }));
@@ -11,7 +17,7 @@ function Dummy() {
   return <div data-testid="dummy" />;
 }
 
-test('renders page component', () => {
+test('renders page component', async () => {
   const mockRouter = {
     route: '/',
     pathname: '/',
@@ -28,5 +34,9 @@ test('renders page component', () => {
   
   render(<App Component={Dummy} pageProps={{}} router={mockRouter} />);
   expect(screen.getByTestId('dummy')).toBeInTheDocument();
-  expect(mockSignInAnonymously).toHaveBeenCalled();
+
+  await waitFor(() => {
+    expect(mockEnsureAuthPersistence).toHaveBeenCalled();
+    expect(mockSignInAnonymously).toHaveBeenCalled();
+  });
 });

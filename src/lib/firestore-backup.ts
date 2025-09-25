@@ -8,7 +8,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
-import { db } from './firebase';
+import { db, isFirebaseConfigured } from './firebase';
 import { ensureAuthenticatedUser, getCurrentUser } from './firebase-auth';
 import { getAllMeals } from './offline-storage';
 import { setLastBackupTimestamp } from './offline-storage';
@@ -48,6 +48,12 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
   };
 
   try {
+    const database = db;
+    if (!database || !isFirebaseConfigured) {
+      result.errors.push('Cloud backup is unavailable because Firebase is not configured.');
+      return result;
+    }
+
     // Ensure user is authenticated
     const user = await ensureAuthentication();
     result.userId = user.uid;
@@ -65,7 +71,7 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
     const results: Array<{ success: boolean; mealId: string; error?: string }> = [];
 
     for (let i = 0; i < meals.length; i += batchSize) {
-      const batch = writeBatch(db);
+      const batch = writeBatch(database);
       const batchMeals = meals.slice(i, i + batchSize);
 
       try {
@@ -81,7 +87,7 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
             lastUpdated: serverTimestamp()
           };
 
-          const mealDocRef = doc(db, 'users', user.uid, 'meals', meal.id);
+          const mealDocRef = doc(database, 'users', user.uid, 'meals', meal.id);
           batch.set(mealDocRef, mealData, { merge: true });
         });
 
@@ -119,7 +125,7 @@ export async function backupMealsToCloud(): Promise<CloudBackupResult> {
       await setLastBackupTimestamp(result.timestamp);
 
       // Also store backup metadata in Firestore
-      const backupMetaRef = doc(db, 'users', user.uid, 'metadata', 'backup');
+      const backupMetaRef = doc(database, 'users', user.uid, 'metadata', 'backup');
       await setDoc(backupMetaRef, {
         lastBackupTimestamp: result.timestamp,
         mealCount: result.mealsBackedUp,
@@ -159,7 +165,12 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
     status.userId = currentUser.uid;
 
     // Get backup metadata from Firestore
-    const backupMetaRef = doc(db, 'users', currentUser.uid, 'metadata', 'backup');
+    const database = db;
+    if (!database || !isFirebaseConfigured) {
+      return status;
+    }
+
+    const backupMetaRef = doc(database, 'users', currentUser.uid, 'metadata', 'backup');
     const backupMetaDoc = await getDoc(backupMetaRef);
 
     if (backupMetaDoc.exists()) {
@@ -169,7 +180,7 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
     }
 
     // Get actual count of meals in Firestore
-    const mealsCollectionRef = collection(db, 'users', currentUser.uid, 'meals');
+    const mealsCollectionRef = collection(database, 'users', currentUser.uid, 'meals');
     const snapshot = await getDocs(mealsCollectionRef);
     status.cloudMealCount = snapshot.size;
 
