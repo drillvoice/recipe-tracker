@@ -4,12 +4,12 @@ import {
   type User,
 } from "firebase/auth";
 
-import { auth } from "./firebase";
+import { auth, isFirebaseConfigured } from "./firebase";
 
 let currentUser: User | null = null;
 let pendingAuthPromise: Promise<User> | null = null;
 
-if (typeof window !== "undefined" && typeof auth.onAuthStateChanged === "function") {
+if (typeof window !== "undefined" && auth && typeof auth.onAuthStateChanged === "function") {
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
   });
@@ -20,6 +20,11 @@ export function getCurrentUser(): User | null {
 }
 
 export async function ensureAuthenticatedUser(): Promise<User> {
+  const firebaseAuth = auth;
+  if (!firebaseAuth || !isFirebaseConfigured) {
+    throw new Error("Firebase authentication is not configured.");
+  }
+
   if (currentUser) {
     return currentUser;
   }
@@ -29,7 +34,7 @@ export async function ensureAuthenticatedUser(): Promise<User> {
   }
 
   pendingAuthPromise = new Promise<User>((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
       if (user) {
         currentUser = user;
         pendingAuthPromise = null;
@@ -39,7 +44,7 @@ export async function ensureAuthenticatedUser(): Promise<User> {
       }
 
       try {
-        const result = await signInAnonymously(auth);
+        const result = await signInAnonymously(firebaseAuth);
         currentUser = result.user;
         pendingAuthPromise = null;
         unsubscribe();

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:firebase": "node scripts/build-firebase.js",
     "start": "next start",
     "test": "jest",
     "lint": "eslint .",
@@ -31,6 +32,7 @@
     "@types/react": "^19.1.13",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
