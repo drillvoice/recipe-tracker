@@ -17,42 +17,81 @@ import {
   type Messaging,
 } from "firebase/messaging";
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
-};
+const requiredEnvVars = [
+  "NEXT_PUBLIC_FIREBASE_API_KEY",
+  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+  "NEXT_PUBLIC_FIREBASE_APP_ID",
+] as const;
 
-const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const missingEnvVars = requiredEnvVars.filter(
+  (key) => !process.env[key],
+);
 
-export const auth: Auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence);
+export const isFirebaseConfigured = missingEnvVars.length === 0;
 
-export const db: Firestore = getFirestore(app);
+const firebaseConfig = isFirebaseConfigured
+  ? {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID ?? undefined,
+    }
+  : null;
+
+const app: FirebaseApp | null = firebaseConfig
+  ? getApps().length
+    ? getApp()
+    : initializeApp(firebaseConfig)
+  : null;
+
+export const auth: Auth | null = app ? getAuth(app) : null;
+
+export async function ensureAuthPersistence(): Promise<void> {
+  if (!auth || typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.warn("Failed to set Firebase auth persistence:", error);
+  }
+}
+
+export const db: Firestore | null = app ? getFirestore(app) : null;
 
 // Initialize Firebase Cloud Messaging
 let messaging: Messaging | null = null;
 
-if (typeof window !== "undefined") {
-  enableIndexedDbPersistence(db).catch((err) => {
+if (app && typeof window !== "undefined") {
+  enableIndexedDbPersistence(db!).catch((err) => {
     console.warn("IndexedDB persistence failed", err);
   });
 
   // Initialize messaging only in browser environment
-  isSupported().then((supported) => {
-    if (supported) {
-      messaging = getMessaging(app);
-      console.log("Firebase Cloud Messaging supported and initialized");
-    } else {
-      console.log("Firebase Cloud Messaging not supported in this browser");
-    }
-  }).catch((err) => {
-    console.warn("Failed to check FCM support:", err);
-  });
+  isSupported()
+    .then((supported) => {
+      if (supported && app) {
+        messaging = getMessaging(app);
+        console.log("Firebase Cloud Messaging supported and initialized");
+      } else {
+        console.log("Firebase Cloud Messaging not supported in this browser");
+      }
+    })
+    .catch((err) => {
+      console.warn("Failed to check FCM support:", err);
+    });
+} else if (!isFirebaseConfigured) {
+  console.warn(
+    "Firebase environment variables are not fully configured. Skipping Firebase initialization.",
+    `Missing: ${missingEnvVars.join(", ")}`,
+  );
 }
 
 export { messaging };

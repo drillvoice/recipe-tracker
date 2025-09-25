@@ -69,10 +69,15 @@ export default function Meals() {
   }
 
   async function syncPendingMeals() {
+    const database = db;
+    if (!database) {
+      return;
+    }
+
     const pending = await getPendingMeals();
     for (const m of pending) {
       try {
-        const docRef = await addDoc(collection(db, "meals"), {
+        const docRef = await addDoc(collection(database, "meals"), {
           mealName: m.mealName,
           date: m.date,
           uid: m.uid,
@@ -111,7 +116,7 @@ export default function Meals() {
     setMessage(null);
 
     // Check rate limiting
-    const rateLimitCheck = checkFormSubmissionLimit(auth.currentUser?.uid);
+    const rateLimitCheck = checkFormSubmissionLimit(auth?.currentUser?.uid);
     if (!rateLimitCheck.allowed) {
       setErrors([`Too many submissions. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`]);
       return;
@@ -129,7 +134,7 @@ export default function Meals() {
         id: Date.now().toString(),
         mealName: validation.data.mealName,
         date: Timestamp.fromDate(new Date(validation.data.date + 'T00:00:00')),
-        uid: auth.currentUser?.uid,
+        uid: auth?.currentUser?.uid,
         pending: true,
       };
       
