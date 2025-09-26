@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import type { AppProps } from 'next/app';
 
 const mockEnsureAuthPersistence = jest.fn().mockResolvedValue(undefined);
 
@@ -18,21 +19,25 @@ function Dummy() {
 }
 
 test('renders page component', async () => {
-  const mockRouter = {
-    route: '/',
-    pathname: '/',
-    query: {},
-    asPath: '/',
-    push: jest.fn(),
-    replace: jest.fn(),
-    reload: jest.fn(),
-    prefetch: jest.fn(),
-    back: jest.fn(),
-    beforePopState: jest.fn(),
-    events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() }
-  } as any;
-  
-  render(<App Component={Dummy} pageProps={{}} router={mockRouter} />);
+  const mockAppProps: AppProps = {
+    Component: Dummy,
+    pageProps: {},
+    router: {
+      route: '/',
+      pathname: '/',
+      query: {},
+      asPath: '/',
+      push: jest.fn(),
+      replace: jest.fn(),
+      reload: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+      beforePopState: jest.fn(),
+      events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() }
+    } as unknown as AppProps['router']
+  };
+
+  render(<App {...mockAppProps} />);
   expect(screen.getByTestId('dummy')).toBeInTheDocument();
 
   await waitFor(() => {

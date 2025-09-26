@@ -12,7 +12,7 @@ beforeAll(async () => {
       projectId: 'demo-test',
       firestore: { rules },
     });
-  } catch (e) {
+  } catch {
     available = false;
     console.warn('Firestore emulator not running, skipping tests');
   }

@@ -1,10 +1,11 @@
+import React from 'react';
 import Link from "next/link";
 
 interface NavigationProps {
   currentPage: 'add' | 'dishes' | 'tags' | 'account';
 }
 
-export default function Navigation({ currentPage }: NavigationProps) {
+const Navigation = React.memo<NavigationProps>(({ currentPage }) => {
   return (
     <nav className="top-nav">
       <Link
@@ -33,4 +34,8 @@ export default function Navigation({ currentPage }: NavigationProps) {
       </Link>
     </nav>
   );
-}
+});
+
+Navigation.displayName = 'Navigation';
+
+export default Navigation;

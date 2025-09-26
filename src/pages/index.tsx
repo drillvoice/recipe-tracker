@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Head from "next/head";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
@@ -62,11 +62,11 @@ export default function Meals() {
     return () => clearInterval(checkTaglineInterval);
   }, [currentTagline]);
 
-  async function loadSuggestions() {
+  const loadSuggestions = useCallback(async () => {
     const all = await getAllMeals();
     const names = Array.from(new Set(all.map(m => m.mealName)));
     setSuggestions(names);
-  }
+  }, []);
 
   async function syncPendingMeals() {
     const database = db;
@@ -89,26 +89,26 @@ export default function Meals() {
     }
   }
 
-  function handleMealNameChange(value: string) {
+  const handleMealNameChange = useCallback((value: string) => {
     setMealName(value);
     if (value.trim() === "") {
       setFilteredSuggestions([]);
       setShowSuggestions(false);
       return;
     }
-    
+
     const filtered = suggestions.filter(suggestion =>
       suggestion.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredSuggestions(filtered);
     setShowSuggestions(filtered.length > 0 && value !== "");
-  }
+  }, [suggestions]);
 
-  function selectSuggestion(suggestion: string) {
+  const selectSuggestion = useCallback((suggestion: string) => {
     setMealName(suggestion);
     setShowSuggestions(false);
     setFilteredSuggestions([]);
-  }
+  }, []);
 
   async function addMeal() {
     // Clear previous errors and messages
@@ -243,7 +243,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.4.0
+        v0.4.1
       </div>
     </main>
     </>

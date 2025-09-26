@@ -1,4 +1,4 @@
-import { getAllMeals as getLegacyMeals, type Meal as LegacyMeal } from './mealsStore';
+import { getAllMeals as getLegacyMeals } from './mealsStore';
 import { saveMeal, getAllMeals, getCacheMetadata, updateCacheMetadata } from './offline-storage';
 
 /**
