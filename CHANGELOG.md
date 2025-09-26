@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-09-27
+
+### Removed
+- **BREAKING**: Removed legacy database layer (mealsStore.ts) completely
+- **BREAKING**: Removed database migration system (database-migration.ts)
+- **Legacy Migration Logic**: Eliminated migration calls from useMeals hook
+
+### Fixed
+- **Test Reliability**: Eliminated migration error noise in test output
+- **Test Mocking**: Removed obsolete migration function mocks from test files
+- **System Complexity**: Significantly reduced codebase complexity by removing dual database system
+
+### Technical
+- **Code Reduction**: Removed 187+ lines of legacy database and migration code
+- **Single Database**: Now uses only enhanced IndexedDB storage system (offline-storage.ts)
+- **Simplified Architecture**: Eliminated potential data consistency issues between storage systems
+- **Performance**: Faster app startup without migration checks on every load
+
+### Security
+- **Risk Elimination**: Removed potential data loss scenarios from dual database conflicts
+- **Data Integrity**: Single source of truth for all meal data
+
 ## [0.4.1] - 2025-09-27
 
 ### Fixed

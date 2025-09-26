@@ -21,14 +21,6 @@ jest.mock('@/lib/offline-storage', () => ({
   updateCacheMetadata: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('@/lib/database-migration', () => ({
-  migrateLegacyData: jest.fn().mockResolvedValue({
-    success: true,
-    migratedCount: 0,
-    errors: []
-  }),
-  isMigrationNeeded: jest.fn().mockResolvedValue(false)
-}));
 
 // Mock Firebase
 jest.mock('@/lib/firebase', () => ({
