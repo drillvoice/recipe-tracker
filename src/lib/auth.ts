@@ -22,8 +22,8 @@ export async function linkAnonymousWithEmailPassword(email: string, password: st
   const credential = EmailAuthProvider.credential(email, password);
   try {
     return await linkWithCredential(firebaseAuth.currentUser, credential);
-  } catch (err: any) {
-    if (err.code === "auth/credential-already-in-use") {
+  } catch (err: unknown) {
+    if ((err as { code?: string }).code === "auth/credential-already-in-use") {
       return await signInWithEmailAndPassword(firebaseAuth, email, password);
     }
     throw err;

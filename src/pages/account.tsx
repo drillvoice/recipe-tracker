@@ -4,7 +4,6 @@ import { ExportManager, type ExportOptions } from "@/lib/export-manager";
 import { ImportManager, type ImportOptions, type ImportPreview } from "@/lib/import-manager";
 import { DataValidator, type ValidationResult } from "@/lib/data-validator";
 import { getAllMeals } from "@/lib/offline-storage";
-import { getBackupStatus as getEnhancedBackupStatus } from "@/lib/offline-storage";
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from "@/lib/firestore-backup";
 import InstallPrompt from "@/components/InstallPrompt";
 import PWAStatus from "@/components/PWAStatus";
@@ -20,7 +19,6 @@ interface BackupStatus {
 type TabType = 'export' | 'import' | 'verification';
 
 export default function DataManagement() {
-  const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null);
   const [cloudBackupStatus, setCloudBackupStatus] = useState<CloudBackupStatus | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [importing, setImporting] = useState(false);
@@ -61,7 +59,7 @@ export default function DataManagement() {
         needsBackup: true,
         daysSinceBackup: Infinity
       };
-      setBackupStatus(status);
+      // Status no longer used
     } catch (error) {
       console.error('Failed to load backup status:', error);
     }
@@ -303,7 +301,7 @@ export default function DataManagement() {
     }
   };
 
-  const handleClearLocalData = async () => {
+  const _handleClearLocalData = async () => {
     if (!confirm('Are you sure you want to clear all local data? This cannot be undone. Make sure you have a backup first.')) {
       return;
     }

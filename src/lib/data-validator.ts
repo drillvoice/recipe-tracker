@@ -12,7 +12,7 @@ export interface ValidationError {
   type: 'critical' | 'error' | 'warning';
   field: string;
   message: string;
-  item?: any;
+  item?: unknown;
   suggestion?: string;
 }
 
@@ -452,7 +452,7 @@ export class DataValidator {
       await getAllMeals();
       await getSettings();
       return { passed: true, issues };
-    } catch (error) {
+    } catch {
       issues.push({
         severity: 'critical',
         category: 'data_consistency',
@@ -538,7 +538,7 @@ export class DataValidator {
         });
       }
 
-    } catch (error) {
+    } catch {
       issues.push({
         severity: 'major',
         category: 'performance',
@@ -581,7 +581,7 @@ export class DataValidator {
         }
       }
 
-    } catch (error) {
+    } catch {
       issues.push({
         severity: 'minor',
         category: 'data_consistency',
@@ -628,7 +628,7 @@ export class DataValidator {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Storage estimate not available - not critical
     }
 

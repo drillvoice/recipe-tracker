@@ -1,4 +1,3 @@
-const CACHE_NAME = 'dish-diary-v2';
 const STATIC_CACHE_NAME = 'dish-diary-static-v2';
 const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 
@@ -106,7 +105,7 @@ async function networkFirst(request) {
     }
 
     return networkResponse;
-  } catch (error) {
+  } catch {
     console.log('[SW] Network failed, trying cache:', request.url);
     const cachedResponse = await dynamicCache.match(request);
 
@@ -138,7 +137,7 @@ async function cacheFirst(request) {
       staticCache.put(request, networkResponse.clone());
     }
     return networkResponse;
-  } catch (error) {
+  } catch {
     console.log('[SW] Cache and network failed for:', request.url);
     throw error;
   }
@@ -184,7 +183,7 @@ self.addEventListener('push', (event) => {
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
-  } catch (error) {
+  } catch {
     console.log('[SW] No JSON payload, using default');
   }
 

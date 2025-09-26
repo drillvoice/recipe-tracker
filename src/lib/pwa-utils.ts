@@ -81,7 +81,7 @@ export async function unregisterServiceWorker(): Promise<boolean> {
 export function getPWAInstallState(): PWAInstallState {
   const isStandalone = typeof window !== 'undefined' && (
     window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
+    (window.navigator as { standalone?: boolean }).standalone === true ||
     document.referrer.includes('android-app://')
   );
 
