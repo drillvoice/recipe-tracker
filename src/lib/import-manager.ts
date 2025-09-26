@@ -4,10 +4,9 @@ import {
   saveMeal,
   updateSettings,
   updateCacheMetadata,
-  type Meal,
-  type AppSettings
+  type Meal
 } from './offline-storage';
-import { ExportManager, type BackupData, type SerializableMeal } from './export-manager';
+import { ExportManager, type SerializableMeal } from './export-manager';
 import { TagManager } from './tag-manager';
 
 export type ConflictResolutionStrategy = 'skip' | 'overwrite' | 'merge' | 'ask';

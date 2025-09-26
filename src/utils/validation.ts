@@ -71,7 +71,7 @@ export function validateMeal(data: unknown): ValidationResult<{ mealName: string
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.issues.map((err: any) => err.message)
+        errors: error.issues.map((issue) => issue.message)
       };
     }
     return {
@@ -92,7 +92,7 @@ export function validateEmail(email: unknown): ValidationResult<string> {
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.issues.map((err: any) => err.message)
+        errors: error.issues.map((issue) => issue.message)
       };
     }
     return {
@@ -113,7 +113,7 @@ export function validatePassword(password: unknown): ValidationResult<string> {
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.issues.map((err: any) => err.message)
+        errors: error.issues.map((issue) => issue.message)
       };
     }
     return {

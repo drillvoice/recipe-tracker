@@ -1,4 +1,4 @@
-import { measurePerformance, measureAsyncPerformance } from '@/utils/performance';
+import { measurePerformance } from '@/utils/performance';
 import { Timestamp } from 'firebase/firestore';
 import type { Meal } from '@/lib/offline-storage';
 import type { Idea } from '@/hooks/useIdeas';
