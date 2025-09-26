@@ -4,7 +4,6 @@ import {
   linkWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,
-  signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
 
@@ -13,7 +12,6 @@ jest.mock('firebase/auth', () => ({
   linkWithCredential: jest.fn(() => Promise.resolve({ user: { email: 'e', emailVerified: false } })),
   sendEmailVerification: jest.fn(() => Promise.resolve()),
   sendPasswordResetEmail: jest.fn(() => Promise.resolve()),
-  signInWithEmailAndPassword: jest.fn(() => Promise.resolve({ user: { email: 'e', emailVerified: true } })),
   signOut: jest.fn(() => Promise.resolve()),
 }));
 

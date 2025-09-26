@@ -3,11 +3,10 @@
  */
 
 import 'fake-indexeddb/auto';
-import { Timestamp } from 'firebase/firestore';
 
 // Polyfill for test environment
 if (!global.structuredClone) {
-  global.structuredClone = (obj: any) => JSON.parse(JSON.stringify(obj));
+  global.structuredClone = (obj: unknown) => JSON.parse(JSON.stringify(obj));
 }
 
 // Mock Firebase Firestore Timestamp
@@ -29,7 +28,7 @@ class MockTimestamp {
     return new Date(this.toMillis());
   }
 
-  isEqual(other: any) {
+  isEqual(other: MockTimestamp) {
     return this.seconds === other.seconds && this.nanoseconds === other.nanoseconds;
   }
 
