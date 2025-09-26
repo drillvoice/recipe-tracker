@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface ActionButtonProps {
   icon: string;
   onClick: () => void;
@@ -6,13 +8,13 @@ interface ActionButtonProps {
   disabled?: boolean;
 }
 
-export default function ActionButton({ 
-  icon, 
-  onClick, 
-  title, 
-  variant = 'default', 
-  disabled = false 
-}: ActionButtonProps) {
+const ActionButton = React.memo<ActionButtonProps>(({
+  icon,
+  onClick,
+  title,
+  variant = 'default',
+  disabled = false
+}) => {
   return (
     <button
       className={`action-btn action-btn-${variant}`}
@@ -23,4 +25,8 @@ export default function ActionButton({
       {icon}
     </button>
   );
-}
+});
+
+ActionButton.displayName = 'ActionButton';
+
+export default ActionButton;
