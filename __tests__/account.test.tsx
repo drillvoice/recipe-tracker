@@ -16,14 +16,6 @@ jest.mock('@/lib/offline-storage', () => ({
   saveMeal: jest.fn().mockResolvedValue(undefined)
 }));
 
-jest.mock('@/lib/database-migration', () => ({
-  migrateLegacyData: jest.fn().mockResolvedValue({
-    success: true,
-    migratedCount: 0,
-    errors: []
-  }),
-  isMigrationNeeded: jest.fn().mockResolvedValue(false)
-}));
 
 jest.mock('@/lib/data-validator', () => ({
   DataValidator: {
