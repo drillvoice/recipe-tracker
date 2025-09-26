@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-09-27
+
+### Fixed
+- **TypeScript Configuration**: Fixed ESLint warnings by adding "type": "module" to package.json and renaming jest.config.js to jest.config.cjs
+- **Type Safety**: Replaced 75+ instances of `any` types with proper TypeScript types across test files
+- **Test Mocking**: Fixed authentication test mocking and App component test with proper AppProps typing
+
+### Changed
+- **Performance Optimization**: Added React.memo to Navigation and ActionButton components to prevent unnecessary re-renders
+- **Performance Optimization**: Added useCallback to frequently used functions in index.tsx (loadSuggestions, handleMealNameChange, selectSuggestion)
+- **Error Handling**: Standardized error parameter patterns in validation.ts, replacing `(err: any)` with proper types
+
+### Technical
+- **Code Quality**: Removed 8+ unused imports and variables across multiple files
+- **Bundle Optimization**: Cleaned up dead code for better maintainability
+- **Developer Experience**: Added displayName properties to memoized components for better debugging
+- **Build System**: Enhanced ES module compatibility with proper Jest configuration
+
 ## [0.4.0] - 2025-09-25
 
 ### Added
