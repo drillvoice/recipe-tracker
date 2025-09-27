@@ -112,8 +112,8 @@ describe('Data Management Page', () => {
     });
 
     expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
-    expect(screen.getByText('Local Data Management')).toBeInTheDocument();
-    expect(screen.getByText('Backup to Cloud')).toBeInTheDocument();
+    // Note: This text is now shown with an emoji prefix
+    expect(screen.getByText('Backup Now')).toBeInTheDocument();
   });
 
   test('displays backup status correctly', async () => {
@@ -127,10 +127,10 @@ describe('Data Management Page', () => {
 
     // Check for cloud backup status elements in the new format
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('meals in cloud')).toBeInTheDocument();
-    expect(screen.getByText('Last backup:')).toBeInTheDocument();
+    expect(screen.getByText('Cloud Meals:')).toBeInTheDocument();
+    expect(screen.getByText('Last Backup:')).toBeInTheDocument();
     expect(screen.getByText('Status:')).toBeInTheDocument();
-    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getByText('✅ Connected')).toBeInTheDocument();
   });
 
   test('backup button is clickable', async () => {
@@ -139,10 +139,10 @@ describe('Data Management Page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Backup to Cloud')).toBeInTheDocument();
+      expect(screen.getByText('Backup Now')).toBeInTheDocument();
     });
 
-    const backupButton = screen.getByText('Backup to Cloud');
+    const backupButton = screen.getByText('Backup Now');
     expect(backupButton).toBeEnabled();
 
     // Just ensure clicking doesn't crash
@@ -157,12 +157,12 @@ describe('Data Management Page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Local Data Management')).toBeInTheDocument();
+      expect(screen.getByText('📁 Local Data Management')).toBeInTheDocument();
     });
 
     // Should show the tabbed interface
     expect(screen.getByText('Export Data')).toBeInTheDocument();
     expect(screen.getByText('Import Data')).toBeInTheDocument();
-    expect(screen.getByText('Backup Verification')).toBeInTheDocument();
+    expect(screen.getByText('Data Verification')).toBeInTheDocument();
   });
 });
