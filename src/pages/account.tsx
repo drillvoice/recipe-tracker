@@ -9,12 +9,6 @@ import InstallPrompt from "@/components/InstallPrompt";
 import PWAStatus from "@/components/PWAStatus";
 import NotificationManager, { type NotificationSettings, type NotificationStatus } from "@/lib/notification-manager";
 
-interface BackupStatus {
-  lastBackup: number;
-  mealCount: number;
-  needsBackup: boolean;
-  daysSinceBackup: number;
-}
 
 type TabType = 'export' | 'import' | 'verification';
 
@@ -53,12 +47,6 @@ export default function DataManagement() {
     try {
       // Get actual meal count from main database
       const meals = await getAllMeals();
-      const status = {
-        lastBackup: 0,
-        mealCount: meals.length,
-        needsBackup: true,
-        daysSinceBackup: Infinity
-      };
       // Status no longer used
     } catch (error) {
       console.error('Failed to load backup status:', error);
@@ -301,7 +289,7 @@ export default function DataManagement() {
     }
   };
 
-  const _handleClearLocalData = async () => {
+  const handleClearLocalData = async () => {
     if (!confirm('Are you sure you want to clear all local data? This cannot be undone. Make sure you have a backup first.')) {
       return;
     }

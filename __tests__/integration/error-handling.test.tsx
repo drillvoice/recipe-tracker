@@ -54,11 +54,9 @@ describe.skip('Error Handling Integration Tests', () => {
 
     test('shows loading state before error', async () => {
       // Create a promise that we can control
-      let resolvePromise: (value: any) => void;
       let rejectPromise: (error: any) => void;
-      
-      const controlledPromise = new Promise((resolve, reject) => {
-        resolvePromise = resolve;
+
+      const controlledPromise = new Promise((_resolve, reject) => {
         rejectPromise = reject;
       });
       
