@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2025-09-27
+
+### Fixed
+- **Firebase Configuration**: Ensured client bundles receive populated Firebase environment variables by deriving the config and missing-variable checks from a single injected env map.
+- **Regression Coverage**: Added Jest coverage that mimics the compiled env map to confirm `isFirebaseConfigured` stays true when values are present.
+
 ## [0.4.2] - 2025-09-27
 
 ### Removed
