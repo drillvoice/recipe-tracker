@@ -17,6 +17,27 @@ import {
   type Messaging,
 } from "firebase/messaging";
 
+const firebaseEnv = {
+  NEXT_PUBLIC_FIREBASE_API_KEY:
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID:
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
+  NEXT_PUBLIC_FIREBASE_APP_ID:
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:
+    process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID ?? "",
+  NEXT_PUBLIC_FIREBASE_VAPID_KEY:
+    process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "",
+} as const;
+
+type FirebaseEnv = typeof firebaseEnv;
+
 const requiredEnvVars = [
   "NEXT_PUBLIC_FIREBASE_API_KEY",
   "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -26,21 +47,33 @@ const requiredEnvVars = [
   "NEXT_PUBLIC_FIREBASE_APP_ID",
 ] as const;
 
-const missingEnvVars = requiredEnvVars.filter(
-  (key) => !process.env[key],
-);
+type RequiredEnvKey = (typeof requiredEnvVars)[number];
+
+const missingEnvVars = (
+  Object.entries(firebaseEnv) as [keyof FirebaseEnv, string][]
+)
+  .filter(
+    ([key, value]) =>
+      requiredEnvVars.includes(key as RequiredEnvKey) && value.length === 0,
+  )
+  .map(([key]) => key as RequiredEnvKey);
 
 export const isFirebaseConfigured = missingEnvVars.length === 0;
 
 const firebaseConfig = isFirebaseConfigured
   ? {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID ?? undefined,
+      apiKey: firebaseEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: firebaseEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: firebaseEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: firebaseEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: firebaseEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: firebaseEnv.NEXT_PUBLIC_FIREBASE_APP_ID,
+      ...(firebaseEnv.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+        ? {
+            measurementId:
+              firebaseEnv.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+          }
+        : {}),
     }
   : null;
 
@@ -105,7 +138,7 @@ export async function getFCMToken(): Promise<string | null> {
 
   try {
     // You'll need to add your VAPID key from Firebase Console
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+    const vapidKey = firebaseEnv.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
     if (!vapidKey) {
       console.warn("VAPID key not configured for FCM");
       return null;
