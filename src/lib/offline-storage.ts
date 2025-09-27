@@ -49,7 +49,7 @@ export interface SyncItem {
   id: string;
   type: 'meal' | 'setting' | 'tag';
   operation: 'create' | 'update' | 'delete';
-  data: any;
+  data: unknown;
   timestamp: number;
   retryCount?: number;
 }
@@ -192,10 +192,11 @@ export async function getAllMeals(): Promise<Meal[]> {
 
     // Try to restore from serialized format
     try {
-      if (m.date && typeof (m.date as any).seconds === 'number') {
-        return { ...m, date: new Timestamp((m.date as any).seconds, (m.date as any).nanoseconds || 0) };
+      if (m.date && typeof (m.date as { seconds: number; nanoseconds?: number }).seconds === 'number') {
+        const dateObj = m.date as { seconds: number; nanoseconds?: number };
+        return { ...m, date: new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0) };
       }
-    } catch (error) {
+    } catch {
       // If Timestamp constructor fails (like in tests), keep the original object
       // Silently handle this case to avoid test noise
     }

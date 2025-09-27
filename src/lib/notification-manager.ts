@@ -135,7 +135,7 @@ class NotificationManager {
             title: 'Dismiss',
           },
         ],
-      } as any);
+      } as NotificationOptions);
       return true;
     } catch (error) {
       console.error('Error showing test notification:', error);
@@ -326,7 +326,7 @@ class NotificationManager {
             title: '✕ Dismiss',
           },
         ],
-      } as any);
+      } as NotificationOptions);
 
       console.log('Dinner reminder notification shown');
       return true;

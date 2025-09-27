@@ -1,4 +1,4 @@
-import { getAllMeals, updateMeal, type Meal } from './offline-storage';
+import { getAllMeals, updateMeal } from './offline-storage';
 
 // Color palette - 8 nice pastels
 export const TAG_COLORS = {
@@ -87,7 +87,7 @@ export class TagManager {
     // Collect tag usage statistics
     meals.forEach(meal => {
       if (meal.tags && Array.isArray(meal.tags)) {
-        const mealTime = meal.date.toMillis ? meal.date.toMillis() : (meal.date as any).getTime();
+        const mealTime = meal.date.toMillis ? meal.date.toMillis() : (meal.date as unknown as Date).getTime();
 
         meal.tags.forEach(tag => {
           if (tag && typeof tag === 'string' && tag.trim()) {

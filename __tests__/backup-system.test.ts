@@ -236,7 +236,6 @@ describe('Backup System Integration Tests', () => {
 
     test('should handle empty data gracefully', async () => {
       // Clear all meals
-      const meals = await getAllMeals();
       // In a real implementation, we'd delete them, but for testing just export empty set
 
       const options: ExportOptions = {

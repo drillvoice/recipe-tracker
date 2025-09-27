@@ -1,6 +1,5 @@
 import { signInEmail, signUpEmail, signOutUser, sendReset } from '@/lib/auth';
 import {
-  EmailAuthProvider,
   linkWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,

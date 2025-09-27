@@ -244,7 +244,7 @@ export async function getCloudBackupHealth(): Promise<{
       health.recommendations.push('Run a backup to ensure all data is synchronized');
     }
 
-  } catch (error) {
+  } catch {
     health.healthy = false;
     health.issues.push('Unable to check cloud backup status');
     health.recommendations.push('Check your internet connection and try again');

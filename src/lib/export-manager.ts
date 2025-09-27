@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 import { getAllMeals, getSettings, getCacheMetadata, type Meal, type AppSettings } from './offline-storage';
 import { PWAFileManager } from './pwa-file-manager';
 import { TagManager, type TagManagementData } from './tag-manager';
@@ -48,7 +47,7 @@ export interface BackupData {
   metadata: BackupMetadata;
   meals: SerializableMeal[];
   settings?: AppSettings;
-  cache_meta?: any[];
+  cache_meta?: unknown[];
   tagManagement?: TagManagementData;
 }
 
@@ -66,7 +65,7 @@ export interface SerializableMeal {
 }
 
 export class ExportManager {
-  private static readonly VERSION = '0.4.2';
+  private static readonly VERSION = '0.4.3';
   private static readonly SOURCE = 'dish-diary';
 
   /**
@@ -153,11 +152,11 @@ export class ExportManager {
   private static async gatherExportData(options: ExportOptions): Promise<{
     meals: SerializableMeal[];
     settings?: AppSettings;
-    metadata?: any;
-    cache_meta?: any;
+    metadata?: unknown;
+    cache_meta?: unknown;
     tagManagement?: TagManagementData;
   }> {
-    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: any; cache_meta?: any; tagManagement?: TagManagementData } = {
+    const data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData } = {
       meals: []
     };
 
@@ -210,7 +209,7 @@ export class ExportManager {
   /**
    * Generate JSON export
    */
-  private static generateJSONExport(data: any, options: ExportOptions): { content: string; filename: string } {
+  private static generateJSONExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
     const exportData = {
       metadata: {
         version: this.VERSION,
@@ -236,7 +235,7 @@ export class ExportManager {
   /**
    * Generate CSV export (meals only)
    */
-  private static generateCSVExport(data: any, options: ExportOptions): { content: string; filename: string } {
+  private static generateCSVExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
     if (data.meals.length === 0) {
       return { content: '', filename: '' };
     }
@@ -267,7 +266,7 @@ export class ExportManager {
   /**
    * Generate backup export with compression and checksum
    */
-  private static generateBackupExport(data: any, options: ExportOptions): { content: string; filename: string } {
+  private static generateBackupExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
     const backupData: BackupData = {
       metadata: {
         version: this.VERSION,
@@ -314,7 +313,7 @@ export class ExportManager {
         const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch (error) {
+      } catch {
         // Fall back to simple checksum if crypto.subtle fails
       }
     }

@@ -1,4 +1,4 @@
-import { openDB, type IDBPDatabase } from 'idb';
+import { openDB } from 'idb';
 import { Timestamp } from 'firebase/firestore';
 import type { Meal } from './offline-storage';
 
@@ -123,7 +123,7 @@ export async function migrateFromOldDatabase(): Promise<MigrationResult> {
           mealName: oldMeal.mealName,
           date: oldMeal.date instanceof Timestamp
             ? oldMeal.date
-            : new Timestamp((oldMeal.date as any).seconds || 0, (oldMeal.date as any).nanoseconds || 0),
+            : new Timestamp((oldMeal.date as { seconds?: number; nanoseconds?: number }).seconds || 0, (oldMeal.date as { seconds?: number; nanoseconds?: number }).nanoseconds || 0),
           uid: oldMeal.uid,
           pending: oldMeal.pending || false,
           hidden: oldMeal.hidden || false

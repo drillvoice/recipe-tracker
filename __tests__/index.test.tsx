@@ -41,10 +41,8 @@ test('renders add meal form', async () => {
 });
 
 test('suggests previous meals', async () => {
-  let container: HTMLElement;
   await act(async () => {
-    const rendered = render(<Page />);
-    container = rendered.container;
+    render(<Page />);
   });
   // The autocomplete now uses custom dropdown instead of datalist
   // Check that suggestions appear when typing
