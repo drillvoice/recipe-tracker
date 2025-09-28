@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2025-09-28
+
+### Added
+- **Data Management Dashboard**: Unified status headers, compact stats, and drag-and-drop importing for the Cloud Backup and Import panels make the settings area easier to scan and use.
+- **Notification Testing Tools**: Added UI controls to schedule a server-driven dinner reminder test and clear it without leaving the app.
+
+### Changed
+- **Import Pipeline Hardening**: Tightened type guards, normalized metadata, and improved conflict summaries when restoring meals from JSON, CSV, or backup exports.
+- **Notification Controls**: Reworked toggle logic to better surface browser support, permission state, and reminder timing in one place.
+
+### Fixed
+- **Reminder Lifecycle**: Ensured disabling reminders clears scheduled jobs and surfaces clearer feedback when browser permissions block activation.
+- **Modal Cleanup**: Confirm dialogs now always restore the document scroll state even if confirm handlers throw.
+
 ## [0.4.4] - 2025-09-27
 
 ### Fixed
