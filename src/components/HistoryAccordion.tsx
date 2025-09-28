@@ -21,9 +21,11 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
 
   // Refresh meals when refreshTrigger changes
   useEffect(() => {
-    if (refreshTrigger) {
-      loadMeals();
+    if (refreshTrigger === undefined || refreshTrigger === null) {
+      return;
     }
+
+    loadMeals();
   }, [refreshTrigger, loadMeals]);
 
   const startEdit = useCallback((meal: Meal) => {

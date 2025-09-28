@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -21,15 +21,26 @@ export default function ConfirmDialog({
   onCancel,
   variant = 'default'
 }: ConfirmDialogProps) {
+  const previousOverflowRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const { style } = document.body;
+
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      if (previousOverflowRef.current === null) {
+        previousOverflowRef.current = style.overflow;
+      }
+      style.overflow = 'hidden';
+    } else if (previousOverflowRef.current !== null) {
+      style.overflow = previousOverflowRef.current;
+      previousOverflowRef.current = null;
     }
-    
+
     return () => {
-      document.body.style.overflow = 'unset';
+      if (previousOverflowRef.current !== null) {
+        style.overflow = previousOverflowRef.current;
+        previousOverflowRef.current = null;
+      }
     };
   }, [isOpen]);
 
