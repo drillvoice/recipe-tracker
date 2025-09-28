@@ -1,5 +1,12 @@
 import { Timestamp } from 'firebase/firestore';
-import { getAllMeals, getSettings, getCacheMetadata, type Meal } from './offline-storage';
+import {
+  getAllMeals,
+  getSettings,
+  getCacheMetadata,
+  type Meal,
+  type AppSettings,
+  type CacheMetadata
+} from './offline-storage';
 
 export interface ValidationResult {
   valid: boolean;
@@ -265,7 +272,10 @@ export class DataValidator {
   /**
    * Validate settings data
    */
-  private static async validateSettings(settings: any, result: ValidationResult): Promise<void> {
+  private static async validateSettings(
+    settings: AppSettings | null | undefined,
+    result: ValidationResult
+  ): Promise<void> {
     if (!settings) {
       result.warnings.push({
         type: 'data_quality',
@@ -310,7 +320,11 @@ export class DataValidator {
   /**
    * Validate metadata consistency
    */
-  private static async validateMetadata(metadata: any, actualMealCount: number, result: ValidationResult): Promise<void> {
+  private static async validateMetadata(
+    metadata: CacheMetadata | null,
+    actualMealCount: number,
+    result: ValidationResult
+  ): Promise<void> {
     if (!metadata) {
       result.warnings.push({
         type: 'data_quality',

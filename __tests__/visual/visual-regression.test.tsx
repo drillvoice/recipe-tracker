@@ -50,7 +50,10 @@ jest.mock('@/lib/firebase', () => ({
 }));
 
 jest.mock('firebase/auth', () => ({
-  onAuthStateChanged: (auth: any, cb: any) => {
+  onAuthStateChanged: (
+    _auth: unknown,
+    cb: (user: { uid: string; isAnonymous: boolean }) => void
+  ) => {
     cb({ uid: 'test-uid', isAnonymous: true });
     return () => {};
   }
@@ -80,9 +83,9 @@ const originalDate = Date;
 beforeAll(() => {
   // Mock Date constructor with better compatibility
   global.Date = class extends originalDate {
-    constructor(...args: any[]) {
+    constructor(...args: ConstructorParameters<typeof Date>) {
       if (args.length) {
-        super(...(args as [number | string | Date]));
+        super(...args);
       } else {
         super(mockDate);
       }
@@ -104,8 +107,8 @@ beforeAll(() => {
         return mockDate.toISOString();
       }
       return super.toISOString();
-    }
-  } as any;
+      }
+  } as unknown as DateConstructor;
 });
 
 afterAll(() => {

@@ -1,8 +1,13 @@
 import fs from 'fs';
-import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
+import {
+  initializeTestEnvironment,
+  assertSucceeds,
+  assertFails,
+  type RulesTestEnvironment
+} from '@firebase/rules-unit-testing';
 import { doc, setDoc } from 'firebase/firestore';
 
-let testEnv: any;
+let testEnv: RulesTestEnvironment | null = null;
 let available = true;
 
 beforeAll(async () => {
@@ -24,6 +29,9 @@ afterAll(async () => {
 
 test('user can write only to own path', async () => {
   if (!available) return;
+  if (!testEnv) {
+    throw new Error('Firestore test environment was not initialized.');
+  }
   const aliceDb = testEnv.authenticatedContext('alice').firestore();
   await assertSucceeds(setDoc(doc(aliceDb, 'meals/alice/items/1'), { name: 'x' }));
   await assertFails(setDoc(doc(aliceDb, 'meals/bob/items/1'), { name: 'x' }));
