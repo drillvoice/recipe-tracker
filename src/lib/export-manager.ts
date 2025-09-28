@@ -95,17 +95,17 @@ export class ExportManager {
 
       switch (options.format) {
         case 'json':
-          { const jsonResult = this.generateJSONExport(data, options);
+          { const jsonResult = this.generateJSONExport(data);
           content = jsonResult.content;
           filename = jsonResult.filename; }
           break;
         case 'csv':
-          { const csvResult = this.generateCSVExport(data, options);
+          { const csvResult = this.generateCSVExport(data);
           content = csvResult.content;
           filename = csvResult.filename; }
           break;
         case 'backup':
-          { const backupResult = this.generateBackupExport(data, options);
+          { const backupResult = this.generateBackupExport(data);
           content = backupResult.content;
           filename = backupResult.filename; }
           break;
@@ -209,7 +209,7 @@ export class ExportManager {
   /**
    * Generate JSON export
    */
-  private static generateJSONExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
+  private static generateJSONExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }): { content: string; filename: string } {
     const exportData = {
       metadata: {
         version: this.VERSION,
@@ -235,7 +235,7 @@ export class ExportManager {
   /**
    * Generate CSV export (meals only)
    */
-  private static generateCSVExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
+  private static generateCSVExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }): { content: string; filename: string } {
     if (data.meals.length === 0) {
       return { content: '', filename: '' };
     }
@@ -266,7 +266,7 @@ export class ExportManager {
   /**
    * Generate backup export with compression and checksum
    */
-  private static generateBackupExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }, _options: ExportOptions): { content: string; filename: string } {
+  private static generateBackupExport(data: { meals: SerializableMeal[]; settings?: AppSettings; metadata?: unknown; cache_meta?: unknown; tagManagement?: TagManagementData }): { content: string; filename: string } {
     const backupData: BackupData = {
       metadata: {
         version: this.VERSION,
