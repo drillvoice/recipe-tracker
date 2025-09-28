@@ -198,7 +198,7 @@ async function databaseExists(dbName: string): Promise<boolean> {
     const db = await openDB(dbName, 1);
     db.close();
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

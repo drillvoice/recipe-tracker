@@ -1,10 +1,12 @@
 import { render, screen, act } from '@testing-library/react';
 
 // Polyfill for next/link usage in tests
-(document as any).createRange = () => ({
-  setStart: () => {},
-  setEnd: () => {},
-  commonAncestorContainer: document.createElement('div')
+Object.defineProperty(document, 'createRange', {
+  value: () => ({
+    setStart: () => undefined,
+    setEnd: () => undefined,
+    commonAncestorContainer: document.createElement('div')
+  }) as unknown as Range
 });
 
 jest.mock('@/lib/offline-storage', () => ({

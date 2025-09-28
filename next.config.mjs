@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 /** @type {import('next').NextConfig} */
 const deployTarget = process.env.NEXT_DEPLOY_TARGET;
 const isFirebaseStaticExport = deployTarget === 'firebase-hosting';

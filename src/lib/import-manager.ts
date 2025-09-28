@@ -4,10 +4,16 @@ import {
   saveMeal,
   updateSettings,
   updateCacheMetadata,
-  type Meal
+  type Meal,
+  type AppSettings,
+  type CacheMetadata
 } from './offline-storage';
-import { ExportManager, type SerializableMeal } from './export-manager';
-import { TagManager } from './tag-manager';
+import {
+  ExportManager,
+  type SerializableMeal,
+  type BackupMetadata
+} from './export-manager';
+import { TagManager, type TagManagementData } from './tag-manager';
 
 export type ConflictResolutionStrategy = 'skip' | 'overwrite' | 'merge' | 'ask';
 
@@ -18,13 +24,20 @@ export interface ImportOptions {
   dryRun?: boolean;
 }
 
-export interface ConflictItem {
-  type: 'meal' | 'setting';
-  action: 'update' | 'create';
-  existing?: any;
-  incoming: any;
-  fieldConflicts?: string[];
-}
+export type ConflictItem =
+  | {
+      type: 'meal';
+      action: 'update';
+      existing: Meal;
+      incoming: SerializableMeal;
+      fieldConflicts?: string[];
+    }
+  | {
+      type: 'meal';
+      action: 'create';
+      incoming: SerializableMeal;
+      fieldConflicts?: string[];
+    };
 
 export interface ImportResult {
   success: boolean;
@@ -47,7 +60,7 @@ export interface ImportResult {
 export interface ImportPreview {
   valid: boolean;
   format: string;
-  metadata?: any;
+  metadata?: BackupMetadata | Record<string, unknown>;
   summary: {
     totalMeals: number;
     newMeals: number;
@@ -59,6 +72,25 @@ export interface ImportPreview {
   errors: string[];
   warnings: string[];
 }
+
+type ImportFormat = 'backup' | 'json' | 'csv' | 'unknown';
+
+interface ParsedImportPayload {
+  meals: SerializableMeal[];
+  settings?: Partial<AppSettings>;
+  cache_meta?: CacheMetadata | CacheMetadata[] | null;
+  tagManagement?: TagManagementData;
+}
+
+interface ParsedImportResult {
+  success: boolean;
+  format: ImportFormat;
+  data: ParsedImportPayload;
+  metadata?: BackupMetadata | Record<string, unknown>;
+  errors: string[];
+}
+
+type MealUpdateConflict = Extract<ConflictItem, { action: 'update' }>;
 
 export class ImportManager {
 
@@ -242,15 +274,20 @@ export class ImportManager {
 
       // Update metadata
       if (parsed.metadata && !options.dryRun) {
+        const metadataObject = parsed.metadata as Record<string, unknown>;
+        const metadataSource =
+          typeof metadataObject.source === 'string' ? metadataObject.source : 'unknown';
+        const metadataFormat =
+          typeof metadataObject.format === 'string' ? metadataObject.format : 'unknown';
         await updateCacheMetadata('import_status', {
           lastImportTimestamp: Date.now(),
-          lastImportSource: parsed.metadata.source || 'unknown',
-          lastImportFormat: parsed.metadata.format || 'unknown'
+          lastImportSource: metadataSource,
+          lastImportFormat: metadataFormat
         });
       }
 
       result.summary.conflictsDetected = result.conflicts.length;
-      result.summary.conflictsResolved = result.conflicts.filter(c => c.action).length;
+      result.summary.conflictsResolved = result.conflicts.filter(c => c.action === 'update').length;
 
       result.success = result.errors.length === 0;
 
@@ -268,49 +305,41 @@ export class ImportManager {
   /**
    * Parse import data and detect format
    */
-  private static async parseImportData(content: string): Promise<{
-    success: boolean;
-    format: string;
-    data: any;
-    metadata?: any;
-    errors: string[];
-  }> {
-    const result = {
+  private static async parseImportData(content: string): Promise<ParsedImportResult> {
+    const result: ParsedImportResult = {
       success: false,
       format: 'unknown',
-      data: {} as any,
-      metadata: undefined,
-      errors: [] as string[]
+      data: { meals: [] },
+      errors: []
     };
 
     try {
       // Try parsing as JSON first
-      const parsed = JSON.parse(content);
+      const parsed: unknown = JSON.parse(content);
 
       // Detect format based on structure
       if (this.isBackupFormat(parsed)) {
+        const meals = this.normalizeMealArray(parsed.meals);
         result.format = 'backup';
         result.data = {
-          meals: parsed.meals || [],
-          settings: parsed.settings,
-          cache_meta: parsed.cache_meta
+          meals,
+          settings: (parsed.settings as Partial<AppSettings> | undefined) ?? undefined,
+          cache_meta: (parsed.cache_meta as CacheMetadata | CacheMetadata[] | null | undefined) ?? null,
+          tagManagement: (parsed.tagManagement as TagManagementData | undefined) ?? undefined
         };
-        result.metadata = parsed.metadata;
+        result.metadata = parsed.metadata as BackupMetadata | Record<string, unknown> | undefined;
       } else if (this.isJSONExportFormat(parsed)) {
+        const meals = this.normalizeMealArray(parsed.meals);
         result.format = 'json';
         result.data = {
-          meals: parsed.meals || [],
-          settings: parsed.settings
+          meals,
+          settings: (parsed.settings as Partial<AppSettings> | undefined) ?? undefined,
+          tagManagement: (parsed.tagManagement as TagManagementData | undefined) ?? undefined
         };
-        result.metadata = parsed.metadata;
+        result.metadata = parsed.metadata as BackupMetadata | Record<string, unknown> | undefined;
       } else {
         result.errors.push('Unrecognized JSON format');
         return result;
-      }
-
-      // Validate and convert meals
-      if (result.data.meals) {
-        result.data.meals = result.data.meals.map((meal: any) => this.validateAndConvertMeal(meal));
       }
 
       result.success = true;
@@ -335,35 +364,60 @@ export class ImportManager {
   /**
    * Check if data is backup format
    */
-  private static isBackupFormat(data: any): boolean {
-    return data &&
-           data.metadata &&
-           data.metadata.format === 'backup' &&
-           Array.isArray(data.meals);
+  private static isBackupFormat(data: unknown): data is {
+    metadata: { format: string; key?: string };
+    meals?: unknown[];
+    settings?: Partial<AppSettings>;
+    cache_meta?: CacheMetadata | CacheMetadata[] | null;
+    tagManagement?: TagManagementData;
+  } {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+    const candidate = data as Record<string, unknown>;
+    const metadata = candidate.metadata as Record<string, unknown> | undefined;
+    return (
+      Array.isArray(candidate.meals) &&
+      typeof metadata?.format === 'string' &&
+      metadata.format === 'backup'
+    );
   }
 
   /**
    * Check if data is JSON export format
    */
-  private static isJSONExportFormat(data: any): boolean {
-    // Check if it's a valid JSON export with proper structure
-    if (!data || !data.metadata || !Array.isArray(data.meals)) {
+  private static isJSONExportFormat(data: unknown): data is {
+    metadata: { format?: string; key?: string };
+    meals?: unknown[];
+    settings?: Partial<AppSettings>;
+    tagManagement?: TagManagementData;
+  } {
+    if (!data || typeof data !== 'object') {
       return false;
     }
 
-    // Accept new format with explicit format field
-    if (data.metadata.format === 'json') {
+    const candidate = data as Record<string, unknown>;
+    const metadata = candidate.metadata as Record<string, unknown> | undefined;
+    if (!Array.isArray(candidate.meals) || !metadata) {
+      return false;
+    }
+
+    if (metadata.format === 'json') {
       return true;
     }
 
-    // Accept legacy formats:
-    // 1. Files with backup_status key (cache metadata exports)
-    // 2. Files without format field (older exports)
-    if (data.metadata.key === 'backup_status' || !data.metadata.format) {
+    if (metadata.key === 'backup_status' || metadata.format === undefined) {
       return true;
     }
 
     return false;
+  }
+
+  private static normalizeMealArray(meals: unknown): SerializableMeal[] {
+    if (!Array.isArray(meals)) {
+      return [];
+    }
+    return meals.map(meal => this.validateAndConvertMeal(meal));
   }
 
   /**
@@ -419,30 +473,49 @@ export class ImportManager {
   /**
    * Validate and convert meal data
    */
-  private static validateAndConvertMeal(mealData: any): SerializableMeal {
-    if (!mealData.id || typeof mealData.id !== 'string') {
+  private static validateAndConvertMeal(mealData: unknown): SerializableMeal {
+    if (!mealData || typeof mealData !== 'object') {
+      throw new Error('Invalid meal data structure');
+    }
+
+    const candidate = mealData as Record<string, unknown>;
+
+    const id = candidate.id;
+    if (typeof id !== 'string' || id.trim() === '') {
       throw new Error('Meal missing required ID field');
     }
 
-    if (!mealData.mealName || typeof mealData.mealName !== 'string') {
+    const mealName = candidate.mealName;
+    if (typeof mealName !== 'string' || mealName.trim() === '') {
       throw new Error('Meal missing required mealName field');
     }
 
-    if (!mealData.date) {
+    const dateValue = candidate.date;
+    if (!dateValue) {
       throw new Error('Meal missing required date field');
     }
 
     // Convert date to consistent format
-    let dateObj;
-    if (mealData.date.seconds !== undefined) {
-      // Already in Firestore Timestamp format
+    let dateObj: SerializableMeal['date'];
+    if (
+      typeof dateValue === 'object' &&
+      dateValue !== null &&
+      'seconds' in dateValue
+    ) {
+      const seconds = Number((dateValue as { seconds: number }).seconds);
+      const nanoseconds = Number((dateValue as { nanoseconds?: number }).nanoseconds ?? 0);
+      if (Number.isNaN(seconds)) {
+        throw new Error('Invalid seconds value in meal date');
+      }
       dateObj = {
-        seconds: mealData.date.seconds,
-        nanoseconds: mealData.date.nanoseconds || 0
+        seconds,
+        nanoseconds
       };
-    } else if (typeof mealData.date === 'string') {
-      // ISO string format
-      const date = new Date(mealData.date);
+    } else if (typeof dateValue === 'string') {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) {
+        throw new Error('Invalid date string in meal data');
+      }
       dateObj = {
         seconds: Math.floor(date.getTime() / 1000),
         nanoseconds: (date.getTime() % 1000) * 1000000
@@ -451,13 +524,17 @@ export class ImportManager {
       throw new Error('Invalid date format in meal data');
     }
 
+    const uid = typeof candidate.uid === 'string' ? candidate.uid : undefined;
+    const pending = typeof candidate.pending === 'boolean' ? candidate.pending : Boolean(candidate.pending);
+    const hidden = typeof candidate.hidden === 'boolean' ? candidate.hidden : Boolean(candidate.hidden);
+
     return {
-      id: mealData.id,
-      mealName: mealData.mealName.trim(),
+      id: id.trim(),
+      mealName: mealName.trim(),
       date: dateObj,
-      uid: mealData.uid,
-      pending: !!mealData.pending,
-      hidden: !!mealData.hidden
+      uid,
+      pending,
+      hidden
     };
   }
 
@@ -495,7 +572,7 @@ export class ImportManager {
           const conflicts = this.detectMealConflicts(existing, incomingMeal);
 
           if (conflicts.length > 0) {
-            const conflict: ConflictItem = {
+            const conflict: MealUpdateConflict = {
               type: 'meal',
               action: 'update',
               existing,
@@ -560,7 +637,7 @@ export class ImportManager {
    * Resolve meal conflict based on strategy
    */
   private static async resolveMealConflict(
-    conflict: ConflictItem,
+    conflict: MealUpdateConflict,
     strategy: ConflictResolutionStrategy
   ): Promise<'skip' | 'overwrite' | 'merge'> {
     switch (strategy) {
@@ -571,7 +648,9 @@ export class ImportManager {
       case 'merge': {
         // For meals, merge means take newer timestamp
         const existingTime = conflict.existing.date.toMillis();
-        const incomingTime = conflict.incoming.date.seconds * 1000;
+        const incomingTime =
+          conflict.incoming.date.seconds * 1000 +
+          conflict.incoming.date.nanoseconds / 1_000_000;
         return incomingTime > existingTime ? 'overwrite' : 'skip';
       }
       case 'ask':

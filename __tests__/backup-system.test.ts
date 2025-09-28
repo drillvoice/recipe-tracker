@@ -80,10 +80,21 @@ Object.defineProperty(document.body, 'removeChild', {
   value: jest.fn()
 });
 
-import { ExportManager, type ExportOptions, type BackupData } from '../src/lib/export-manager';
-import { ImportManager, type ImportOptions } from '../src/lib/import-manager';
+import {
+  ExportManager,
+  type ExportOptions,
+  type BackupData
+} from '../src/lib/export-manager';
+import {
+  ImportManager,
+  type ImportOptions,
+  type ConflictResolutionStrategy
+} from '../src/lib/import-manager';
 import { DataValidator } from '../src/lib/data-validator';
 import { saveMeal, getAllMeals, updateSettings, type Meal } from '../src/lib/offline-storage';
+
+const createMockTimestamp = (date: Date): Meal['date'] =>
+  MockTimestamp.fromDate(date) as unknown as Meal['date'];
 
 describe('Backup System Integration Tests', () => {
   beforeEach(async () => {
@@ -101,7 +112,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-1',
         mealName: 'Spaghetti Carbonara',
-        date: MockTimestamp.fromDate(new Date('2024-03-15')) as any,
+        date: createMockTimestamp(new Date('2024-03-15')),
         uid: 'test-user',
         pending: false,
         hidden: false
@@ -109,7 +120,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-2',
         mealName: 'Chicken Curry',
-        date: MockTimestamp.fromDate(new Date('2024-03-16')) as any,
+        date: createMockTimestamp(new Date('2024-03-16')),
         uid: 'test-user',
         pending: true,
         hidden: false
@@ -117,7 +128,7 @@ describe('Backup System Integration Tests', () => {
       {
         id: 'meal-3',
         mealName: 'Vegetable Stir Fry',
-        date: MockTimestamp.fromDate(new Date('2024-03-17')) as any,
+        date: createMockTimestamp(new Date('2024-03-17')),
         uid: 'test-user',
         pending: false,
         hidden: true
@@ -216,13 +227,13 @@ describe('Backup System Integration Tests', () => {
         {
           id: 'valid-meal',
           mealName: 'Test Meal',
-          date: MockTimestamp.fromDate(new Date()) as any,
+          date: createMockTimestamp(new Date()),
           uid: 'test-user'
         },
         {
           id: '', // Invalid - empty ID
           mealName: 'Invalid Meal',
-          date: MockTimestamp.fromDate(new Date()) as any,
+          date: createMockTimestamp(new Date()),
           uid: 'test-user'
         }
       ];
@@ -417,7 +428,7 @@ describe('Backup System Integration Tests', () => {
       const invalidMeal = {
         id: '', // Invalid empty ID
         mealName: '',
-        date: MockTimestamp.fromDate(new Date()) as any,
+        date: createMockTimestamp(new Date()),
         uid: 'test-user'
       } as Meal;
 
@@ -445,7 +456,7 @@ describe('Backup System Integration Tests', () => {
         new Array(15000).fill(null).map((_, i) => ({
           id: `meal-${i}`,
           mealName: `Meal ${i}`,
-          date: MockTimestamp.fromDate(new Date()) as any,
+          date: createMockTimestamp(new Date()),
           uid: 'test-user'
         }))
       );
@@ -587,15 +598,11 @@ describe('Backup System Integration Tests', () => {
       };
 
       // Test different conflict resolution strategies
-      const strategies: Array<{ strategy: string; expectedAction: string }> = [
-        { strategy: 'skip', expectedAction: 'should skip conflicting items' },
-        { strategy: 'overwrite', expectedAction: 'should overwrite with new data' },
-        { strategy: 'merge', expectedAction: 'should merge based on timestamps' }
-      ];
+      const strategies: ConflictResolutionStrategy[] = ['skip', 'overwrite', 'merge'];
 
-      for (const { strategy } of strategies) {
+      for (const strategy of strategies) {
         const options: ImportOptions = {
-          conflictResolution: strategy as any,
+          conflictResolution: strategy,
           createBackup: false,
           dryRun: true // Use dry run to avoid affecting subsequent tests
         };
@@ -630,10 +637,10 @@ describe('Backup System Integration Tests', () => {
     });
 
     test('should handle unsupported export formats gracefully', async () => {
-      const options: ExportOptions = {
-        format: 'xml' as any, // Unsupported format
+      const options = {
+        format: 'xml', // Unsupported format
         includeMeals: true
-      };
+      } as unknown as ExportOptions;
 
       const result = await ExportManager.exportData(options);
 

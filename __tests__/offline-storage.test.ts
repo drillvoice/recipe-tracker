@@ -18,8 +18,16 @@ jest.mock('idb', () => ({
 
 describe('offline-storage meals', () => {
   beforeAll(() => {
-    (global as any).window = (global as any).window || {};
-    (global as any).window.indexedDB = {};
+    const globalWithWindow = globalThis as typeof globalThis & {
+      window?: { indexedDB?: unknown };
+    };
+    globalWithWindow.window = globalWithWindow.window ?? {};
+    globalWithWindow.window.indexedDB = {
+      open: jest.fn(),
+      deleteDatabase: jest.fn(),
+      cmp: jest.fn(),
+      databases: jest.fn()
+    } as unknown as IDBFactory;
   });
 
   test('getAllMeals converts plain date objects to Firestore Timestamps', async () => {

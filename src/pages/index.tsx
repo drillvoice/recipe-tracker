@@ -30,21 +30,35 @@ export default function Meals() {
   const [currentTagline, setCurrentTagline] = useState<string>("");
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
-  useEffect(() => {
-    syncPendingMeals();
-    loadSuggestions();
-    initializeNotifications();
+  const syncPendingMeals = useCallback(async () => {
+    const database = db;
+    if (!database) {
+      return;
+    }
+
+    const pending = await getPendingMeals();
+    for (const m of pending) {
+      try {
+        const docRef = await addDoc(collection(database, "meals"), {
+          mealName: m.mealName,
+          date: m.date,
+          uid: m.uid,
+        });
+        await markMealSynced(m.id, docRef.id);
+      } catch {
+        // ignore offline errors
+      }
+    }
   }, []);
 
-  // Initialize notification system
-  async function initializeNotifications() {
+  const initializeNotifications = useCallback(async () => {
     try {
       await NotificationManager.initialize();
       console.log('Notification system initialized');
     } catch (error) {
       console.error('Failed to initialize notifications:', error);
     }
-  }
+  }, []);
 
   // Initialize and manage tagline rotation
   useEffect(() => {
@@ -68,26 +82,11 @@ export default function Meals() {
     setSuggestions(names);
   }, []);
 
-  async function syncPendingMeals() {
-    const database = db;
-    if (!database) {
-      return;
-    }
-
-    const pending = await getPendingMeals();
-    for (const m of pending) {
-      try {
-        const docRef = await addDoc(collection(database, "meals"), {
-          mealName: m.mealName,
-          date: m.date,
-          uid: m.uid,
-        });
-        await markMealSynced(m.id, docRef.id);
-      } catch {
-        // ignore offline errors
-      }
-    }
-  }
+  useEffect(() => {
+    syncPendingMeals();
+    loadSuggestions();
+    initializeNotifications();
+  }, [initializeNotifications, loadSuggestions, syncPendingMeals]);
 
   const handleMealNameChange = useCallback((value: string) => {
     setMealName(value);

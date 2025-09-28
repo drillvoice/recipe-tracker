@@ -54,14 +54,6 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
     }
   }, [editingId, editMealName, editDate, updateMealData, cancelEdit]);
 
-  const confirmDelete = useCallback((meal: Meal) => {
-    showDialog(
-      "Delete Dish",
-      `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
-      () => handleDelete(meal.id)
-    );
-  }, [showDialog]);
-
   const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteMealData(id);
@@ -69,6 +61,14 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
       console.error('Error deleting meal:', error);
     }
   }, [deleteMealData]);
+
+  const confirmDelete = useCallback((meal: Meal) => {
+    showDialog(
+      "Delete Dish",
+      `Are you sure you want to delete "${meal.mealName}" from ${meal.date.toDate().toLocaleDateString()}?`,
+      () => handleDelete(meal.id)
+    );
+  }, [handleDelete, showDialog]);
 
   const handleEditMealNameChange = useCallback((value: string) => {
     setEditMealName(value);
