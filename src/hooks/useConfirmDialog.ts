@@ -31,8 +31,11 @@ export function useConfirmDialog() {
   };
 
   const confirmAndClose = () => {
-    dialogState.onConfirm();
-    hideDialog();
+    try {
+      dialogState.onConfirm();
+    } finally {
+      hideDialog();
+    }
   };
 
   return {
