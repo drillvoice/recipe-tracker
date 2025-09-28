@@ -26,29 +26,31 @@ export default function DataValidation() {
   };
 
   if (validating) {
-    return (
-      <div className="validation-loading">
-        <p>Validating data integrity...</p>
-      </div>
-    );
+    return <div className="loading">Validating data integrity...</div>;
   }
 
   if (!validationResult) {
     return (
-      <div className="validation-error">
-        <p>Unable to load validation results.</p>
-        <button onClick={handleRevalidate} className="retry-button">
-          Retry Validation
-        </button>
-      </div>
+      <>
+        <div className="message-card error">
+          <p>Unable to load validation results.</p>
+        </div>
+        <div className="action-group">
+          <button onClick={handleRevalidate} className="primary-button">
+            Retry Validation
+          </button>
+        </div>
+      </>
     );
   }
 
-  return (
-    <div className="validation-section">
-      <h3>Data Verification</h3>
-      <p>Check the integrity and health of your stored data.</p>
+  const statusPrefix = validationResult.valid ? 'All systems operational.' : 'Issues detected in your data.';
+  const statusSuffix = validationResult.valid
+    ? 'Your training data is secure and backed up regularly.'
+    : 'Review the issues below and consider running a data repair.';
 
+  return (
+    <div>
       <div className="verification-grid">
         <div className="score-circle">
           <span className="score">{validationResult.stats.dataIntegrityScore}</span>
@@ -58,9 +60,7 @@ export default function DataValidation() {
         <div className="verification-stats">
           <div className="verification-stat">
             <span className="verification-label">Total Sessions</span>
-            <span className="verification-value">
-              {validationResult.stats.totalMeals}
-            </span>
+            <span className="verification-value">{validationResult.stats.totalMeals}</span>
           </div>
           <div className="verification-stat">
             <span className="verification-label">Issues Found</span>
@@ -76,33 +76,25 @@ export default function DataValidation() {
           </div>
           <div className="verification-stat">
             <span className="verification-label">Last Check</span>
-            <span className="verification-value">
-              Just now
-            </span>
+            <span className="verification-value">Just now</span>
           </div>
         </div>
       </div>
 
       <div className="verification-status">
         <p>
-          <strong>
-            {validationResult.valid
-              ? 'All systems operational.'
-              : 'Issues detected in your data.'
-            }
-          </strong>{' '}
-          {validationResult.valid
-            ? 'Your training data is secure and backed up regularly.'
-            : 'Review the issues below and consider running a data repair.'}
+          <strong>{statusPrefix}</strong> {statusSuffix}
         </p>
       </div>
 
       {validationResult.errors.length > 0 && (
-        <div className="validation-errors">
-          <h4>Issues Found:</h4>
+        <div className="message-card error">
+          <p>
+            <strong>Issues Found:</strong>
+          </p>
           <ul>
             {validationResult.errors.map((error, index) => (
-              <li key={index} className={`error-item ${error.type}`}>
+              <li key={index}>
                 <strong>{error.type}:</strong> {error.message}
               </li>
             ))}
@@ -111,11 +103,13 @@ export default function DataValidation() {
       )}
 
       {validationResult.warnings.length > 0 && (
-        <div className="validation-warnings">
-          <h4>Warnings:</h4>
+        <div className="message-card info">
+          <p>
+            <strong>Warnings:</strong>
+          </p>
           <ul>
             {validationResult.warnings.map((warning, index) => (
-              <li key={index} className="warning-item">
+              <li key={index}>
                 <strong>{warning.type}:</strong> {warning.message}
               </li>
             ))}
@@ -123,8 +117,8 @@ export default function DataValidation() {
         </div>
       )}
 
-      <div className="validation-actions">
-        <button onClick={handleRevalidate} className="revalidate-button secondary">
+      <div className="action-group">
+        <button onClick={handleRevalidate} className="secondary-button">
           Run Validation Again
         </button>
       </div>

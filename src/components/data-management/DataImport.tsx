@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ImportManager, type ImportOptions, type ImportPreview } from '@/lib/import-manager';
 import type { MessageState } from './types';
 
@@ -10,6 +10,7 @@ export default function DataImport({ onMessage }: DataImportProps) {
   const [importing, setImporting] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [importFileContent, setImportFileContent] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -78,7 +79,6 @@ export default function DataImport({ onMessage }: DataImportProps) {
       console.log('Import result:', result);
 
       if (result.success) {
-        const totalProcessed = result.summary.mealsImported + result.summary.mealsUpdated;
         const successParts = [];
 
         if (result.summary.mealsImported > 0) {
@@ -124,75 +124,80 @@ export default function DataImport({ onMessage }: DataImportProps) {
     setImportPreview(null);
     setImportFileContent(null);
     onMessage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
-    <div className="import-section">
-      <h3>Import Data</h3>
-      <p>Upload a previously exported JSON file to restore your data.</p>
-
-      <div className="import-actions">
-        <div className="file-input-wrapper">
-          <input
-            type="file"
-            accept=".json,.backup"
-            onChange={handleFileSelect}
-            disabled={importing}
-            className="file-input"
-            id="import-file-input"
-          />
-          <label htmlFor="import-file-input" className="file-input-label">
-            {importing ? 'Processing...' : 'Choose File'}
-          </label>
-        </div>
+    <div>
+      <div
+        className="file-drop-zone"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <div className="file-icon">📁</div>
+        <p className="file-drop-title">Click to browse or drag files here</p>
+        <p className="file-drop-subtitle">Supports JSON, CSV, and backup files</p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,.csv,.backup"
+          onChange={handleFileSelect}
+          disabled={importing}
+          className="file-input-hidden"
+        />
       </div>
+
+      {importing && <div className="import-status">Reading file...</div>}
 
       {importPreview && (
         <div className="import-preview">
-          <h4>Import Preview</h4>
-          <div className="preview-summary">
-            <div className="preview-item">
-              <span className="preview-label">Format:</span>
-              <span className="preview-value">{importPreview.format}</span>
+          <h4 className="preview-title">Import Preview</h4>
+          <div className="preview-stats">
+            <div className="stat-item">
+              <span className="stat-value">{importPreview.format.toUpperCase()}</span>
+              <span className="stat-label">Format</span>
             </div>
-            <div className="preview-item">
-              <span className="preview-label">Total Meals:</span>
-              <span className="preview-value">{importPreview.summary.totalMeals}</span>
+            <div className="stat-item">
+              <span className="stat-value">{importPreview.summary.totalMeals}</span>
+              <span className="stat-label">Total Sessions</span>
             </div>
-            <div className="preview-item">
-              <span className="preview-label">New Meals:</span>
-              <span className="preview-value">{importPreview.summary.newMeals}</span>
+            <div className="stat-item">
+              <span className="stat-value">{importPreview.summary.newMeals}</span>
+              <span className="stat-label">New Sessions</span>
             </div>
-            <div className="preview-item">
-              <span className="preview-label">Existing Meals:</span>
-              <span className="preview-value">{importPreview.summary.existingMeals}</span>
+            <div className="stat-item">
+              <span className={`stat-value ${importPreview.conflicts.length > 0 ? 'warning' : 'success'}`}>
+                {importPreview.conflicts.length}
+              </span>
+              <span className="stat-label">Conflicts</span>
             </div>
           </div>
 
-          <div className="preview-actions">
+          {importPreview.conflicts.length > 0 && (
+            <div className="conflicts-warning">
+              <p>⚠️ {importPreview.conflicts.length} conflicts detected. Existing data will be preserved.</p>
+            </div>
+          )}
+
+          <div className="import-actions">
             <button
+              className="import-button"
               onClick={handleImport}
               disabled={importing}
-              className="import-button primary"
             >
-              {importing ? 'Importing...' : 'Confirm Import'}
+              {importing ? 'Importing...' : 'Import Data'}
             </button>
             <button
+              className="cancel-button"
               onClick={clearPreview}
               disabled={importing}
-              className="cancel-button secondary"
             >
               Cancel
             </button>
           </div>
         </div>
       )}
-
-      <div className="import-info">
-        <p className="info-text">
-          💡 <strong>Supported formats:</strong> JSON exports from this app or compatible backup files.
-        </p>
-      </div>
     </div>
   );
 }

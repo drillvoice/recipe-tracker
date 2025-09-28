@@ -74,23 +74,26 @@ export default function DataExport({ onMessage }: DataExportProps) {
   };
 
   return (
-    <div className="export-section">
-      <h3>Export All Data (JSON)</h3>
-      <p>Download all your dishes, settings, and metadata as a JSON file for backup or migration.</p>
+    <div>
+      <div className="export-controls">
+        <p className="export-description">
+          Export all your meal data as a JSON file for backup or transfer to another device.
+        </p>
 
-      <div className="export-actions">
         <button
+          className="export-button primary"
           onClick={handleExport}
           disabled={exporting}
-          className="export-button primary"
         >
           {exporting ? 'Exporting...' : 'Export All Data (JSON)'}
         </button>
-      </div>
 
-      <div className="export-info">
-        <p className="info-text">
-          💡 <strong>Tip:</strong> Regular exports help protect your data. The exported file can be re-imported on any device.
+        <p className="export-note">
+          <strong>Save Options:</strong> Modern browsers (Chrome, Edge) will show a "Save As" dialog to choose your save location.
+          For Google Drive, save to your local Google Drive folder or use the Google Drive web interface to upload the file.
+        </p>
+        <p className="export-details">
+          The exported file will include all meals, settings, and metadata in JSON format.
         </p>
       </div>
     </div>
