@@ -1,10 +1,12 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 
-document.createRange = () => ({
-  setStart: () => {},
-  setEnd: () => {},
-  commonAncestorContainer: document.createElement('div')
-} as any);
+Object.defineProperty(document, 'createRange', {
+  value: () => ({
+    setStart: () => undefined,
+    setEnd: () => undefined,
+    commonAncestorContainer: document.createElement('div')
+  }) as unknown as Range
+});
 
 jest.mock('@/lib/firebase', () => ({
   auth: {},
@@ -15,7 +17,17 @@ jest.mock('@/lib/offline-storage', () => ({
   saveMeal: jest.fn().mockResolvedValue(undefined),
   getPendingMeals: jest.fn().mockResolvedValue([]),
   getAllMeals: jest.fn().mockResolvedValue([
-    { id: '1', mealName: 'Burritos', date: {}, tags: ['Dinner'] } as any,
+    {
+      id: '1',
+      mealName: 'Burritos',
+      date: {
+        toDate: () => new Date('2024-01-01'),
+        toMillis: () => new Date('2024-01-01').getTime(),
+        seconds: Math.floor(new Date('2024-01-01').getTime() / 1000),
+        nanoseconds: 0
+      },
+      tags: ['Dinner']
+    }
   ]),
   markMealSynced: jest.fn().mockResolvedValue(undefined),
 }));

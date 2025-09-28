@@ -10,12 +10,22 @@ const mockDeleteMeal = jest.fn();
 const mockGetAllMeals = jest.fn();
 const mockHideMealsByName = jest.fn();
 
+const createMockTimestamp = (date: Date) => {
+  const milliseconds = date.getTime();
+  return {
+    toDate: () => new Date(milliseconds),
+    toMillis: () => milliseconds,
+    seconds: Math.floor(milliseconds / 1000),
+    nanoseconds: (milliseconds % 1000) * 1_000_000
+  };
+};
+
 jest.mock('@/lib/offline-storage', () => ({
-  saveMeal: (...args: any[]) => mockSaveMeal(...args),
-  updateMeal: (...args: any[]) => mockUpdateMeal(...args),
-  deleteMeal: (...args: any[]) => mockDeleteMeal(...args),
+  saveMeal: (...args: unknown[]) => mockSaveMeal(...args),
+  updateMeal: (...args: unknown[]) => mockUpdateMeal(...args),
+  deleteMeal: (...args: unknown[]) => mockDeleteMeal(...args),
   getAllMeals: () => mockGetAllMeals(),
-  hideMealsByName: (...args: any[]) => mockHideMealsByName(...args),
+  hideMealsByName: (...args: unknown[]) => mockHideMealsByName(...args),
   getPendingMeals: () => Promise.resolve([]),
   getCacheMetadata: jest.fn().mockResolvedValue(null),
   updateCacheMetadata: jest.fn().mockResolvedValue(undefined),
@@ -31,7 +41,7 @@ jest.mock('@/lib/firebase', () => ({
 
 // Mock Firebase Auth
 jest.mock('firebase/auth', () => ({
-  onAuthStateChanged: (auth: any, cb: any) => {
+  onAuthStateChanged: (_auth: unknown, cb: (user: { uid: string; isAnonymous: boolean }) => void) => {
     cb({ uid: 'test-uid', isAnonymous: true });
     return () => {};
   }
@@ -54,9 +64,9 @@ describe.skip('Error Handling Integration Tests', () => {
 
     test('shows loading state before error', async () => {
       // Create a promise that we can control
-      let rejectPromise: (error: any) => void;
+      let rejectPromise: ((reason?: unknown) => void) | undefined;
 
-      const controlledPromise = new Promise((_resolve, reject) => {
+      const controlledPromise = new Promise<never>((_resolve, reject) => {
         rejectPromise = reject;
       });
       
@@ -86,10 +96,7 @@ describe.skip('Error Handling Integration Tests', () => {
         {
           id: '1',
           mealName: 'Pizza',
-          date: {
-            toDate: () => new Date('2024-03-15'),
-            toMillis: () => new Date('2024-03-15').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-15')),
           uid: 'test-uid'
         }
       ];
@@ -133,10 +140,7 @@ describe.skip('Error Handling Integration Tests', () => {
         {
           id: '1',
           mealName: 'Pizza',
-          date: {
-            toDate: () => new Date('2024-03-15'),
-            toMillis: () => new Date('2024-03-15').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-15')),
           uid: 'test-uid'
         }
       ];
@@ -178,10 +182,7 @@ describe.skip('Error Handling Integration Tests', () => {
         {
           id: '1',
           mealName: 'Pasta',
-          date: {
-            toDate: () => new Date('2024-03-15'),
-            toMillis: () => new Date('2024-03-15').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-15')),
           uid: 'test-uid',
           hidden: false
         }
@@ -239,19 +240,13 @@ describe.skip('Error Handling Integration Tests', () => {
         {
           id: '1',
           mealName: '', // Empty name
-          date: {
-            toDate: () => new Date('2024-03-15'),
-            toMillis: () => new Date('2024-03-15').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-15')),
           uid: 'test-uid'
         },
         {
           id: '2',
           // Missing mealName
-          date: {
-            toDate: () => new Date('2024-03-14'),
-            toMillis: () => new Date('2024-03-14').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-14')),
           uid: 'test-uid'
         }
       ];
@@ -272,10 +267,7 @@ describe.skip('Error Handling Integration Tests', () => {
       const largeMealSet = Array.from({ length: 100 }, (_, i) => ({
         id: i.toString(),
         mealName: `Meal ${i}`,
-        date: {
-          toDate: () => new Date(Date.now() - i * 24 * 60 * 60 * 1000),
-          toMillis: () => Date.now() - i * 24 * 60 * 60 * 1000,
-        },
+        date: createMockTimestamp(new Date(Date.now() - i * 24 * 60 * 60 * 1000)),
         uid: 'test-uid',
         hidden: i % 10 === 0 // Every 10th meal is hidden
       }));
@@ -308,10 +300,7 @@ describe.skip('Error Handling Integration Tests', () => {
         {
           id: '1',
           mealName: 'Pizza',
-          date: {
-            toDate: () => new Date('2024-03-15'),
-            toMillis: () => new Date('2024-03-15').getTime(),
-          },
+          date: createMockTimestamp(new Date('2024-03-15')),
           uid: 'test-uid'
         }
       ];

@@ -121,13 +121,16 @@ describe('Performance Tests', () => {
   });
 
   test('Memory usage - large dataset processing', () => {
-    const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+    const performanceWithMemory = performance as Performance & {
+      memory?: { usedJSHeapSize: number };
+    };
+    const initialMemory = performanceWithMemory.memory?.usedJSHeapSize || 0;
     
     // Process a large dataset
     const meals = generateMockMeals(5000);
     const ideas = processIdeas(meals);
     
-    const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+    const finalMemory = performanceWithMemory.memory?.usedJSHeapSize || 0;
     const memoryIncrease = finalMemory - initialMemory;
     
     expect(ideas.length).toBeGreaterThan(0);
