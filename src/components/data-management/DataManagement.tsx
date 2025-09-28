@@ -27,7 +27,7 @@ export default function DataManagement() {
   return (
     <>
       <Navigation currentPage="account" />
-      <main className="main-container">
+      <main className="container">
         <h1>Data Management</h1>
 
         {/* Install Prompt */}
@@ -35,8 +35,8 @@ export default function DataManagement() {
 
         {/* Global Messages */}
         {message && (
-          <div className={`message ${message.type}`}>
-            {message.text}
+          <div className={`message-card ${message.type}`}>
+            <p>{message.text}</p>
             <button
               onClick={() => setMessage(null)}
               className="message-close"
@@ -47,19 +47,23 @@ export default function DataManagement() {
           </div>
         )}
 
+        {/* Notification Settings */}
+        <section className="data-section">
+          <NotificationSettings onMessage={setMessage} />
+        </section>
+
         {/* Cloud Backup Section */}
         <section className="data-section">
           <CloudBackup onMessage={setMessage} />
         </section>
 
         {/* Local Data Management */}
-        <section className="data-section">
-          <div className="status-header">
+        <section className="data-section enhanced-tabs">
+          <div className="tab-header">
             <h2>📁 Local Data Management</h2>
-            <div className="status-indicator">
-              <div className="status-dot active" />
-              <span className="status-text active">Ready</span>
-            </div>
+            <p className="tab-description">
+              Export your meal data for backup, import saved files, and verify data integrity.
+            </p>
           </div>
 
           {/* Tab Navigation */}
@@ -86,8 +90,8 @@ export default function DataManagement() {
 
           {/* Import-specific messages */}
           {activeTab === 'import' && importMessage && (
-            <div className={`message ${importMessage.type}`}>
-              {importMessage.text}
+            <div className={`message-card ${importMessage.type}`} style={{ margin: '16px 0' }}>
+              <p>{importMessage.text}</p>
               <button
                 onClick={() => setImportMessage(null)}
                 className="message-close"
@@ -104,11 +108,6 @@ export default function DataManagement() {
             {activeTab === 'import' && <DataImport onMessage={setImportMessage} />}
             {activeTab === 'verification' && <DataValidation />}
           </div>
-        </section>
-
-        {/* Notification Settings */}
-        <section className="data-section">
-          <NotificationSettings onMessage={setMessage} />
         </section>
 
         {/* PWA Status */}

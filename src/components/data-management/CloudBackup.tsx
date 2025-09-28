@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from '@/lib/firestore-backup';
-import { getAllMeals } from '@/lib/offline-storage';
 import type { MessageState } from './types';
 
 interface CloudBackupProps {
@@ -70,51 +69,58 @@ export default function CloudBackup({ onMessage }: CloudBackupProps) {
     }
   };
 
-  return (
-    <div className="backup-section">
-      <h3>Cloud Backup</h3>
-      <p>Securely backup your data to the cloud for access across devices.</p>
+  const statusVariant =
+    !cloudBackupStatus?.isAuthenticated || cloudBackupStatus?.syncNeeded ? 'warning' : 'active';
 
-      {cloudBackupStatus && (
-        <div className="backup-status">
-          <div className="status-grid">
-            <div className="status-item">
-              <span className="status-label">Status:</span>
-              <span className={`status-value ${cloudBackupStatus.isAuthenticated ? 'authenticated' : 'not-authenticated'}`}>
-                {cloudBackupStatus.isAuthenticated ? '✅ Connected' : '❌ Not Connected'}
+  return (
+    <>
+      <div className="status-header">
+        <h2>Cloud Backup</h2>
+        <div className="status-indicator">
+          <div className={`status-dot ${statusVariant}`} />
+          <span className={`status-text ${statusVariant}`}>
+            {!cloudBackupStatus?.isAuthenticated
+              ? 'Not Connected'
+              : cloudBackupStatus?.syncNeeded
+              ? 'Sync Needed'
+              : 'Up to Date'}
+          </span>
+        </div>
+      </div>
+
+      {cloudBackupStatus ? (
+        <div className="backup-info-compact">
+          <div className="backup-stats">
+            <div className="backup-stat">
+              <span>📊</span>
+              <span>
+                <strong>Cloud Meals:</strong> {cloudBackupStatus.cloudMealCount}
               </span>
             </div>
-            {cloudBackupStatus.isAuthenticated && (
-              <>
-                <div className="status-item">
-                  <span className="status-label">Cloud Meals:</span>
-                  <span className="status-value">{cloudBackupStatus.cloudMealCount}</span>
-                </div>
-                <div className="status-item">
-                  <span className="status-label">Last Backup:</span>
-                  <span className="status-value">{formatTimeAgo(cloudBackupStatus.lastCloudBackup)}</span>
-                </div>
-                <div className="status-item">
-                  <span className="status-label">Sync Status:</span>
-                  <span className={`status-value ${cloudBackupStatus.syncNeeded ? 'sync-needed' : 'up-to-date'}`}>
-                    {cloudBackupStatus.syncNeeded ? '⚠️ Sync Needed' : '✅ Up to Date'}
-                  </span>
-                </div>
-              </>
-            )}
+            <div className="backup-stat">
+              <span>⏰</span>
+              <span>
+                <strong>Last Backup:</strong> {formatTimeAgo(cloudBackupStatus.lastCloudBackup)}
+              </span>
+            </div>
+            <div className="backup-stat">
+              <span>☁️</span>
+              <span>
+                <strong>Status:</strong> {cloudBackupStatus.isAuthenticated ? '✅ Connected' : '❌ Not Connected'}
+              </span>
+            </div>
           </div>
+          <button
+            className="backup-button compact"
+            onClick={handleBackupNow}
+            disabled={exporting}
+          >
+            {exporting ? 'Backing Up...' : 'Backup Now'}
+          </button>
         </div>
+      ) : (
+        <div className="loading">Loading cloud backup status...</div>
       )}
-
-      <div className="backup-actions">
-        <button
-          onClick={handleBackupNow}
-          disabled={exporting}
-          className="backup-button primary"
-        >
-          {exporting ? 'Backing up...' : 'Backup Now'}
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
