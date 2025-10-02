@@ -1,10 +1,7 @@
 import {
   getAllMeals,
   getSettings,
-  getCacheMetadata,
-  type Meal,
-  type AppSettings,
-  type CacheMetadata
+  getCacheMetadata
 } from '../offline-storage';
 
 import { ValidatorUtils } from './validator-utils';
@@ -95,11 +92,11 @@ export class DataValidator {
         });
       }
 
-    } catch (error) {
+    } catch (_error) {
       result.errors.push({
         type: 'critical',
         field: 'system',
-        message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `Validation failed: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
         suggestion: 'Check system integrity and try again'
       });
       result.valid = false;
@@ -135,7 +132,7 @@ export class DataValidator {
         criticalIssues,
         lastChecked: Date.now()
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         healthy: false,
         score: 0,

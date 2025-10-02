@@ -15,18 +15,36 @@ import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 import { TaglineManager } from "@/lib/tagline-manager";
 import NotificationManager from "@/lib/notification-manager";
+import { useFormState, useToggle, useAutocomplete, useMessages } from "@/hooks/common";
 
 export default function Meals() {
-  const [mealName, setMealName] = useState("");
-  const [date, setDate] = useState(() =>
-    new Date().toISOString().substring(0, 10)
-  );
-  const [message, setMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<string[]>([]);
+  // Form state using useFormState hook
+  const { values: formValues, updateValue: updateFormValue } = useFormState({
+    mealName: "",
+    date: new Date().toISOString().substring(0, 10)
+  });
+
+  // Message management using useMessages hook
+  const { messages, addSuccess, addError, clearAllMessages } = useMessages({
+    autoClose: true,
+    autoCloseDelay: 3000
+  });
+
+  // Toggle states using useToggle hook
+  const { isOpen: historyAccordionOpen, toggle: toggleHistoryAccordion, open: openHistoryAccordion } = useToggle(false);
+
+  // Autocomplete for meal suggestions using useAutocomplete hook
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [historyAccordionOpen, setHistoryAccordionOpen] = useState(false);
+  const {
+    inputValue: mealName,
+    suggestions: filteredSuggestions,
+    showSuggestions,
+    setInputValue: setMealName,
+    selectSuggestion,
+    closeSuggestions
+  } = useAutocomplete(suggestions, { maxSuggestions: 5 });
+
+  // Other component state
   const [currentTagline, setCurrentTagline] = useState<string>("");
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
@@ -88,43 +106,23 @@ export default function Meals() {
     initializeNotifications();
   }, [initializeNotifications, loadSuggestions, syncPendingMeals]);
 
-  const handleMealNameChange = useCallback((value: string) => {
-    setMealName(value);
-    if (value.trim() === "") {
-      setFilteredSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const filtered = suggestions.filter(suggestion =>
-      suggestion.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredSuggestions(filtered);
-    setShowSuggestions(filtered.length > 0 && value !== "");
-  }, [suggestions]);
-
-  const selectSuggestion = useCallback((suggestion: string) => {
-    setMealName(suggestion);
-    setShowSuggestions(false);
-    setFilteredSuggestions([]);
-  }, []);
+  // handleMealNameChange and selectSuggestion are now handled by useAutocomplete hook
 
   async function addMeal() {
-    // Clear previous errors and messages
-    setErrors([]);
-    setMessage(null);
+    // Clear previous messages
+    clearAllMessages();
 
     // Check rate limiting
     const rateLimitCheck = checkFormSubmissionLimit(auth?.currentUser?.uid);
     if (!rateLimitCheck.allowed) {
-      setErrors([`Too many submissions. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`]);
+      addError(`Too many submissions. Please wait ${rateLimitCheck.retryAfter} seconds before trying again.`);
       return;
     }
 
     // Validate input
-    const validation = validateMeal({ mealName, date });
+    const validation = validateMeal({ mealName, date: formValues.date });
     if (!validation.success) {
-      setErrors(validation.errors);
+      validation.errors.forEach(error => addError(error));
       return;
     }
 
@@ -136,28 +134,31 @@ export default function Meals() {
         uid: auth?.currentUser?.uid,
         pending: true,
       };
-      
+
       await saveMeal(newMeal);
+
+      // Reset form using the hook
       setMealName("");
-      setDate(new Date().toISOString().substring(0, 10));
-      setMessage("Meal saved successfully");
-      setTimeout(() => setMessage(null), 3000);
+      updateFormValue('date', new Date().toISOString().substring(0, 10));
+
+      // Show success message using the hook
+      addSuccess("Meal saved successfully");
 
       // Open history accordion to show visual confirmation
-      setHistoryAccordionOpen(true);
+      openHistoryAccordion();
 
       // Trigger history refresh
       setRefreshTrigger(Date.now());
 
+      // Update suggestions and close autocomplete
       setSuggestions(prev =>
         Array.from(new Set([...prev, validation.data.mealName]))
       );
-      setShowSuggestions(false);
-      setFilteredSuggestions([]);
+      closeSuggestions();
       syncPendingMeals();
     } catch (error) {
       console.error('Error saving meal:', error);
-      setErrors(['Failed to save meal. Please try again.']);
+      addError('Failed to save meal. Please try again.');
     }
   }
 
@@ -177,15 +178,15 @@ export default function Meals() {
             <input
               placeholder="Enter meal name..."
               value={mealName}
-              onChange={e => handleMealNameChange(e.target.value)}
+              onChange={e => setMealName(e.target.value)}
               onFocus={() => {
                 if (mealName.trim() && filteredSuggestions.length > 0) {
-                  setShowSuggestions(true);
+                  // openSuggestions is called automatically by useAutocomplete
                 }
               }}
               onBlur={() => {
                 // Delay hiding to allow clicks on suggestions
-                setTimeout(() => setShowSuggestions(false), 150);
+                setTimeout(() => closeSuggestions(), 150);
               }}
               onKeyDown={event => {
                 if (event.key === "Enter") {
@@ -218,26 +219,27 @@ export default function Meals() {
           Date
           <input
             type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
+            value={formValues.date}
+            onChange={e => updateFormValue('date', e.target.value)}
           />
         </label>
         <button onClick={addMeal}>Add Dish</button>
       </div>
       
-      {errors.length > 0 && (
+      {/* Messages are now handled by useMessages hook */}
+      {messages.length > 0 && (
         <div className="form" style={{ marginTop: '0.5rem' }}>
-          {errors.map((error, index) => (
-            <p key={index} className="error-message">{error}</p>
+          {messages.map((message) => (
+            <p key={message.id} className={`${message.type}-message`}>
+              {message.text}
+            </p>
           ))}
         </div>
       )}
-      
-      {message && <p className="success-message">{message}</p>}
 
       <HistoryAccordion
         isOpen={historyAccordionOpen}
-        onToggle={() => setHistoryAccordionOpen(!historyAccordionOpen)}
+        onToggle={toggleHistoryAccordion}
         refreshTrigger={refreshTrigger}
       />
 

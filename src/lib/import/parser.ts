@@ -1,7 +1,7 @@
 import { type SerializableMeal, type BackupMetadata } from '../export-manager';
 import { type AppSettings, type CacheMetadata } from '../offline-storage';
 import { type TagManagementData } from '../tag-manager';
-import { type ParsedImportResult, type ImportFormat } from './types';
+import { type ParsedImportResult } from './types';
 
 export class ImportParser {
   /**

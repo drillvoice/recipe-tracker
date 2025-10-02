@@ -1,5 +1,5 @@
 import { type Meal, type AppSettings, type CacheMetadata } from '../offline-storage';
-import { type ValidationResult, type ValidationError, type ValidationWarning } from './types';
+import { type ValidationResult } from './types';
 
 export class ValidatorUtils {
   /**
@@ -104,7 +104,7 @@ export class ValidatorUtils {
               suggestion: 'Check if this date is correct'
             });
           }
-        } catch (error) {
+        } catch (_error) {
           result.stats.invalidDates++;
           result.errors.push({
             type: 'error',

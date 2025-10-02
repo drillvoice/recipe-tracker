@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { backupMealsToCloud, getCloudBackupStatus, type CloudBackupStatus } from '@/lib/firestore-backup';
 import type { MessageState } from './types';
+import { useAsyncOperation } from '@/hooks/common';
 
 interface CloudBackupProps {
   onMessage: (message: MessageState | null) => void;
@@ -8,7 +9,33 @@ interface CloudBackupProps {
 
 export default function CloudBackup({ onMessage }: CloudBackupProps) {
   const [cloudBackupStatus, setCloudBackupStatus] = useState<CloudBackupStatus | null>(null);
-  const [exporting, setExporting] = useState(false);
+
+  // Use async operation hook for backup functionality
+  const { execute: executeBackup, isLoading: exporting } = useAsyncOperation(
+    backupMealsToCloud,
+    {
+      onSuccess: async (result) => {
+        if (result.success) {
+          onMessage({
+            type: 'success',
+            text: `Cloud backup successful: ${result.mealsBackedUp} meals backed up to Firestore`
+          });
+          await loadCloudBackupStatus();
+        } else {
+          onMessage({
+            type: 'error',
+            text: `Cloud backup failed: ${result.errors.join(', ')}`
+          });
+        }
+      },
+      onError: (error) => {
+        onMessage({
+          type: 'error',
+          text: `Cloud backup failed: ${error.message}`
+        });
+      }
+    }
+  );
 
   useEffect(() => {
     loadCloudBackupStatus();
@@ -24,32 +51,8 @@ export default function CloudBackup({ onMessage }: CloudBackupProps) {
   };
 
   const handleBackupNow = async () => {
-    setExporting(true);
     onMessage(null);
-
-    try {
-      const result = await backupMealsToCloud();
-
-      if (result.success) {
-        onMessage({
-          type: 'success',
-          text: `Cloud backup successful: ${result.mealsBackedUp} meals backed up to Firestore`
-        });
-        await loadCloudBackupStatus();
-      } else {
-        onMessage({
-          type: 'error',
-          text: `Cloud backup failed: ${result.errors.join(', ')}`
-        });
-      }
-    } catch (error) {
-      onMessage({
-        type: 'error',
-        text: `Cloud backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    } finally {
-      setExporting(false);
-    }
+    await executeBackup();
   };
 
   const formatTimeAgo = (timestamp: number): string => {

@@ -1,8 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getSettings,
   updateSettings,
-  getCacheMetadata,
   updateCacheMetadata,
   type AppSettings,
   type CacheMetadata,

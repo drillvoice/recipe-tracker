@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { type Meal, saveMeal } from '../offline-storage';
 import { type SerializableMeal } from '../export-manager';
-import { type ConflictResolutionStrategy, type MealUpdateConflict, type ConflictItem } from './types';
+import { type ConflictResolutionStrategy, type MealUpdateConflict } from './types';
 
 export class ConflictResolver {
   /**

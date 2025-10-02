@@ -32,11 +32,11 @@ export class IntegrityChecker {
           } else {
             result.issues.push(...checkResult.issues);
           }
-        } catch (error) {
+        } catch (_error) {
           result.issues.push({
             severity: 'critical',
             category: 'data_consistency',
-            description: `Integrity check failed: ${error}`,
+            description: `Integrity check failed: ${_error}`,
             affectedItems: 0,
             fixable: false
           });
@@ -50,11 +50,11 @@ export class IntegrityChecker {
         result.recommendations = this.generateRecommendations(result.issues);
       }
 
-    } catch (error) {
+    } catch (_error) {
       result.issues.push({
         severity: 'critical',
         category: 'data_consistency',
-        description: `Integrity check system failure: ${error}`,
+        description: `Integrity check system failure: ${_error}`,
         affectedItems: 0,
         fixable: false
       });
@@ -76,7 +76,7 @@ export class IntegrityChecker {
       await getCacheMetadata('backup_status');
 
       return { passed: true, issues: [] };
-    } catch (error) {
+    } catch (_error) {
       issues.push({
         severity: 'critical',
         category: 'data_consistency',
@@ -118,7 +118,7 @@ export class IntegrityChecker {
       }
 
       return { passed: duplicates === 0, issues };
-    } catch (error) {
+    } catch (_error) {
       issues.push({
         severity: 'critical',
         category: 'data_consistency',
@@ -150,7 +150,7 @@ export class IntegrityChecker {
       }
 
       return { passed: meals.length <= 5000, issues };
-    } catch (error) {
+    } catch (_error) {
       issues.push({
         severity: 'major',
         category: 'performance',
@@ -193,7 +193,7 @@ export class IntegrityChecker {
       }
 
       return { passed: issues.length === 0, issues };
-    } catch (error) {
+    } catch (_error) {
       issues.push({
         severity: 'major',
         category: 'data_quality',
@@ -238,7 +238,7 @@ export class IntegrityChecker {
       }
 
       return { passed: issues.length === 0, issues };
-    } catch (error) {
+    } catch (_error) {
       // Storage API not available, this is not critical
       return { passed: true, issues: [] };
     }
