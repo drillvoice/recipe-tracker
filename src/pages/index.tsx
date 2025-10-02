@@ -19,7 +19,7 @@ import { useFormState, useToggle, useAutocomplete, useMessages } from "@/hooks/c
 
 export default function Meals() {
   // Form state using useFormState hook
-  const { values: formValues, updateValue: updateFormValue, resetForm } = useFormState({
+  const { values: formValues, updateValue: updateFormValue } = useFormState({
     mealName: "",
     date: new Date().toISOString().substring(0, 10)
   });

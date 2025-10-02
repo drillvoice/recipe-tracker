@@ -61,7 +61,7 @@ export interface UseEditModeReturn<T> {
  * );
  * ```
  */
-export function useEditMode<T extends Record<string, any>>(
+export function useEditMode<T extends Record<string, unknown>>(
   onSave: (id: string, values: T) => Promise<void>
 ): UseEditModeReturn<T> {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -84,14 +84,9 @@ export function useEditMode<T extends Record<string, any>>(
       return;
     }
 
-    try {
-      await onSave(editingId, editValues);
-      setEditingId(null);
-      setEditValues(null);
-    } catch (error) {
-      // Let the caller handle the error
-      throw error;
-    }
+    await onSave(editingId, editValues);
+    setEditingId(null);
+    setEditValues(null);
   }, [editingId, editValues, onSave]);
 
   const updateEditValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {

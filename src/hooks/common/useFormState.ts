@@ -38,7 +38,7 @@ export interface UseFormStateReturn<T> {
  * );
  * ```
  */
-export function useFormState<T extends Record<string, any>>(
+export function useFormState<T extends Record<string, unknown>>(
   initialValues: T,
   validator?: (values: T) => ValidationResult<T>
 ): UseFormStateReturn<T> {

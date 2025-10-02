@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+// Types for import functionality
 import { type Meal, type AppSettings, type CacheMetadata } from '../offline-storage';
 import { type SerializableMeal, type BackupMetadata } from '../export-manager';
 import { type TagManagementData } from '../tag-manager';

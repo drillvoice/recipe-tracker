@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import ActionButton from '@/components/ActionButton';
 import type { Idea } from '@/hooks/useIdeas';
 

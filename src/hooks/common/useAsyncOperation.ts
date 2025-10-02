@@ -6,7 +6,7 @@ interface UseAsyncOperationOptions<T> {
   initialData?: T;
 }
 
-export interface UseAsyncOperationReturn<T, Args extends any[]> {
+export interface UseAsyncOperationReturn<T, Args extends unknown[]> {
   execute: (...args: Args) => Promise<T | void>;
   isLoading: boolean;
   error: Error | null;
@@ -34,7 +34,7 @@ export interface UseAsyncOperationReturn<T, Args extends any[]> {
  * const handleLoadUser = () => execute('user123');
  * ```
  */
-export function useAsyncOperation<T, Args extends any[] = []>(
+export function useAsyncOperation<T, Args extends unknown[] = []>(
   asyncFn: (...args: Args) => Promise<T>,
   options: UseAsyncOperationOptions<T> = {}
 ): UseAsyncOperationReturn<T, Args> {
