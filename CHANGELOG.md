@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-10-02
+
+### Added
+- **React Query Data Management**: Implemented @tanstack/react-query for enhanced data management with intelligent caching, optimistic updates, and background synchronization
+- **Modular Architecture**: Split large files into focused modules for better maintainability and development experience
+- **Enhanced Query Hooks**: New useMealsQuery and useIdeasQuery hooks with automatic cache management and error handling
+- **Mutation System**: Comprehensive mutation hooks for all data operations with optimistic updates and rollback on errors
+
+### Changed
+- **BREAKING**: Import Manager split into modular components (ImportParser, ConflictResolver, ImportExecutor)
+- **BREAKING**: Data Validator restructured into focused modules (ValidatorUtils, IntegrityChecker)
+- **Component Architecture**: IdeasTableRow split into TagManagementSection and ExpandableRowContent for better reusability
+- **Performance Optimization**: React Query reduces unnecessary re-renders and API calls with intelligent caching
+- **Developer Experience**: Large files (732/694/351 lines) split into focused modules under 200 lines each
+
+### Technical
+- **Backwards Compatibility**: All existing imports maintained via re-export pattern
+- **Enhanced Caching**: 5-minute stale time with 10-minute garbage collection for optimal performance
+- **Error Recovery**: Automatic retry logic with exponential backoff for failed operations
+- **Type Safety**: Full TypeScript coverage maintained across all modular components
+- **Tree Shaking**: Better bundle optimization with modular imports
+
+### Dependencies
+- Added @tanstack/react-query ^5.90.2 for enhanced data management
+
 ## [0.4.5] - 2025-09-28
 
 ### Added

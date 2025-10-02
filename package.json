@@ -1,6 +1,6 @@
 {
   "name": "dish-diary",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "type": "module",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.2",
     "dompurify": "^3.2.6",
     "firebase": "^12.3.0",
     "idb": "^8.0.3",
