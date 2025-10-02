@@ -5,6 +5,7 @@ import { auth, ensureAuthPersistence, isFirebaseConfigured } from "@/lib/firebas
 import { signInAnonymously } from "firebase/auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerServiceWorker } from "@/lib/pwa-utils";
+import { QueryClientProvider, queryClient } from "@/hooks/queries";
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
@@ -44,8 +45,10 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <Component {...pageProps} />
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <Component {...pageProps} />
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 }
