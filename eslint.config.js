@@ -99,6 +99,8 @@ export default [
       'out/',
       'build/',
       'dist/',
+      'functions/lib/',
+      'functions/node_modules/',
       '**/*.d.ts'
     ]
   }

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:firebase": "node scripts/build-firebase.js",
+    "build:firebase": "cd functions && npm run build",
     "start": "next start",
     "test": "jest",
     "lint": "eslint .",
