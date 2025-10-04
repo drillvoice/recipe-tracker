@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-10-04
+
+### Added
+- **Meal Planning Filters**: Comprehensive filtering system for the Dishes page to support meal planning workflows
+- **Date-Based Filtering**: Filter dishes by "last made" date with 6 time range options (7, 14, 30, 60, 90+ days ago)
+- **Tag-Based Filtering**: Multi-select tag filter with clickable tag chips and OR logic (shows dishes with ANY selected tag)
+- **Combined Filter Logic**: All filters work together seamlessly (date + tags + show hidden) with AND logic
+- **Smart Count Display**: Shows "X of Y dishes" when filters are active, "X unique dishes" when filters are cleared
+- **Filter UI Panel**: Clean, organized filter panel with sections for "Last made", "Tags", and "Show Hidden"
+
+### Changed
+- **Filter Button Visibility**: Filter button now always visible (not just when hidden dishes exist)
+- **Enhanced Filter Panel**: Redesigned filter interface matching modern design patterns with proper sections and labels
+- **Filter Organization**: Grouped filter controls into logical sections with clear visual hierarchy
+
+### Technical
+- Added date filtering with millisecond-based cutoff calculations for precise time-based filtering
+- Implemented tag filtering with Set-based selection state for optimal performance
+- Added 100+ lines of responsive CSS for filter UI components (dropdown, tag chips, sections)
+- Blue selected state for tag filter chips with smooth hover transitions
+- Memoized filter logic to prevent unnecessary re-calculations
+
 ## [0.5.0] - 2025-10-02
 
 ### Added
