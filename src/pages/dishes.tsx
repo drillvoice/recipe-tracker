@@ -5,7 +5,7 @@ import IdeasTableRow from "@/components/IdeasTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
-type DateFilterOption = "any" | "7days" | "14days" | "30days" | "60days" | "90days";
+type DateFilterOption = "any" | "7days" | "14days" | "21days" | "28days";
 
 export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
@@ -83,9 +83,8 @@ export default function Ideas() {
       const daysMap: Record<Exclude<DateFilterOption, "any">, number> = {
         "7days": 7,
         "14days": 14,
-        "30days": 30,
-        "60days": 60,
-        "90days": 90,
+        "21days": 21,
+        "28days": 28,
       };
       const days = daysMap[dateFilter];
       const cutoffTime = now - (days * 24 * 60 * 60 * 1000);
@@ -141,20 +140,49 @@ export default function Ideas() {
 
           {/* Date Filter */}
           <div className="filter-section">
-            <label className="filter-label">Last made</label>
-            <select
-              className="date-filter-dropdown"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as DateFilterOption)}
-            >
-              <option value="any">Any time</option>
-              <option value="7days">More than 7 days ago</option>
-              <option value="14days">More than 14 days ago</option>
-              <option value="30days">More than 30 days ago</option>
-              <option value="60days">More than 60 days ago</option>
-              <option value="90days">More than 90 days ago</option>
-            </select>
+            <label className="filter-label">
+              Last made {dateFilter !== "any" ? `${dateFilter.replace("days", "")}+ days ago` : ""}
+            </label>
+            <div className="date-filter-chips">
+              <button
+                className={`date-filter-chip ${dateFilter === "7days" ? 'selected' : ''}`}
+                onClick={() => setDateFilter("7days")}
+              >
+                7
+              </button>
+              <button
+                className={`date-filter-chip ${dateFilter === "14days" ? 'selected' : ''}`}
+                onClick={() => setDateFilter("14days")}
+              >
+                14
+              </button>
+              <button
+                className={`date-filter-chip ${dateFilter === "21days" ? 'selected' : ''}`}
+                onClick={() => setDateFilter("21days")}
+              >
+                21
+              </button>
+              <button
+                className={`date-filter-chip ${dateFilter === "28days" ? 'selected' : ''}`}
+                onClick={() => setDateFilter("28days")}
+              >
+                28
+              </button>
+            </div>
           </div>
+
+          {/* Clear Date Filter */}
+          {dateFilter !== "any" && (
+            <div className="filter-section" style={{ marginTop: '-0.75rem', marginBottom: '0.5rem' }}>
+              <button
+                className="clear-tags-button"
+                onClick={() => setDateFilter("any")}
+                title="Clear date filter"
+              >
+                Clear date filter
+              </button>
+            </div>
+          )}
 
           {/* Tag Filter */}
           {allUniqueTags.length > 0 && (

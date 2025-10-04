@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-10-04
+
+### Changed
+- **Date Filter UX Improvement**: Replaced dropdown menu with inline button chips (7, 14, 21, 28 days) for faster interaction
+- **Exclusive Date Selection**: Date filter chips now work like radio buttons - selecting one automatically deselects others
+- **Dynamic Label**: Label displays "Last made X+ days ago" when a date filter is active
+- **Simplified Time Ranges**: Focused on meal planning-relevant periods (7, 14, 21, 28 days) instead of broader ranges
+
+### Technical
+- Replaced `<select>` dropdown with button chip interface matching tag filter pattern
+- Added date-filter-chip CSS classes with blue selected state and hover transitions
+- Simplified date filter logic for 4 focused time periods instead of 6
+
 ## [0.6.0] - 2025-10-04
 
 ### Added
