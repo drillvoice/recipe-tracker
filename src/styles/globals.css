@@ -575,7 +575,7 @@ h1 {
 /* Ideas Filter Toggle */
 .ideas-filters {
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 1.25rem;
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -593,6 +593,107 @@ h1 {
   }
 }
 
+.filter-section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.filter-section {
+  margin-bottom: 1.25rem;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  display: block;
+  color: #374151;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.filter-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.date-filter-dropdown {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.9375rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.date-filter-dropdown:hover {
+  border-color: #9ca3af;
+}
+
+.date-filter-dropdown:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.tag-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-filter-chip {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 1.25rem;
+  background-color: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.tag-filter-chip:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.tag-filter-chip.selected {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.tag-filter-chip.selected:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.clear-tags-button {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.clear-tags-button:hover {
+  color: #374151;
+}
+
 .filter-toggle {
   display: flex;
   align-items: center;
@@ -606,10 +707,6 @@ h1 {
   height: 1.25rem;
   accent-color: #2563eb;
   cursor: pointer;
-}
-
-.filter-label {
-  color: #374151;
 }
 
 /* Hidden Meal Styling */
