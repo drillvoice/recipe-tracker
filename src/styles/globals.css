@@ -623,26 +623,40 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
-.date-filter-dropdown {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  font-size: 0.9375rem;
+.date-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.date-filter-chip {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  background-color: white;
+  border-radius: 1.25rem;
+  background-color: #f9fafb;
   color: #374151;
   cursor: pointer;
   transition: all 0.15s;
+  font-weight: 500;
+  min-width: 3rem;
+  text-align: center;
 }
 
-.date-filter-dropdown:hover {
+.date-filter-chip:hover {
+  background-color: #f3f4f6;
   border-color: #9ca3af;
 }
 
-.date-filter-dropdown:focus {
-  outline: none;
+.date-filter-chip.selected {
+  background-color: #2563eb;
+  color: white;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.date-filter-chip.selected:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 .tag-filter-chips {
