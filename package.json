@@ -20,8 +20,8 @@
     "firebase": "^12.3.0",
     "idb": "^8.0.3",
     "next": "^15.5.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/dompurify": "^3.0.5",
     "@types/jest": "^29.5.14",
-    "@types/react": "^19.1.15",
+    "@types/react": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.44.0",
     "cross-env": "^10.1.0",
