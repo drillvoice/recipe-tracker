@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2025-10-07
+
+### Removed
+- **Dinner Reminder System**: Removed non-functional push notification feature including all related code and infrastructure
+- Deleted notification-manager.ts, NotificationSettings component, and firebase-messaging-sw.js
+- Removed Firebase Cloud Functions for reminder scheduling (reminders.ts, sendDueDinnerReminders)
+- Removed GitHub Actions workflow for Firebase reminder deployment
+- Removed luxon dependency from Cloud Functions package
+- Cleaned up Firebase Cloud Messaging (FCM) integration code from firebase.ts
+- Removed VAPID key environment variable requirement
+
+### Changed
+- Simplified codebase by removing ~1000+ lines of non-functional notification code
+- Updated CLAUDE.md to remove notification system documentation
+- Cleaned up localStorage usage (removed notification preferences)
+
+### Technical
+- Reduced complexity in firebase.ts by removing FCM initialization and token management
+- Simplified DataManagement component by removing NotificationSettings section
+- Removed notification initialization from home page startup
+- Updated functions/package.json to remove luxon and @types/luxon dependencies
+
 ## [0.6.1] - 2025-10-04
 
 ### Changed
