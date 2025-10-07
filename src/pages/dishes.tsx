@@ -6,12 +6,14 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 type DateFilterOption = "any" | "7days" | "14days" | "21days" | "28days";
+type TagFilterMode = "OR" | "AND";
 
 export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilterOption>("any");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
   const { dialogProps, showDialog } = useConfirmDialog();
   const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
 
@@ -95,15 +97,23 @@ export default function Ideas() {
       });
     }
 
-    // Filter by tags (OR logic - show dishes with ANY selected tag)
+    // Filter by tags with AND/OR logic
     if (selectedTags.size > 0) {
-      filtered = filtered.filter(idea =>
-        idea.tags?.some(tag => selectedTags.has(tag))
-      );
+      if (tagFilterMode === "OR") {
+        // OR logic - show dishes with ANY selected tag
+        filtered = filtered.filter(idea =>
+          idea.tags?.some(tag => selectedTags.has(tag))
+        );
+      } else {
+        // AND logic - show dishes with ALL selected tags
+        filtered = filtered.filter(idea =>
+          Array.from(selectedTags).every(selectedTag => idea.tags?.includes(selectedTag))
+        );
+      }
     }
 
     return filtered;
-  }, [ideas, showHidden, dateFilter, selectedTags]);
+  }, [ideas, showHidden, dateFilter, selectedTags, tagFilterMode]);
 
   const hiddenCount = useMemo(() =>
     ideas.filter(i => i.hidden).length,
@@ -141,30 +151,30 @@ export default function Ideas() {
           {/* Date Filter */}
           <div className="filter-section">
             <label className="filter-label">
-              Last made {dateFilter !== "any" ? `${dateFilter.replace("days", "")}+ days ago` : ""}
+              Last made {dateFilter !== "any" ? `${dateFilter.replace("days", "")}+ days ago` : "...days ago"}
             </label>
             <div className="date-filter-chips">
               <button
                 className={`date-filter-chip ${dateFilter === "7days" ? 'selected' : ''}`}
-                onClick={() => setDateFilter("7days")}
+                onClick={() => setDateFilter(dateFilter === "7days" ? "any" : "7days")}
               >
                 7
               </button>
               <button
                 className={`date-filter-chip ${dateFilter === "14days" ? 'selected' : ''}`}
-                onClick={() => setDateFilter("14days")}
+                onClick={() => setDateFilter(dateFilter === "14days" ? "any" : "14days")}
               >
                 14
               </button>
               <button
                 className={`date-filter-chip ${dateFilter === "21days" ? 'selected' : ''}`}
-                onClick={() => setDateFilter("21days")}
+                onClick={() => setDateFilter(dateFilter === "21days" ? "any" : "21days")}
               >
                 21
               </button>
               <button
                 className={`date-filter-chip ${dateFilter === "28days" ? 'selected' : ''}`}
-                onClick={() => setDateFilter("28days")}
+                onClick={() => setDateFilter(dateFilter === "28days" ? "any" : "28days")}
               >
                 28
               </button>
@@ -210,6 +220,27 @@ export default function Ideas() {
                   </button>
                 ))}
               </div>
+              {selectedTags.size > 1 && (
+                <div className="tag-logic-toggle">
+                  <label className="filter-label" style={{ marginBottom: '0.5rem' }}>Match:</label>
+                  <div className="tag-logic-buttons">
+                    <button
+                      className={`tag-logic-button ${tagFilterMode === "OR" ? 'selected' : ''}`}
+                      onClick={() => setTagFilterMode("OR")}
+                      title="Show dishes with ANY selected tag"
+                    >
+                      Any tag (OR)
+                    </button>
+                    <button
+                      className={`tag-logic-button ${tagFilterMode === "AND" ? 'selected' : ''}`}
+                      onClick={() => setTagFilterMode("AND")}
+                      title="Show dishes with ALL selected tags"
+                    >
+                      All tags (AND)
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
