@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2025-10-07
+
+### Added
+- **AND/OR Tag Filter Toggle**: Added toggle to switch between OR logic (any selected tag) and AND logic (all selected tags) when filtering by multiple tags
+- **Toggle appears automatically** when 2+ tags are selected, defaults to OR mode for backwards compatibility
+
+### Changed
+- **Improved Date Filter Label**: Changed "Last made" to "Last made...days ago" when no filter is selected for better clarity
+- **Toggle-off Date Filter**: Clicking a selected date filter button now deselects it, providing an alternative way to clear the filter
+
+### Technical
+- Added tag filter mode state management with OR/AND logic support
+- Implemented conditional rendering of tag logic toggle based on selection count
+- Added CSS styling for tag logic toggle buttons with selected states and hover effects
+- Enhanced filter logic to support both tag matching modes in useMemo dependency array
+
 ## [0.6.2] - 2025-10-07
 
 ### Removed
