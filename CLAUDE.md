@@ -30,12 +30,11 @@ firebase deploy               # Deploy to Firebase Hosting and Functions
 ## Architecture Overview
 
 ### Data Flow & Storage Strategy
-This is a **local-first** Progressive Web App with cloud backup and push notifications. All operations write to IndexedDB first, then queue for cloud sync:
+This is a **local-first** Progressive Web App with cloud backup. All operations write to IndexedDB first, then queue for cloud sync:
 
 1. **Primary Storage**: IndexedDB (`recipe-tracker-enhanced` v2) with enhanced schema
 2. **Cloud Backup**: Firebase Firestore under `users/{uid}/meals/{mealId}`
 3. **Sync Strategy**: Anonymous authentication with automatic background sync
-4. **Notifications**: Firebase Cloud Messaging with server-side scheduling via Cloud Functions
 
 ### Database Schema (IndexedDB)
 The enhanced schema includes four object stores:
@@ -46,7 +45,6 @@ The enhanced schema includes four object stores:
 
 ### Browser Storage (localStorage)
 - Tag management data (categories, colors, assignments)
-- Notification preferences and reminder settings
 - Tagline rotation state and timing
 
 ### Key Libraries & Modules
@@ -67,7 +65,6 @@ The enhanced schema includes four object stores:
 - `firebase.ts`: Configuration with offline persistence enabled
 - `firebase-auth.ts`: Authentication utilities and token management
 - `auth.ts`: Legacy authentication helpers
-- `notification-manager.ts`: Push notification system with FCM integration
 
 ### Component Architecture
 - **Pages**: Next.js pages with server-side rendering disabled (SPA mode)
@@ -116,12 +113,6 @@ interface CategoryData {
 4. Updates backup metadata in Firestore and local cache
 5. UI shows real-time status: authentication, sync state, last backup time with unified dashboard
 
-### Notification System
-1. **Client-Side**: `notification-manager.ts` handles permission requests and FCM token registration
-2. **Server-Side**: Firebase Cloud Functions (`functions/src/index.ts`) schedule and send push notifications
-3. **Service Worker**: Handles background notifications and action responses
-4. **Settings UI**: Complete notification preferences in Data Management dashboard
-
 ### Local Export System
 Separate from cloud backup, provides file-based exports with native file system integration:
 - **JSON**: Complete data with metadata
@@ -151,7 +142,6 @@ Separate from cloud backup, provides file-based exports with native file system 
 - `account.test.tsx`: Data management interface tests
 - `performance.test.ts`: Load testing with large datasets
 - `integration/`: Cross-component integration tests
-- `notification-manager.test.ts`: Push notification system tests
 - `tag-management.test.ts`: Tag system and category management tests
 - `pwa-functionality.test.ts`: Progressive Web App feature tests
 
@@ -190,7 +180,6 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 NEXT_PUBLIC_FIREBASE_APP_ID
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-NEXT_PUBLIC_FIREBASE_VAPID_KEY    # For push notifications
 ```
 
 ### Firestore Data Structure
@@ -198,11 +187,9 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY    # For push notifications
 users/{uid}/
   meals/{mealId}          # Individual dish documents
   metadata/backup         # Backup timestamps and metadata
-  notifications/          # Notification preferences and tokens
 ```
 
 ### Firebase Cloud Functions
-- `sendDueDinnerReminders`: Scheduled function for push notifications
 - Automated deployment via GitHub Actions
 - Node.js 20 runtime with v6 Firebase Functions SDK
 
@@ -228,7 +215,6 @@ users/{uid}/
 - No sensitive data in client-side code or commits
 - Comprehensive Content Security Policy in next.config.js
 - Security headers (HSTS, X-Frame-Options, etc.) configured
-- Push notification tokens securely managed with FCM
 - Service worker follows secure contexts requirements
 
 ## Critical Development Notes
@@ -243,7 +229,7 @@ users/{uid}/
 ### Test Environment Setup
 - `jest.setup.ts` includes required polyfills (window.matchMedia for PWA tests)
 - All tests must mock `@/lib/offline-storage` for storage operations
-- PWA tests require mocking of service worker and notification APIs
+- PWA tests require mocking of service worker APIs
 - Integration tests require comprehensive mocking of storage and Firebase functions
 
 ### PWA Features
@@ -251,7 +237,6 @@ users/{uid}/
 - Web App Manifest for installability (`public/manifest.json`)
 - File System Access API for native file saving
 - Offline-first architecture with comprehensive caching strategies
-- Push notifications with Firebase Cloud Messaging
 - Install prompts and PWA status indicators
 - Background sync for data operations
 - When pushing updates, update @CHANGELOG.md and increment the version number appropriately.

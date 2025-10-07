@@ -4,4 +4,4 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-export { sendDueDinnerReminders } from "./reminders";
+// Cloud Functions can be added here

@@ -14,7 +14,6 @@ import HistoryAccordion from "@/components/HistoryAccordion";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 import { TaglineManager } from "@/lib/tagline-manager";
-import NotificationManager from "@/lib/notification-manager";
 import { useFormState, useToggle, useAutocomplete, useMessages } from "@/hooks/common";
 
 export default function Meals() {
@@ -69,15 +68,6 @@ export default function Meals() {
     }
   }, []);
 
-  const initializeNotifications = useCallback(async () => {
-    try {
-      await NotificationManager.initialize();
-      console.log('Notification system initialized');
-    } catch (error) {
-      console.error('Failed to initialize notifications:', error);
-    }
-  }, []);
-
   // Initialize and manage tagline rotation
   useEffect(() => {
     // Set initial tagline
@@ -103,8 +93,7 @@ export default function Meals() {
   useEffect(() => {
     syncPendingMeals();
     loadSuggestions();
-    initializeNotifications();
-  }, [initializeNotifications, loadSuggestions, syncPendingMeals]);
+  }, [loadSuggestions, syncPendingMeals]);
 
   // handleMealNameChange and selectSuggestion are now handled by useAutocomplete hook
 
@@ -244,7 +233,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.6.1
+        v0.6.2
       </div>
     </main>
     </>
