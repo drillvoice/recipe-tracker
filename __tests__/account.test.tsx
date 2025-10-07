@@ -76,26 +76,6 @@ jest.mock('@/lib/firestore-backup', () => ({
   })
 }));
 
-jest.mock('@/lib/notification-manager', () => ({
-  __esModule: true,
-  default: {
-    getSettings: jest.fn().mockReturnValue({
-      enabled: true,
-      reminderTime: '20:00'
-    }),
-    getStatus: jest.fn().mockResolvedValue({
-      permission: 'granted',
-      supported: true,
-      fcmSupported: true
-    }),
-    saveSettings: jest.fn(),
-    requestPermission: jest.fn().mockResolvedValue('granted'),
-    scheduleNextReminder: jest.fn().mockResolvedValue(true),
-    clearScheduler: jest.fn(),
-    showTestNotification: jest.fn().mockResolvedValue(true)
-  }
-}));
-
 describe('Data Management Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();

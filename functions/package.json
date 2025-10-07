@@ -16,11 +16,9 @@
   },
   "dependencies": {
     "firebase-admin": "^11.10.1",
-    "firebase-functions": "^6.4.0",
-    "luxon": "^3.4.4"
+    "firebase-functions": "^6.4.0"
   },
   "devDependencies": {
-    "@types/luxon": "^3.7.1",
     "@types/node": "^20.10.5",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",

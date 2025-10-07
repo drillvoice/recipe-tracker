@@ -6,7 +6,6 @@ import CloudBackup from './CloudBackup';
 import DataExport from './DataExport';
 import DataImport from './DataImport';
 import DataValidation from './DataValidation';
-import NotificationSettings from './NotificationSettings';
 import type { TabType, MessageState } from './types';
 
 export default function DataManagement() {
@@ -46,11 +45,6 @@ export default function DataManagement() {
             </button>
           </div>
         )}
-
-        {/* Notification Settings */}
-        <section className="data-section">
-          <NotificationSettings onMessage={setMessage} />
-        </section>
 
         {/* Cloud Backup Section */}
         <section className="data-section">
