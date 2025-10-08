@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2025-10-08
+
+### Added
+- **Comprehensive Test Suite Expansion**: Added 62 new tests across validation and hooks (+117% increase)
+- **Validation Test Coverage**: 45 new tests for input sanitization, schema validation, and error handling
+  - XSS protection with HTML sanitization tests
+  - Meal, email, and password schema validation
+  - Edge case handling with invalid inputs
+  - Date validation with dynamic current date compatibility
+- **Hook Test Coverage**: 17 new tests for useMeals hook functionality
+  - Load/reload operations with proper sorting
+  - Optimistic updates for all CRUD operations
+  - Comprehensive error handling scenarios
+  - State management verification
+
+### Technical
+- **Test Results**: Increased passing tests from 53 to 115 (100% pass rate)
+- **Coverage Improvements**: Statements +1.9%, Functions +4.43%, Lines +1.98%
+- **Code Quality**: All tests follow best practices with proper mocking and assertions
+- **Maintainability**: Tests cover critical user flows and error paths for better confidence
+
 ## [0.6.3] - 2025-10-07
 
 ### Added
