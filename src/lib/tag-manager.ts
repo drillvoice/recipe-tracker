@@ -89,22 +89,22 @@ export class TagManager {
       if (meal.tags && Array.isArray(meal.tags)) {
         const mealTime = meal.date.toMillis ? meal.date.toMillis() : (meal.date as unknown as Date).getTime();
 
-        meal.tags.forEach(tag => {
-          if (tag && typeof tag === 'string' && tag.trim()) {
-            const tagName = tag.trim();
-            const existing = tagStats.get(tagName);
+        // Deduplicate tags within this meal to prevent double-counting
+        const uniqueTags = Array.from(new Set(meal.tags.map(tag => tag.trim()).filter(tag => tag)));
 
-            if (!existing || mealTime > existing.lastUsed) {
-              tagStats.set(tagName, {
-                count: (existing?.count || 0) + 1,
-                lastUsed: mealTime
-              });
-            } else {
-              tagStats.set(tagName, {
-                ...existing,
-                count: existing.count + 1
-              });
-            }
+        uniqueTags.forEach(tagName => {
+          const existing = tagStats.get(tagName);
+
+          if (!existing || mealTime > existing.lastUsed) {
+            tagStats.set(tagName, {
+              count: (existing?.count || 0) + 1,
+              lastUsed: mealTime
+            });
+          } else {
+            tagStats.set(tagName, {
+              ...existing,
+              count: existing.count + 1
+            });
           }
         });
       }

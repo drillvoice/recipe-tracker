@@ -65,7 +65,7 @@ export interface SerializableMeal {
 }
 
 export class ExportManager {
-  private static readonly VERSION = '0.6.2';
+  private static readonly VERSION = '0.6.5';
   private static readonly SOURCE = 'dish-diary';
 
   /**

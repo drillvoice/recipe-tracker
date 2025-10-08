@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2025-10-08
+
+### Fixed
+- **Tag Count Accuracy**: Fixed bug where tags with duplicates in the same dish's tag array were being double-counted
+- **Tag Deduplication**: Tag counting now properly deduplicates tags within each meal before counting
+
+### Changed
+- **Category-Based Tag Organization**: Tags page now groups tags under category headings (Cuisine, Protein, Cooking Method, Dietary, etc.)
+- **Uncategorised Section**: Tags without a category are grouped under "Uncategorised" heading
+- **Accordion UI**: Each category section is now an expandable/collapsible accordion (all start open by default)
+- **Category Count Badges**: Category headers display tag count for that category
+
+### Technical
+- Added tag deduplication logic using `Array.from(new Set(...))` for accurate counting (src/lib/tag-manager.ts:93)
+- Implemented category grouping logic with Map-based organization (src/pages/tags.tsx:136-157)
+- Added accordion state management with `collapsedCategories` Set (src/pages/tags.tsx:22)
+- Added 60+ lines of category accordion CSS styling with gradient headers and hover effects (src/styles/globals.css:2200-2258)
+
 ## [0.6.4] - 2025-10-08
 
 ### Added

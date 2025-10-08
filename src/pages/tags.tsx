@@ -19,6 +19,7 @@ export default function Tags() {
   } | null>(null);
   const [showCategoryManagement, setShowCategoryManagement] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const { dialogProps, showDialog } = useConfirmDialog();
 
   useEffect(() => {
@@ -119,6 +120,42 @@ export default function Tags() {
     return TAG_COLORS[colorKey];
   };
 
+  const toggleCategoryCollapse = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  // Group tags by category
+  const groupedTags = (() => {
+    const grouped = new Map<string, TagInfo[]>();
+
+    // Initialize with all categories
+    categories.forEach(cat => {
+      grouped.set(cat.id, []);
+    });
+
+    // Add uncategorised group
+    grouped.set('uncategorised', []);
+
+    // Sort tags into groups
+    tags.forEach(tag => {
+      if (tag.category && grouped.has(tag.category)) {
+        grouped.get(tag.category)!.push(tag);
+      } else {
+        grouped.get('uncategorised')!.push(tag);
+      }
+    });
+
+    return grouped;
+  })();
+
   return (
     <>
       <Head>
@@ -151,151 +188,333 @@ export default function Tags() {
           </div>
         ) : tags.length > 0 ? (
           <div className="tags-list">
-            {tags.map(tag => {
-              const isExpanded = expandedTag === tag.name;
-              const effectiveColor = editingTag?.customColor ||
-                (editingTag?.category ? categories.find(c => c.id === editingTag.category)?.color : undefined) ||
-                getTagColor(tag);
+            {/* Render categories */}
+            {categories.map(category => {
+              const categoryTags = groupedTags.get(category.id) || [];
+              if (categoryTags.length === 0) return null;
+              const isCollapsed = collapsedCategories.has(category.id);
 
               return (
-                <div key={tag.name} className="tag-list-item">
+                <div key={category.id} className="tag-category-section">
                   <button
-                    className={`tag-item-header ${isExpanded ? 'expanded' : ''}`}
-                    onClick={() => handleTagClick(tag)}
-                    style={{ borderLeft: `4px solid ${getTagColor(tag)}` }}
-                    disabled={isUpdating}
+                    className={`category-header ${isCollapsed ? 'collapsed' : 'expanded'}`}
+                    onClick={() => toggleCategoryCollapse(category.id)}
                   >
-                    <div className="tag-item-info">
-                      <span className="tag-name">{tag.name}</span>
-                      <span className="tag-stats">
-                        {tag.count} dish{tag.count === 1 ? '' : 'es'}
-                        {tag.lastUsed && (
-                          <>
-                            <span className="separator">•</span>
-                            <span className="last-used">
-                              Last used: {new Date(tag.lastUsed).toLocaleDateString()}
-                            </span>
-                          </>
-                        )}
-                      </span>
-                    </div>
-                    <div className="tag-item-meta">
-                      {tag.category && (
-                        <span className="tag-category">
-                          {categories.find(c => c.id === tag.category)?.name || tag.category}
-                        </span>
-                      )}
-                      <span
-                        className="tag-color-indicator"
-                        style={{ backgroundColor: getTagColor(tag) }}
-                      />
-                    </div>
+                    <span className="category-title">{category.name}</span>
+                    <span className="category-count">{categoryTags.length} tag{categoryTags.length === 1 ? '' : 's'}</span>
+                    <span className="category-arrow">{isCollapsed ? '▶' : '▼'}</span>
                   </button>
+                  {!isCollapsed && (
+                    <div className="category-tags">
+                      {categoryTags.map(tag => {
+                        const isExpanded = expandedTag === tag.name;
+                        const effectiveColor = editingTag?.customColor ||
+                          (editingTag?.category ? categories.find(c => c.id === editingTag.category)?.color : undefined) ||
+                          getTagColor(tag);
 
-                  {isExpanded && editingTag && (
-                    <div className="tag-edit-panel">
-                      <div className="tag-preview-compact">
-                        <div
-                          className="tag-preview-chip-compact"
-                          style={{
-                            backgroundColor: TAG_COLORS[effectiveColor as TagColor] || TAG_COLORS.gray,
-                            color: (effectiveColor === 'yellow' || effectiveColor === 'beige') ? '#374151' : '#1f2937'
-                          }}
-                        >
-                          {editingTag.name.trim() || tag.name}
-                        </div>
-                      </div>
-
-                      <div className="edit-form-compact">
-                        <div className="form-row">
-                          <div className="form-group-compact">
-                            <label>Name</label>
-                            <input
-                              type="text"
-                              value={editingTag.name}
-                              onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
-                              className="form-input-compact"
-                              disabled={isUpdating}
-                            />
-                          </div>
-                          <div className="form-group-compact">
-                            <label>Category</label>
-                            <select
-                              value={editingTag.category}
-                              onChange={(e) => setEditingTag({...editingTag, category: e.target.value})}
-                              className="form-select-compact"
-                              disabled={isUpdating}
-                            >
-                              <option value="">No category</option>
-                              {categories.map(category => (
-                                <option key={category.id} value={category.id}>
-                                  {category.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="form-group-compact">
-                          <label>Custom Color</label>
-                          <div className="color-picker-compact">
+                        return (
+                          <div key={tag.name} className="tag-list-item">
                             <button
-                              type="button"
-                              className={`color-option-compact ${editingTag.customColor === '' ? 'selected' : ''}`}
-                              onClick={() => setEditingTag({...editingTag, customColor: ''})}
+                              className={`tag-item-header ${isExpanded ? 'expanded' : ''}`}
+                              onClick={() => handleTagClick(tag)}
+                              style={{ borderLeft: `4px solid ${getTagColor(tag)}` }}
                               disabled={isUpdating}
-                              title="Use category color"
                             >
-                              Default
+                              <div className="tag-item-info">
+                                <span className="tag-name">{tag.name}</span>
+                                <span className="tag-stats">
+                                  {tag.count} dish{tag.count === 1 ? '' : 'es'}
+                                  {tag.lastUsed && (
+                                    <>
+                                      <span className="separator">•</span>
+                                      <span className="last-used">
+                                        Last used: {new Date(tag.lastUsed).toLocaleDateString()}
+                                      </span>
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="tag-item-meta">
+                                <span
+                                  className="tag-color-indicator"
+                                  style={{ backgroundColor: getTagColor(tag) }}
+                                />
+                              </div>
                             </button>
-                            {Object.entries(TAG_COLORS).map(([colorKey, colorValue]) => (
-                              <button
-                                key={colorKey}
-                                type="button"
-                                className={`color-option-compact ${editingTag.customColor === colorKey ? 'selected' : ''}`}
-                                style={{ backgroundColor: colorValue }}
-                                onClick={() => setEditingTag({...editingTag, customColor: colorKey as TagColor})}
-                                disabled={isUpdating}
-                                title={colorKey}
-                              />
-                            ))}
-                          </div>
-                        </div>
 
-                        <div className="edit-actions">
-                          <button
-                            type="button"
-                            className="danger-button small"
-                            onClick={() => handleDeleteTag(tag)}
-                            disabled={isUpdating}
-                          >
-                            Delete
-                          </button>
-                          <div className="action-group">
-                            <button
-                              type="button"
-                              className="secondary-button small"
-                              onClick={handleCancelEdit}
-                              disabled={isUpdating}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              className="primary-button small"
-                              onClick={handleSaveTag}
-                              disabled={isUpdating || editingTag.name.trim() === ''}
-                            >
-                              {isUpdating ? 'Saving...' : 'Save'}
-                            </button>
+                            {isExpanded && editingTag && (
+                              <div className="tag-edit-panel">
+                                <div className="tag-preview-compact">
+                                  <div
+                                    className="tag-preview-chip-compact"
+                                    style={{
+                                      backgroundColor: TAG_COLORS[effectiveColor as TagColor] || TAG_COLORS.gray,
+                                      color: (effectiveColor === 'yellow' || effectiveColor === 'beige') ? '#374151' : '#1f2937'
+                                    }}
+                                  >
+                                    {editingTag.name.trim() || tag.name}
+                                  </div>
+                                </div>
+
+                                <div className="edit-form-compact">
+                                  <div className="form-row">
+                                    <div className="form-group-compact">
+                                      <label>Name</label>
+                                      <input
+                                        type="text"
+                                        value={editingTag.name}
+                                        onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
+                                        className="form-input-compact"
+                                        disabled={isUpdating}
+                                      />
+                                    </div>
+                                    <div className="form-group-compact">
+                                      <label>Category</label>
+                                      <select
+                                        value={editingTag.category}
+                                        onChange={(e) => setEditingTag({...editingTag, category: e.target.value})}
+                                        className="form-select-compact"
+                                        disabled={isUpdating}
+                                      >
+                                        <option value="">No category</option>
+                                        {categories.map(category => (
+                                          <option key={category.id} value={category.id}>
+                                            {category.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div className="form-group-compact">
+                                    <label>Custom Color</label>
+                                    <div className="color-picker-compact">
+                                      <button
+                                        type="button"
+                                        className={`color-option-compact ${editingTag.customColor === '' ? 'selected' : ''}`}
+                                        onClick={() => setEditingTag({...editingTag, customColor: ''})}
+                                        disabled={isUpdating}
+                                        title="Use category color"
+                                      >
+                                        Default
+                                      </button>
+                                      {Object.entries(TAG_COLORS).map(([colorKey, colorValue]) => (
+                                        <button
+                                          key={colorKey}
+                                          type="button"
+                                          className={`color-option-compact ${editingTag.customColor === colorKey ? 'selected' : ''}`}
+                                          style={{ backgroundColor: colorValue }}
+                                          onClick={() => setEditingTag({...editingTag, customColor: colorKey as TagColor})}
+                                          disabled={isUpdating}
+                                          title={colorKey}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="edit-actions">
+                                    <button
+                                      type="button"
+                                      className="danger-button small"
+                                      onClick={() => handleDeleteTag(tag)}
+                                      disabled={isUpdating}
+                                    >
+                                      Delete
+                                    </button>
+                                    <div className="action-group">
+                                      <button
+                                        type="button"
+                                        className="secondary-button small"
+                                        onClick={handleCancelEdit}
+                                        disabled={isUpdating}
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="primary-button small"
+                                        onClick={handleSaveTag}
+                                        disabled={isUpdating || editingTag.name.trim() === ''}
+                                      >
+                                        {isUpdating ? 'Saving...' : 'Save'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })}
+
+            {/* Render uncategorised tags */}
+            {(() => {
+              const uncategorisedTags = groupedTags.get('uncategorised') || [];
+              if (uncategorisedTags.length === 0) return null;
+              const isCollapsed = collapsedCategories.has('uncategorised');
+
+              return (
+                <div key="uncategorised" className="tag-category-section">
+                  <button
+                    className={`category-header ${isCollapsed ? 'collapsed' : 'expanded'}`}
+                    onClick={() => toggleCategoryCollapse('uncategorised')}
+                  >
+                    <span className="category-title">Uncategorised</span>
+                    <span className="category-count">{uncategorisedTags.length} tag{uncategorisedTags.length === 1 ? '' : 's'}</span>
+                    <span className="category-arrow">{isCollapsed ? '▶' : '▼'}</span>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="category-tags">
+                      {uncategorisedTags.map(tag => {
+                        const isExpanded = expandedTag === tag.name;
+                        const effectiveColor = editingTag?.customColor ||
+                          (editingTag?.category ? categories.find(c => c.id === editingTag.category)?.color : undefined) ||
+                          getTagColor(tag);
+
+                        return (
+                          <div key={tag.name} className="tag-list-item">
+                            <button
+                              className={`tag-item-header ${isExpanded ? 'expanded' : ''}`}
+                              onClick={() => handleTagClick(tag)}
+                              style={{ borderLeft: `4px solid ${getTagColor(tag)}` }}
+                              disabled={isUpdating}
+                            >
+                              <div className="tag-item-info">
+                                <span className="tag-name">{tag.name}</span>
+                                <span className="tag-stats">
+                                  {tag.count} dish{tag.count === 1 ? '' : 'es'}
+                                  {tag.lastUsed && (
+                                    <>
+                                      <span className="separator">•</span>
+                                      <span className="last-used">
+                                        Last used: {new Date(tag.lastUsed).toLocaleDateString()}
+                                      </span>
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="tag-item-meta">
+                                <span
+                                  className="tag-color-indicator"
+                                  style={{ backgroundColor: getTagColor(tag) }}
+                                />
+                              </div>
+                            </button>
+
+                            {isExpanded && editingTag && (
+                              <div className="tag-edit-panel">
+                                <div className="tag-preview-compact">
+                                  <div
+                                    className="tag-preview-chip-compact"
+                                    style={{
+                                      backgroundColor: TAG_COLORS[effectiveColor as TagColor] || TAG_COLORS.gray,
+                                      color: (effectiveColor === 'yellow' || effectiveColor === 'beige') ? '#374151' : '#1f2937'
+                                    }}
+                                  >
+                                    {editingTag.name.trim() || tag.name}
+                                  </div>
+                                </div>
+
+                                <div className="edit-form-compact">
+                                  <div className="form-row">
+                                    <div className="form-group-compact">
+                                      <label>Name</label>
+                                      <input
+                                        type="text"
+                                        value={editingTag.name}
+                                        onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
+                                        className="form-input-compact"
+                                        disabled={isUpdating}
+                                      />
+                                    </div>
+                                    <div className="form-group-compact">
+                                      <label>Category</label>
+                                      <select
+                                        value={editingTag.category}
+                                        onChange={(e) => setEditingTag({...editingTag, category: e.target.value})}
+                                        className="form-select-compact"
+                                        disabled={isUpdating}
+                                      >
+                                        <option value="">No category</option>
+                                        {categories.map(category => (
+                                          <option key={category.id} value={category.id}>
+                                            {category.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div className="form-group-compact">
+                                    <label>Custom Color</label>
+                                    <div className="color-picker-compact">
+                                      <button
+                                        type="button"
+                                        className={`color-option-compact ${editingTag.customColor === '' ? 'selected' : ''}`}
+                                        onClick={() => setEditingTag({...editingTag, customColor: ''})}
+                                        disabled={isUpdating}
+                                        title="Use category color"
+                                      >
+                                        Default
+                                      </button>
+                                      {Object.entries(TAG_COLORS).map(([colorKey, colorValue]) => (
+                                        <button
+                                          key={colorKey}
+                                          type="button"
+                                          className={`color-option-compact ${editingTag.customColor === colorKey ? 'selected' : ''}`}
+                                          style={{ backgroundColor: colorValue }}
+                                          onClick={() => setEditingTag({...editingTag, customColor: colorKey as TagColor})}
+                                          disabled={isUpdating}
+                                          title={colorKey}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="edit-actions">
+                                    <button
+                                      type="button"
+                                      className="danger-button small"
+                                      onClick={() => handleDeleteTag(tag)}
+                                      disabled={isUpdating}
+                                    >
+                                      Delete
+                                    </button>
+                                    <div className="action-group">
+                                      <button
+                                        type="button"
+                                        className="secondary-button small"
+                                        onClick={handleCancelEdit}
+                                        disabled={isUpdating}
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="primary-button small"
+                                        onClick={handleSaveTag}
+                                        disabled={isUpdating || editingTag.name.trim() === ''}
+                                      >
+                                        {isUpdating ? 'Saving...' : 'Save'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div className="form">
@@ -319,7 +538,7 @@ export default function Tags() {
         />
 
         <div className="version-indicator">
-          v0.4.2
+          v0.6.5
         </div>
       </main>
     </>
