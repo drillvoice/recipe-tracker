@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-10-09
+
+### Added
+- **Calendar View on Home Screen**: Interactive monthly calendar showing all recorded dishes with visual date indicators
+- **Visual Dish Indicators**: Days with recorded dishes display with light blue background for quick scanning
+- **Day Selection Interface**: Click any day with a dish to view all dishes recorded for that date
+- **Active Day Highlighting**: Selected days show darker blue background with white text to indicate active state
+- **Month Navigation**: Navigate between months using arrow buttons to view historical and future dish data
+- **Dish Count Summary**: Monthly summary displaying total number of dishes recorded for the displayed month
+- **Inline Dish Management**: Edit and delete dishes directly from calendar view with familiar controls
+- **Multi-Dish Support**: Calendar displays all dishes when multiple entries exist for a single day
+- **Date Context Display**: Selected date shows formatted display (e.g., "Tuesday, October 7") above dish list
+
+### Changed
+- **Home Screen Layout**: Calendar now positioned between dish entry form and history accordion for better workflow
+- **Unified Data Refresh**: Calendar automatically updates when new dishes are added, matching history behavior
+
+### Technical
+- Created CalendarView component (300+ lines) with comprehensive state management
+- Implemented calendar grid generation with proper week alignment and month boundary handling
+- Added meal grouping by date (YYYY-MM-DD) for efficient data organization
+- Integrated edit/delete functionality reusing ActionButton and ConfirmDialog components
+- Added 210+ lines of responsive CSS with mobile-optimized calendar grid and interactions
+- Calendar uses useMeals hook for data operations (updateMealData, deleteMealData)
+- Proper Firebase Timestamp handling for date comparisons and display formatting
+- Empty days non-interactive (clicking does nothing) per UX requirements
+- Selected day remains active on re-click (no de-selection) for consistent interaction model
+
 ## [0.6.5] - 2025-10-08
 
 ### Fixed
