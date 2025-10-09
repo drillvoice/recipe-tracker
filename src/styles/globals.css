@@ -2213,24 +2213,24 @@ h1 {
   align-items: center;
   justify-content: center;
   font-size: 0.875rem;
-  color: #374151;
+  color: #1f2937;
   cursor: pointer;
   transition: all 0.15s;
   position: relative;
 }
 
-.calendar-day:hover:not(:disabled) {
+.calendar-day:hover:not(:disabled):not(.calendar-day-other-month) {
   border-color: #3b82f6;
   transform: translateY(-1px);
 }
 
 .calendar-day:disabled {
   cursor: default;
-  color: #d1d5db;
 }
 
 .calendar-day-other-month {
   color: #d1d5db;
+  cursor: default;
 }
 
 .calendar-day-has-dish {

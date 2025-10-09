@@ -79,9 +79,10 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
       });
     }
 
-    // Add next month's leading days to complete the grid
-    const remainingCells = 42 - days.length; // 6 rows × 7 days
-    for (let day = 1; day <= remainingCells; day++) {
+    // Add next month's leading days to complete the current week only
+    const totalDays = days.length;
+    const daysToCompleteWeek = (7 - (totalDays % 7)) % 7;
+    for (let day = 1; day <= daysToCompleteWeek; day++) {
       days.push({
         date: day,
         isCurrentMonth: false,
@@ -240,7 +241,7 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
               key={index}
               className={`calendar-day ${!day.isCurrentMonth ? 'calendar-day-other-month' : ''} ${day.hasData ? 'calendar-day-has-dish' : ''} ${isSelected ? 'calendar-day-selected' : ''}`}
               onClick={() => handleDayClick(day)}
-              disabled={!day.isCurrentMonth || !day.hasData}
+              disabled={!day.isCurrentMonth}
             >
               {day.date}
             </button>
