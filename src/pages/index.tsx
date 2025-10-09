@@ -11,6 +11,7 @@ import {
 } from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
 import HistoryAccordion from "@/components/HistoryAccordion";
+import CalendarView from "@/components/CalendarView";
 import { validateMeal } from "@/utils/validation";
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 import { TaglineManager } from "@/lib/tagline-manager";
@@ -226,6 +227,8 @@ export default function Meals() {
         </div>
       )}
 
+      <CalendarView refreshTrigger={refreshTrigger} />
+
       <HistoryAccordion
         isOpen={historyAccordionOpen}
         onToggle={toggleHistoryAccordion}
@@ -233,7 +236,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.6.5
+        v0.7.0
       </div>
     </main>
     </>
