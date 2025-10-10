@@ -15,6 +15,8 @@ interface IdeasTableRowProps {
   onConfirmHide: (idea: Idea) => void;
   onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
+  onRenameDish?: (oldName: string, newName: string) => Promise<void>;
+  onDeleteAllInstances?: (mealName: string) => Promise<void>;
   allIdeas?: Idea[]; // For extracting all existing tags for autocomplete
 }
 
@@ -23,6 +25,8 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   onConfirmHide,
   onDirectHide,
   onTagsUpdated,
+  onRenameDish,
+  onDeleteAllInstances,
   allIdeas = []
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
@@ -156,6 +160,8 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           onConfirmHide={onConfirmHide}
           onDirectHide={onDirectHide}
           onTagsUpdated={onTagsUpdated}
+          onRenameDish={onRenameDish}
+          onDeleteAllInstances={onDeleteAllInstances}
         />
       )}
     </>

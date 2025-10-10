@@ -3358,3 +3358,142 @@ h1 {
     text-align: center;
   }
 }
+
+/* ======================================
+   EDIT DISH NAME & DELETE ALL STYLES
+   ====================================== */
+
+/* Edit Name Section */
+.edit-name-section {
+  background: #fffbeb;
+  border: 2px solid #fbbf24;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.edit-name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-name-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.edit-name-input {
+  padding: 0.75rem;
+  border: 1px solid #fbbf24;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  background: white;
+  color: #374151;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.edit-name-input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.edit-name-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-save-name {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.875rem;
+}
+
+.btn-save-name:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
+}
+
+.btn-save-name:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-cancel-name {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.875rem;
+}
+
+.btn-cancel-name:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.btn-cancel-name:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Delete All Section */
+.delete-all-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.confirm-delete-all {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.confirm-delete-all span {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .edit-name-buttons,
+  .confirm-buttons {
+    flex-direction: column;
+  }
+
+  .btn-save-name,
+  .btn-cancel-name {
+    width: 100%;
+  }
+
+  .edit-name-section {
+    padding: 0.75rem;
+  }
+}

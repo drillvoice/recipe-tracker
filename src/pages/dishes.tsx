@@ -15,7 +15,7 @@ export default function Ideas() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
   const { dialogProps, showDialog } = useConfirmDialog();
-  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
+  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags, renameDishAllInstances, deleteAllInstancesOfDish } = useIdeas();
 
   const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
     try {
@@ -298,6 +298,8 @@ export default function Ideas() {
                   onConfirmHide={confirmHide}
                   onDirectHide={directToggleHidden}
                   onTagsUpdated={updateMealTags}
+                  onRenameDish={renameDishAllInstances}
+                  onDeleteAllInstances={deleteAllInstancesOfDish}
                   allIdeas={ideas}
                 />
               ))}

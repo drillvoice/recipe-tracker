@@ -299,6 +299,57 @@ export async function updateMealTagsByName(mealName: string, tags: string[]): Pr
   await tx.done;
 }
 
+export async function updateMealNameByName(oldName: string, newName: string): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+
+  // Use index for efficient lookup instead of scanning all meals
+  const tx = dbInstance.transaction('meals', 'readwrite');
+  const store = tx.objectStore('meals');
+  const index = store.index('mealName');
+
+  // Get all meals with this name using the index
+  const mealsToUpdate = await index.getAll(oldName);
+
+  // Batch update all matching meals with new name
+  const updatePromises = mealsToUpdate.map(meal => {
+    meal.mealName = newName;
+    return store.put(meal);
+  });
+
+  await Promise.all(updatePromises);
+  await tx.done;
+}
+
+export async function deleteMealsByName(mealName: string): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+
+  // Use transaction for atomic operation
+  const tx = dbInstance.transaction(['meals', 'cache_meta'], 'readwrite');
+  const store = tx.objectStore('meals');
+  const index = store.index('mealName');
+
+  // Get all meals with this name using the index
+  const mealsToDelete = await index.getAll(mealName);
+
+  // Batch delete all matching meals
+  const deletePromises = mealsToDelete.map(meal => store.delete(meal.id));
+  await Promise.all(deletePromises);
+
+  // Update meal count in metadata atomically
+  const mealCount = await store.count();
+  const metaStore = tx.objectStore('cache_meta');
+  const existing = await metaStore.get('backup_status') || { key: 'backup_status' };
+  await metaStore.put({ ...existing, mealCount });
+
+  await tx.done;
+}
+
 // === METADATA OPERATIONS ===
 
 export async function getCacheMetadata(key: string): Promise<CacheMetadata | null> {

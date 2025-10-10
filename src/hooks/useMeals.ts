@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, updateMealTagsByName, type Meal } from '@/lib/offline-storage';
+import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, updateMealTagsByName, updateMealNameByName, deleteMealsByName, type Meal } from '@/lib/offline-storage';
 import { Timestamp } from 'firebase/firestore';
 
 export function useMeals() {
@@ -83,6 +83,32 @@ export function useMeals() {
     }
   }, []);
 
+  const renameDishAllInstances = useCallback(async (oldName: string, newName: string) => {
+    try {
+      await updateMealNameByName(oldName, newName);
+      // Optimistically update local state instead of full reload
+      setMeals(prevMeals =>
+        prevMeals.map(meal =>
+          meal.mealName === oldName ? { ...meal, mealName: newName } : meal
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to rename dish'));
+      throw err;
+    }
+  }, []);
+
+  const deleteAllInstancesOfDish = useCallback(async (mealName: string) => {
+    try {
+      await deleteMealsByName(mealName);
+      // Optimistically update local state instead of full reload
+      setMeals(prevMeals => prevMeals.filter(meal => meal.mealName !== mealName));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete dish'));
+      throw err;
+    }
+  }, []);
+
   useEffect(() => {
     loadMeals();
   }, [loadMeals]);
@@ -95,6 +121,8 @@ export function useMeals() {
     updateMealData,
     deleteMealData,
     toggleMealVisibility,
-    updateMealTags
+    updateMealTags,
+    renameDishAllInstances,
+    deleteAllInstancesOfDish
   };
 }
