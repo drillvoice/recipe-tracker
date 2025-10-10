@@ -32,16 +32,12 @@ export default function Ideas() {
     } else {
       // Show confirmation when hiding
       showDialog(
-        "Hide Meal",
-        `Hide "${idea.mealName}" from ideas list?`,
+        "Hide Dish",
+        `Hide "${idea.mealName}" from dishes list?`,
         () => handleToggleHidden(idea.mealName, true)
       );
     }
   }, [showDialog, handleToggleHidden]);
-
-  const directToggleHidden = useCallback(async (idea: Idea) => {
-    await handleToggleHidden(idea.mealName, !idea.hidden);
-  }, [handleToggleHidden]);
 
   // Extract all unique tags from all ideas
   const allUniqueTags = useMemo(() => {
@@ -296,7 +292,6 @@ export default function Ideas() {
                   key={idea.mealName}
                   idea={idea}
                   onConfirmHide={confirmHide}
-                  onDirectHide={directToggleHidden}
                   onTagsUpdated={updateMealTags}
                   onRenameDish={renameDishAllInstances}
                   onDeleteAllInstances={deleteAllInstancesOfDish}

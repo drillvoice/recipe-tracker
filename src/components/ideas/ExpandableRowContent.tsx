@@ -9,7 +9,6 @@ interface ExpandableRowContentProps {
   allExistingTags: string[];
   getTagColor: (tagName: string) => string;
   onConfirmHide: (idea: Idea) => void;
-  onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
   onRenameDish?: (oldName: string, newName: string) => Promise<void>;
   onDeleteAllInstances?: (mealName: string) => Promise<void>;
@@ -21,7 +20,6 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
   allExistingTags,
   getTagColor,
   onConfirmHide,
-  onDirectHide,
   onTagsUpdated,
   onRenameDish,
   onDeleteAllInstances
@@ -34,11 +32,8 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleHideClick = () => {
-    if (onDirectHide) {
-      onDirectHide(idea);
-    } else {
-      setShowHideConfirm(true);
-    }
+    // Always show confirmation for hiding
+    setShowHideConfirm(true);
   };
 
   const handleConfirmHide = () => {
@@ -105,7 +100,7 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
           {isEditingName && onRenameDish && (
             <div className="expanded-section edit-name-section">
               <div className="edit-name-form">
-                <label className="edit-name-label">Edit Meal Name:</label>
+                <label className="edit-name-label">Edit Dish Name:</label>
                 <input
                   type="text"
                   className="edit-name-input"

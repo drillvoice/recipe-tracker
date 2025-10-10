@@ -3409,6 +3409,7 @@ h1 {
   color: #374151;
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
+  text-align: left;
 }
 
 .edit-name-input {
@@ -3420,6 +3421,8 @@ h1 {
   color: #374151;
   transition: border-color 0.15s, box-shadow 0.15s;
   width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .edit-name-input:focus {

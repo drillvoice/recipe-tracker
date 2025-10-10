@@ -13,7 +13,6 @@ import type { Idea } from '@/hooks/useIdeas';
 interface IdeasTableRowProps {
   idea: Idea;
   onConfirmHide: (idea: Idea) => void;
-  onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
   onRenameDish?: (oldName: string, newName: string) => Promise<void>;
   onDeleteAllInstances?: (mealName: string) => Promise<void>;
@@ -23,7 +22,6 @@ interface IdeasTableRowProps {
 export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   idea,
   onConfirmHide,
-  onDirectHide,
   onTagsUpdated,
   onRenameDish,
   onDeleteAllInstances,
@@ -158,7 +156,6 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           allExistingTags={allExistingTags}
           getTagColor={getTagColor}
           onConfirmHide={onConfirmHide}
-          onDirectHide={onDirectHide}
           onTagsUpdated={onTagsUpdated}
           onRenameDish={onRenameDish}
           onDeleteAllInstances={onDeleteAllInstances}
