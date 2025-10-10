@@ -101,45 +101,36 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
             </div>
           </div>
 
-          {/* Edit Meal Name Section */}
-          {onRenameDish && (
+          {/* Edit form - only show when editing */}
+          {isEditingName && onRenameDish && (
             <div className="expanded-section edit-name-section">
-              {!isEditingName ? (
-                <ActionButton
-                  icon="✏️"
-                  onClick={() => setIsEditingName(true)}
-                  title="Edit dish name"
-                  variant="default"
+              <div className="edit-name-form">
+                <label className="edit-name-label">Edit Meal Name:</label>
+                <input
+                  type="text"
+                  className="edit-name-input"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Enter dish name"
+                  autoFocus
                 />
-              ) : (
-                <div className="edit-name-form">
-                  <label className="edit-name-label">Edit Meal Name:</label>
-                  <input
-                    type="text"
-                    className="edit-name-input"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    placeholder="Enter dish name"
-                    autoFocus
-                  />
-                  <div className="edit-name-buttons">
-                    <button
-                      className="btn-save-name"
-                      onClick={handleSaveNameEdit}
-                      disabled={isRenaming}
-                    >
-                      {isRenaming ? 'Saving...' : '✓ Save'}
-                    </button>
-                    <button
-                      className="btn-cancel-name"
-                      onClick={handleCancelNameEdit}
-                      disabled={isRenaming}
-                    >
-                      ✕ Cancel
-                    </button>
-                  </div>
+                <div className="edit-name-buttons">
+                  <button
+                    className="btn-save-name"
+                    onClick={handleSaveNameEdit}
+                    disabled={isRenaming}
+                  >
+                    {isRenaming ? 'Saving...' : '✓ Save'}
+                  </button>
+                  <button
+                    className="btn-cancel-name"
+                    onClick={handleCancelNameEdit}
+                    disabled={isRenaming}
+                  >
+                    ✕ Cancel
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -151,68 +142,79 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
             onTagsUpdated={onTagsUpdated}
           />
 
-          {/* Delete All Instances Section */}
-          {onDeleteAllInstances && (
+          {/* Delete confirmation - only show when confirming */}
+          {showDeleteConfirm && onDeleteAllInstances && (
             <div className="expanded-section delete-all-section">
-              {!showDeleteConfirm ? (
+              <div className="confirm-delete-all">
+                <span>Delete all {idea.count} instance{idea.count === 1 ? '' : 's'} of "{idea.mealName}"?</span>
+                <div className="confirm-buttons">
+                  <ActionButton
+                    icon="✓"
+                    onClick={handleDeleteAll}
+                    title="Yes, delete all"
+                    variant="danger"
+                    disabled={isDeleting}
+                  />
+                  <ActionButton
+                    icon="✕"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    title="Cancel"
+                    variant="default"
+                    disabled={isDeleting}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Hide confirmation - only show when confirming */}
+          {showHideConfirm && (
+            <div className="expanded-section">
+              <div className="confirm-hide">
+                <span>Hide "{idea.mealName}"?</span>
+                <div className="confirm-buttons">
+                  <ActionButton
+                    icon="✓"
+                    onClick={handleConfirmHide}
+                    title="Yes, hide it"
+                    variant="danger"
+                  />
+                  <ActionButton
+                    icon="✕"
+                    onClick={handleCancelHide}
+                    title="Cancel"
+                    variant="default"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons row */}
+          <div className="expanded-section">
+            <div className="action-row">
+              {onRenameDish && (
+                <ActionButton
+                  icon="✏️"
+                  onClick={() => setIsEditingName(true)}
+                  title="Edit dish name"
+                  variant="warning"
+                />
+              )}
+              {onDeleteAllInstances && (
                 <ActionButton
                   icon="🗑️"
                   onClick={() => setShowDeleteConfirm(true)}
                   title={`Delete all ${idea.count} instance${idea.count === 1 ? '' : 's'} of "${idea.mealName}"`}
                   variant="danger"
                 />
-              ) : (
-                <div className="confirm-delete-all">
-                  <span>Delete all {idea.count} instance{idea.count === 1 ? '' : 's'} of "{idea.mealName}"?</span>
-                  <div className="confirm-buttons">
-                    <ActionButton
-                      icon="✓"
-                      onClick={handleDeleteAll}
-                      title="Yes, delete all"
-                      variant="danger"
-                      disabled={isDeleting}
-                    />
-                    <ActionButton
-                      icon="✕"
-                      onClick={() => setShowDeleteConfirm(false)}
-                      title="Cancel"
-                      variant="default"
-                      disabled={isDeleting}
-                    />
-                  </div>
-                </div>
               )}
-            </div>
-          )}
-
-          <div className="expanded-section">
-            <div className="dish-visibility-section">
-              {!showHideConfirm ? (
-                <ActionButton
-                  icon="👁️‍🗨️"
-                  onClick={handleHideClick}
-                  title={`Hide "${idea.mealName}" from suggestions`}
-                  variant="danger"
-                />
-              ) : (
-                <div className="confirm-hide">
-                  <span>Hide "{idea.mealName}"?</span>
-                  <div className="confirm-buttons">
-                    <ActionButton
-                      icon="✓"
-                      onClick={handleConfirmHide}
-                      title="Yes, hide it"
-                      variant="danger"
-                    />
-                    <ActionButton
-                      icon="✕"
-                      onClick={handleCancelHide}
-                      title="Cancel"
-                      variant="default"
-                    />
-                  </div>
-                </div>
-              )}
+              <ActionButton
+                icon="👁️‍🗨️"
+                onClick={handleHideClick}
+                title={`Hide "${idea.mealName}" from suggestions`}
+                variant="primary"
+              />
             </div>
           </div>
         </div>

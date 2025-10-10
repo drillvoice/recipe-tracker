@@ -424,6 +424,24 @@ h1 {
   background: #b91c1c;
 }
 
+.action-btn-warning {
+  background: #fbbf24;
+  color: white;
+}
+
+.action-btn-warning:hover:not(:disabled) {
+  background: #f59e0b;
+}
+
+.action-btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
 /* Table Actions Column */
 .history-table th:last-child,
 .ideas-table th:last-child {
@@ -2878,6 +2896,14 @@ h1 {
 
 .expanded-section:last-child {
   margin-bottom: 0;
+}
+
+/* Horizontal action row for buttons */
+.action-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .section-header {
