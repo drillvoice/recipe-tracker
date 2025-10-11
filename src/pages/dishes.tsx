@@ -15,7 +15,7 @@ export default function Ideas() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
   const { dialogProps, showDialog } = useConfirmDialog();
-  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags } = useIdeas();
+  const { ideas, isLoading, error, toggleMealVisibility, updateMealTags, renameDishAllInstances, deleteAllInstancesOfDish } = useIdeas();
 
   const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
     try {
@@ -32,16 +32,12 @@ export default function Ideas() {
     } else {
       // Show confirmation when hiding
       showDialog(
-        "Hide Meal",
-        `Hide "${idea.mealName}" from ideas list?`,
+        "Hide Dish",
+        `Hide "${idea.mealName}" from dishes list?`,
         () => handleToggleHidden(idea.mealName, true)
       );
     }
   }, [showDialog, handleToggleHidden]);
-
-  const directToggleHidden = useCallback(async (idea: Idea) => {
-    await handleToggleHidden(idea.mealName, !idea.hidden);
-  }, [handleToggleHidden]);
 
   // Extract all unique tags from all ideas
   const allUniqueTags = useMemo(() => {
@@ -296,8 +292,9 @@ export default function Ideas() {
                   key={idea.mealName}
                   idea={idea}
                   onConfirmHide={confirmHide}
-                  onDirectHide={directToggleHidden}
                   onTagsUpdated={updateMealTags}
+                  onRenameDish={renameDishAllInstances}
+                  onDeleteAllInstances={deleteAllInstancesOfDish}
                   allIdeas={ideas}
                 />
               ))}

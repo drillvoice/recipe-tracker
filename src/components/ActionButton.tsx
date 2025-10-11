@@ -4,7 +4,7 @@ interface ActionButtonProps {
   icon: string;
   onClick: () => void;
   title: string;
-  variant?: 'default' | 'danger' | 'success';
+  variant?: 'default' | 'danger' | 'success' | 'warning' | 'primary';
   disabled?: boolean;
 }
 

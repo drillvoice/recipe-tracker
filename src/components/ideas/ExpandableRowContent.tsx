@@ -9,8 +9,9 @@ interface ExpandableRowContentProps {
   allExistingTags: string[];
   getTagColor: (tagName: string) => string;
   onConfirmHide: (idea: Idea) => void;
-  onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
+  onRenameDish?: (oldName: string, newName: string) => Promise<void>;
+  onDeleteAllInstances?: (mealName: string) => Promise<void>;
 }
 
 export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
@@ -19,17 +20,20 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
   allExistingTags,
   getTagColor,
   onConfirmHide,
-  onDirectHide,
-  onTagsUpdated
+  onTagsUpdated,
+  onRenameDish,
+  onDeleteAllInstances
 }) => {
   const [showHideConfirm, setShowHideConfirm] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(idea.mealName);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleHideClick = () => {
-    if (onDirectHide) {
-      onDirectHide(idea);
-    } else {
-      setShowHideConfirm(true);
-    }
+    // Always show confirmation for hiding
+    setShowHideConfirm(true);
   };
 
   const handleConfirmHide = () => {
@@ -39,6 +43,47 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
 
   const handleCancelHide = () => {
     setShowHideConfirm(false);
+  };
+
+  const handleSaveNameEdit = async () => {
+    if (!onRenameDish) return;
+
+    const trimmedName = editedName.trim();
+    if (!trimmedName || trimmedName === idea.mealName) {
+      setIsEditingName(false);
+      setEditedName(idea.mealName);
+      return;
+    }
+
+    try {
+      setIsRenaming(true);
+      await onRenameDish(idea.mealName, trimmedName);
+      setIsEditingName(false);
+    } catch (error) {
+      console.error('Failed to rename dish:', error);
+      setEditedName(idea.mealName);
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const handleCancelNameEdit = () => {
+    setIsEditingName(false);
+    setEditedName(idea.mealName);
+  };
+
+  const handleDeleteAll = async () => {
+    if (!onDeleteAllInstances) return;
+
+    try {
+      setIsDeleting(true);
+      await onDeleteAllInstances(idea.mealName);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Failed to delete all instances:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -51,6 +96,39 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
             </div>
           </div>
 
+          {/* Edit form - only show when editing */}
+          {isEditingName && onRenameDish && (
+            <div className="expanded-section edit-name-section">
+              <div className="edit-name-form">
+                <label className="edit-name-label">Edit Dish Name:</label>
+                <input
+                  type="text"
+                  className="edit-name-input"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Enter dish name"
+                  autoFocus
+                />
+                <div className="edit-name-buttons">
+                  <button
+                    className="btn-save-name"
+                    onClick={handleSaveNameEdit}
+                    disabled={isRenaming}
+                  >
+                    {isRenaming ? 'Saving...' : '✓ Save'}
+                  </button>
+                  <button
+                    className="btn-cancel-name"
+                    onClick={handleCancelNameEdit}
+                    disabled={isRenaming}
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <TagManagementSection
             idea={idea}
             tagStrings={tagStrings}
@@ -59,34 +137,79 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
             onTagsUpdated={onTagsUpdated}
           />
 
+          {/* Delete confirmation - only show when confirming */}
+          {showDeleteConfirm && onDeleteAllInstances && (
+            <div className="expanded-section delete-all-section">
+              <div className="confirm-delete-all">
+                <span>Delete all {idea.count} instance{idea.count === 1 ? '' : 's'} of "{idea.mealName}"?</span>
+                <div className="confirm-buttons">
+                  <ActionButton
+                    icon="✓"
+                    onClick={handleDeleteAll}
+                    title="Yes, delete all"
+                    variant="danger"
+                    disabled={isDeleting}
+                  />
+                  <ActionButton
+                    icon="✕"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    title="Cancel"
+                    variant="default"
+                    disabled={isDeleting}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Hide confirmation - only show when confirming */}
+          {showHideConfirm && (
+            <div className="expanded-section">
+              <div className="confirm-hide">
+                <span>Hide "{idea.mealName}"?</span>
+                <div className="confirm-buttons">
+                  <ActionButton
+                    icon="✓"
+                    onClick={handleConfirmHide}
+                    title="Yes, hide it"
+                    variant="danger"
+                  />
+                  <ActionButton
+                    icon="✕"
+                    onClick={handleCancelHide}
+                    title="Cancel"
+                    variant="default"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons row */}
           <div className="expanded-section">
-            <div className="dish-visibility-section">
-              {!showHideConfirm ? (
+            <div className="action-row">
+              {onRenameDish && (
                 <ActionButton
-                  icon="👁️‍🗨️"
-                  onClick={handleHideClick}
-                  title={`Hide "${idea.mealName}" from suggestions`}
+                  icon="✏️"
+                  onClick={() => setIsEditingName(true)}
+                  title="Edit dish name"
+                  variant="warning"
+                />
+              )}
+              {onDeleteAllInstances && (
+                <ActionButton
+                  icon="🗑️"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  title={`Delete all ${idea.count} instance${idea.count === 1 ? '' : 's'} of "${idea.mealName}"`}
                   variant="danger"
                 />
-              ) : (
-                <div className="confirm-hide">
-                  <span>Hide "{idea.mealName}"?</span>
-                  <div className="confirm-buttons">
-                    <ActionButton
-                      icon="✓"
-                      onClick={handleConfirmHide}
-                      title="Yes, hide it"
-                      variant="danger"
-                    />
-                    <ActionButton
-                      icon="✕"
-                      onClick={handleCancelHide}
-                      title="Cancel"
-                      variant="default"
-                    />
-                  </div>
-                </div>
               )}
+              <ActionButton
+                icon="👁️‍🗨️"
+                onClick={handleHideClick}
+                title={`Hide "${idea.mealName}" from suggestions`}
+                variant="primary"
+              />
             </div>
           </div>
         </div>

@@ -13,16 +13,18 @@ import type { Idea } from '@/hooks/useIdeas';
 interface IdeasTableRowProps {
   idea: Idea;
   onConfirmHide: (idea: Idea) => void;
-  onDirectHide?: (idea: Idea) => void;
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
+  onRenameDish?: (oldName: string, newName: string) => Promise<void>;
+  onDeleteAllInstances?: (mealName: string) => Promise<void>;
   allIdeas?: Idea[]; // For extracting all existing tags for autocomplete
 }
 
 export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   idea,
   onConfirmHide,
-  onDirectHide,
   onTagsUpdated,
+  onRenameDish,
+  onDeleteAllInstances,
   allIdeas = []
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
@@ -154,8 +156,9 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
           allExistingTags={allExistingTags}
           getTagColor={getTagColor}
           onConfirmHide={onConfirmHide}
-          onDirectHide={onDirectHide}
           onTagsUpdated={onTagsUpdated}
+          onRenameDish={onRenameDish}
+          onDeleteAllInstances={onDeleteAllInstances}
         />
       )}
     </>
