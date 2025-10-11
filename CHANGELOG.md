@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-10-11
+
+### Added
+- **Bulk Edit Functionality**: Rename all instances of a dish across all dates from the Dishes page
+- **Bulk Delete Functionality**: Delete all instances of a dish with single action from expanded row
+- **Edit Name Interface**: Inline edit form appears when edit button clicked, with save/cancel controls
+- **Delete Confirmation Dialog**: Shows instance count and requires confirmation before bulk deletion
+- **Hide Confirmation Dialog**: Added confirmation when hiding dishes for improved safety and consistency
+
+### Changed
+- **Horizontal Action Buttons**: Edit, Delete, and Hide buttons now arranged in single horizontal row
+- **Conditional Edit Form**: Edit form hidden by default, only appears when edit pencil icon clicked
+- **Button Color Scheme**: Yellow (warning) for edit, red (danger) for delete, blue (primary) for hide
+- **Consistent Terminology**: Changed "Edit Meal Name:" to "Edit Dish Name:" for app-wide consistency
+- **Left-Aligned Labels**: Edit form label now left-aligned for better visual hierarchy
+
+### Fixed
+- **Edit Input Overflow**: Fixed edit field extending beyond parent container with proper box-sizing and max-width constraints
+- **Hide UX Consistency**: Hide action now always shows confirmation dialog, matching delete behavior
+
+### Technical
+- Added `updateMealNameByName()` and `deleteMealsByName()` functions in offline-storage.ts using mealName index for O(log n) performance
+- Implemented optimistic UI updates in useMeals and useIdeas hooks for bulk operations
+- Added `warning` and `primary` button variants to ActionButton component
+- Created horizontal `.action-row` layout in ExpandableRowContent component
+- Enhanced CSS with `.edit-name-input` constraints (`box-sizing: border-box`, `max-width: 100%`)
+- Used atomic IndexedDB transactions for bulk operations to ensure data consistency
+- Removed unused `onDirectHide` prop from component interfaces
+
 ## [0.7.0] - 2025-10-09
 
 ### Added
