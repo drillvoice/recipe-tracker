@@ -46,7 +46,7 @@
     "jest-util": "^29.7.0",
     "lint-staged": "^16.2.3",
     "ts-jest": "^29.4.4",
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
