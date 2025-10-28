@@ -9,10 +9,6 @@ updates:
     open-pull-requests-limit: 3
     allow:
       - dependency-type: "production"
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - "version-update:semver-major"
     groups:
       production-minor-patch:
         patterns:
@@ -20,30 +16,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    reviewers:
-      - "drillvoice"
-    assignees:
-      - "drillvoice"
-    commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
-      include: "scope"
-    security-updates: true
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-      time: "06:00"
-      timezone: "Australia/Adelaide"
-    open-pull-requests-limit: 3
-    allow:
-      - dependency-type: "production"
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
     reviewers:
       - "drillvoice"
     assignees:
