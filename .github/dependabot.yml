@@ -1,13 +1,24 @@
 version: 2
 updates:
-  # Enable version updates for npm
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
+      cron: "0 6 */28 * *"
+      timezone: "Australia/Adelaide"
+    open-pull-requests-limit: 3
+    allow:
+      - dependency-type: "production"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      production-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
     reviewers:
       - "drillvoice"
     assignees:
@@ -16,46 +27,35 @@ updates:
       prefix: "chore"
       prefix-development: "chore"
       include: "scope"
-    # Security updates
-    allow:
-      - dependency-type: "all"
-    # Group updates for better organization
-    groups:
-      testing:
-        patterns:
-          - "@testing-library/*"
-          - "jest*"
-          - "@types/jest"
-        update-types:
-          - "minor"
-          - "patch"
-      eslint:
-        patterns:
-          - "eslint*"
-          - "@typescript-eslint/*"
-        update-types:
-          - "minor"
-          - "patch"
-      react:
-        patterns:
-          - "react*"
-          - "@types/react*"
-        update-types:
-          - "minor"
-          - "patch"
-      firebase:
-        patterns:
-          - "firebase*"
-          - "@firebase/*"
-        update-types:
-          - "minor"
-          - "patch"
+    security-updates: true
 
-  # Enable version updates for GitHub Actions
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      cron: "0 6 1 */3 *"
+      timezone: "Australia/Adelaide"
+    open-pull-requests-limit: 3
+    allow:
+      - dependency-type: "production"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+    reviewers:
+      - "drillvoice"
+    assignees:
+      - "drillvoice"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    security-updates: true
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 2
+      cron: "0 6 */28 * *"
+      timezone: "Australia/Adelaide"
+    open-pull-requests-limit: 3
+    security-updates: true
