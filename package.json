@@ -17,12 +17,12 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
     "dompurify": "^3.3.0",
-    "firebase": "^12.4.0",
+    "firebase": "^12.5.0",
     "idb": "^8.0.3",
     "next": "^15.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
