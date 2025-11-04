@@ -6,6 +6,31 @@ import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/offline-storage";
 
+const LEADING_EMOJI_PATTERN = new RegExp(
+  "^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*",
+  "u"
+);
+
+function extractLeadingEmoji(mealName: string): string | null {
+  const trimmedName = mealName.trimStart();
+  if (!trimmedName) {
+    return null;
+  }
+
+  const match = trimmedName.match(LEADING_EMOJI_PATTERN);
+  return match ? match[0] : null;
+}
+
+function getLeadingEmojiFromMeals(meals: Meal[]): string | null {
+  for (const meal of meals) {
+    const emoji = extractLeadingEmoji(meal.mealName);
+    if (emoji) {
+      return emoji;
+    }
+  }
+  return null;
+}
+
 interface CalendarViewProps {
   refreshTrigger?: number;
 }
@@ -234,7 +259,16 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
           const dateKey = day.isCurrentMonth
             ? `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`
             : '';
+          const mealsForDay = day.isCurrentMonth && dateKey ? mealsByDate[dateKey] || [] : [];
+          const emoji = day.isCurrentMonth && day.hasData ? getLeadingEmojiFromMeals(mealsForDay) : null;
           const isSelected = dateKey === selectedDate;
+          const ariaLabel = day.isCurrentMonth
+            ? `${monthNames[currentMonth]} ${day.date}, ${currentYear}${
+                day.hasData && mealsForDay.length
+                  ? `. Meals: ${mealsForDay.map(meal => meal.mealName).join(', ')}`
+                  : ''
+              }`
+            : undefined;
 
           return (
             <button
@@ -242,8 +276,14 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
               className={`calendar-day ${!day.isCurrentMonth ? 'calendar-day-other-month' : ''} ${day.hasData ? 'calendar-day-has-dish' : ''} ${isSelected ? 'calendar-day-selected' : ''}`}
               onClick={() => handleDayClick(day)}
               disabled={!day.isCurrentMonth}
+              aria-label={ariaLabel}
             >
-              {day.date}
+              <span className="calendar-day-number">{day.date}</span>
+              {emoji && (
+                <span className="calendar-day-emoji" aria-hidden="true">
+                  {emoji}
+                </span>
+              )}
             </button>
           );
         })}
