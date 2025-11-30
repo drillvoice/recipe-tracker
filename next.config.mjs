@@ -6,6 +6,8 @@ const isFirebaseStaticExport = deployTarget === 'firebase-hosting';
 
 const nextConfig = {
   ...(isFirebaseStaticExport ? { output: 'export' } : {}),
+  // Explicit turbopack config to acknowledge Next.js 16 default behavior
+  turbopack: {},
   // Security-related webpack configuration
   webpack: (config, { dev }) => {
     if (!dev) {
