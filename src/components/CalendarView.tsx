@@ -31,6 +31,13 @@ function getLeadingEmojiFromMeals(meals: Meal[]): string | null {
   return null;
 }
 
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 interface CalendarViewProps {
   refreshTrigger?: number;
 }
@@ -167,7 +174,7 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
   const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);
     setEditMealName(meal.mealName);
-    setEditDate(meal.date.toDate().toISOString().substring(0, 10));
+    setEditDate(formatDateForInput(meal.date.toDate()));
   }, []);
 
   const cancelEdit = useCallback(() => {
