@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 import InstallPrompt from '@/components/InstallPrompt';
 import PWAStatus from '@/components/PWAStatus';
 import CloudBackup from './CloudBackup';
-import DataExport from './DataExport';
-import DataImport from './DataImport';
-import DataValidation from './DataValidation';
 import type { TabType, MessageState } from './types';
+
+const DataExport = lazy(() => import('./DataExport'));
+const DataImport = lazy(() => import('./DataImport'));
+const DataValidation = lazy(() => import('./DataValidation'));
 
 export default function DataManagement() {
   const [activeTab, setActiveTab] = useState<TabType>('export');
@@ -98,9 +99,11 @@ export default function DataManagement() {
 
           {/* Tab Content */}
           <div className="tab-content">
-            {activeTab === 'export' && <DataExport onMessage={setMessage} />}
-            {activeTab === 'import' && <DataImport onMessage={setImportMessage} />}
-            {activeTab === 'verification' && <DataValidation />}
+            <Suspense fallback={<div className="form"><p>Loading...</p></div>}>
+              {activeTab === 'export' && <DataExport onMessage={setMessage} />}
+              {activeTab === 'import' && <DataImport onMessage={setImportMessage} />}
+              {activeTab === 'verification' && <DataValidation />}
+            </Suspense>
           </div>
         </section>
 

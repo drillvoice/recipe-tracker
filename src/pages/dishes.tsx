@@ -295,7 +295,7 @@ export default function Ideas() {
                   onTagsUpdated={updateMealTags}
                   onRenameDish={renameDishAllInstances}
                   onDeleteAllInstances={deleteAllInstancesOfDish}
-                  allIdeas={ideas}
+                  allExistingTags={allUniqueTags}
                 />
               ))}
             </tbody>

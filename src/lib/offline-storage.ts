@@ -392,19 +392,25 @@ export async function getAllTagStrings(): Promise<string[]> {
   if (!db) return [];
 
   const dbInstance = await db;
-  const meals = await dbInstance.getAll('meals');
-
   const tagSet = new Set<string>();
-  meals.forEach(meal => {
+
+  // Use cursor to iterate without loading all meal objects into memory
+  const tx = dbInstance.transaction('meals', 'readonly');
+  let cursor = await tx.objectStore('meals').openCursor();
+
+  while (cursor) {
+    const meal = cursor.value;
     if (meal.tags && Array.isArray(meal.tags)) {
-      meal.tags.forEach(tag => {
+      for (const tag of meal.tags) {
         if (tag && typeof tag === 'string' && tag.trim()) {
           tagSet.add(tag.trim());
         }
-      });
+      }
     }
-  });
+    cursor = await cursor.continue();
+  }
 
+  await tx.done;
   return Array.from(tagSet).sort();
 }
 
@@ -596,15 +602,17 @@ export async function deleteTag(id: string): Promise<void> {
   // Delete the tag
   await tx.objectStore('tags').delete(id);
 
-  // Remove tag from all meals that reference it
+  // Remove tag from matching meals using cursor (avoids loading all meals into memory)
   const mealsStore = tx.objectStore('meals');
-  const meals = await mealsStore.getAll();
+  let cursor = await mealsStore.openCursor();
 
-  for (const meal of meals) {
+  while (cursor) {
+    const meal = cursor.value;
     if (meal.tags && meal.tags.includes(id)) {
       meal.tags = meal.tags.filter(tagId => tagId !== id);
-      await mealsStore.put(meal);
+      await cursor.update(meal);
     }
+    cursor = await cursor.continue();
   }
 
   await tx.done;
@@ -640,8 +648,34 @@ export async function getMealsByTag(tagId: string): Promise<Meal[]> {
   const db = getDb();
   if (!db) return [];
 
-  const meals = await getAllMeals();
-  return meals.filter(meal => meal.tags && meal.tags.includes(tagId));
+  const dbInstance = await db;
+  const results: Meal[] = [];
+
+  // Use cursor to only collect matching meals without loading all into memory
+  const tx = dbInstance.transaction('meals', 'readonly');
+  let cursor = await tx.objectStore('meals').openCursor();
+
+  while (cursor) {
+    const meal = cursor.value;
+    if (meal.tags && meal.tags.includes(tagId)) {
+      // Restore Timestamp prototype if needed
+      if (meal.date && typeof meal.date.toMillis !== 'function') {
+        try {
+          const dateObj = meal.date as unknown as { seconds: number; nanoseconds?: number };
+          if (typeof dateObj.seconds === 'number') {
+            meal.date = new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0);
+          }
+        } catch {
+          // Keep original date
+        }
+      }
+      results.push(meal);
+    }
+    cursor = await cursor.continue();
+  }
+
+  await tx.done;
+  return results;
 }
 
 export async function addTagToMeal(mealId: string, tagId: string): Promise<boolean> {

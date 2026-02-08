@@ -1,11 +1,11 @@
-const STATIC_CACHE_NAME = 'dish-diary-static-v2';
+const STATIC_CACHE_NAME = 'dish-diary-static-v3';
 const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 
 // Files to cache for offline use
 const STATIC_FILES = [
   '/',
-  '/history',
   '/dishes',
+  '/tags',
   '/account',
   '/manifest.json',
   '/icons/icon-72x72.svg',
@@ -176,110 +176,3 @@ async function doBackgroundSync() {
   // This will be implemented when we add background sync for meal uploads
 }
 
-// Push notifications for dinner reminders
-self.addEventListener('push', (event) => {
-  console.log('[SW] Push received:', event);
-
-  let payload = {};
-  try {
-    payload = event.data ? event.data.json() : {};
-  } catch {
-    console.log('[SW] No JSON payload, using default');
-  }
-
-  const title = payload.title || '🍽️ Dinner Time!';
-  const body = payload.body || 'What did you eat for dinner today?';
-  const type = payload.type || 'dinner-reminder';
-
-  const options = {
-    body,
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
-    vibrate: [200, 100, 200],
-    requireInteraction: true,
-    tag: type,
-    data: {
-      type,
-      url: payload.url || '/',
-      timestamp: Date.now(),
-      ...payload.data
-    },
-    actions: [
-      {
-        action: 'add-meal',
-        title: '📝 Add Meal'
-      },
-      {
-        action: 'dismiss',
-        title: '✕ Dismiss'
-      }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification click received:', event.action);
-
-  event.notification.close();
-
-  const notificationData = event.notification.data || {};
-  const notificationType = notificationData.type || 'unknown';
-
-  // Handle dinner reminder actions
-  if (notificationType === 'dinner-reminder') {
-    if (event.action === 'add-meal') {
-      // Open app to main page where users can add meals
-      event.waitUntil(
-        clients.matchAll({ type: 'window' }).then((clientList) => {
-          // If app is already open, focus it
-          for (const client of clientList) {
-            if (client.url.includes(location.origin) && 'focus' in client) {
-              return client.focus();
-            }
-          }
-          // If app is not open, open it
-          if (clients.openWindow) {
-            return clients.openWindow('/');
-          }
-        })
-      );
-    } else if (event.action === 'dismiss') {
-      // Just close the notification (already done above)
-      console.log('[SW] Dinner reminder dismissed');
-    } else {
-      // Clicked on notification body (not action button)
-      event.waitUntil(
-        clients.matchAll({ type: 'window' }).then((clientList) => {
-          for (const client of clientList) {
-            if (client.url.includes(location.origin) && 'focus' in client) {
-              return client.focus();
-            }
-          }
-          if (clients.openWindow) {
-            return clients.openWindow('/');
-          }
-        })
-      );
-    }
-  }
-  // Handle test notifications
-  else if (notificationType === 'test') {
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes(location.origin) && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-    );
-  }
-});

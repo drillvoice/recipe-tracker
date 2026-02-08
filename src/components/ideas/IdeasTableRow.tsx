@@ -16,7 +16,8 @@ interface IdeasTableRowProps {
   onTagsUpdated?: (mealName: string, tags: string[]) => void;
   onRenameDish?: (oldName: string, newName: string) => Promise<void>;
   onDeleteAllInstances?: (mealName: string) => Promise<void>;
-  allIdeas?: Idea[]; // For extracting all existing tags for autocomplete
+  allExistingTags?: string[]; // Pre-computed unique tags for autocomplete (from parent)
+  allIdeas?: Idea[]; // @deprecated — use allExistingTags instead
 }
 
 export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
@@ -25,6 +26,7 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   onTagsUpdated,
   onRenameDish,
   onDeleteAllInstances,
+  allExistingTags: allExistingTagsProp,
   allIdeas = []
 }) => {
   const [categories, setCategories] = useState<TagCategory[]>([]);
@@ -87,8 +89,9 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   // Use the tags from the idea data
   const tagStrings = useMemo(() => idea.tags ?? [], [idea.tags]);
 
-  // Extract all unique tags from all ideas for autocomplete suggestions
+  // Use pre-computed tags from parent if available, otherwise fall back to computing from allIdeas
   const allExistingTags = useMemo(() => {
+    if (allExistingTagsProp) return allExistingTagsProp;
     const tagSet = new Set<string>();
     for (const ideaItem of allIdeas) {
       if (ideaItem.tags) {
@@ -98,7 +101,7 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
       }
     }
     return Array.from(tagSet).sort();
-  }, [allIdeas]);
+  }, [allExistingTagsProp, allIdeas]);
 
   // Render tag chips with proper colors
   const renderedTagChips = useMemo(() => {

@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { Timestamp } from 'firebase/firestore';
 import { useMealsQuery } from './useMealsQuery';
 import { queryKeys } from './index';
 import type { Idea } from '@/hooks/useIdeas';
@@ -58,7 +60,7 @@ export function useIdeasQuery() {
       const ideasArray: Idea[] = Array.from(mealGroups.values()).map(group => ({
         mealName: group.mealName,
         count: group.count,
-        lastMade: new (require('firebase/firestore').Timestamp)(
+        lastMade: new Timestamp(
           Math.floor(group.lastMade.getTime() / 1000),
           (group.lastMade.getTime() % 1000) * 1000000
         ),
@@ -69,19 +71,21 @@ export function useIdeasQuery() {
       // Sort by last made date (newest first)
       return ideasArray.sort((a, b) => b.lastMade.toMillis() - a.lastMade.toMillis());
     },
-    enabled: !mealsLoading && !!meals.length, // Only run when meals are loaded
+    enabled: !mealsLoading, // Run when meals are loaded (empty is valid)
     staleTime: 1 * 60 * 1000, // 1 minute for derived data
   });
 
-  // Computed values
-  const visibleIdeas = ideas.filter(idea => !idea.hidden);
-  const hiddenIdeas = ideas.filter(idea => idea.hidden);
+  // Computed values — memoized to avoid recalculation on every render
+  const visibleIdeas = useMemo(() => ideas.filter(idea => !idea.hidden), [ideas]);
+  const hiddenIdeas = useMemo(() => ideas.filter(idea => idea.hidden), [ideas]);
   const totalIdeas = ideas.length;
   const hiddenCount = hiddenIdeas.length;
 
   // Get unique tags from all ideas
-  const tagSet = new Set(ideas.flatMap(idea => idea.tags || []));
-  const allTags = Array.from(tagSet).sort();
+  const allTags = useMemo(() => {
+    const tagSet = new Set(ideas.flatMap(idea => idea.tags || []));
+    return Array.from(tagSet).sort();
+  }, [ideas]);
 
   return {
     // Data

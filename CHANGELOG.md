@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-02-08
+
+### Changed
+- **React Query Optimization**: Removed double cache invalidation on meal save — optimistic update is no longer immediately overwritten by a refetch
+- **Static Timestamp Import**: Replaced dynamic `require('firebase/firestore')` in useIdeasQuery with module-level import, eliminating per-query overhead
+- **Ideas Query Caching**: Empty meals array is now treated as valid cached state instead of preventing query execution
+- **Memoized Computed Values**: `visibleIdeas`, `hiddenIdeas`, and `allTags` in useIdeasQuery are now wrapped in `useMemo`
+- **Tags Page Grouping**: `groupedTags` computation wrapped in `useMemo` to prevent recalculation on every render
+- **Tag Extraction Optimization**: `allExistingTags` now computed once at parent (dishes page) and passed as prop, eliminating O(n²) per-row extraction
+- **Calendar Day Cell Extraction**: Extracted memoized `CalendarDayCell` component and hoisted constant arrays to module scope
+- **Dialog Props Memoization**: `useConfirmDialog` now returns memoized `dialogProps` object to prevent unnecessary re-renders
+- **Lazy Loaded Components**: CalendarView, DataExport, DataImport, DataValidation, and CategoryManagementModal are now lazy-loaded with Suspense
+- **Firestore Count Query**: Cloud backup status now uses `getCountFromServer()` instead of downloading all meal documents for a count
+- **Cursor-Based Tag Queries**: `getAllTagStrings`, `getMealsByTag`, and `deleteTag` now use IndexedDB cursors instead of loading all meals into memory
+- **Batched Import Operations**: Import executor now batches meal saves in groups of 100 instead of individual transactions
+
+### Fixed
+- **Stale Service Worker Cache**: Replaced `/history` with `/tags` in SW static files list; updated cache version to v3
+- **Stale PWA Shortcut**: Updated manifest.json history shortcut to point to `/dishes` page
+
+### Removed
+- **Dead Notification CSS**: Removed ~270 lines of unused notification settings styles (feature removed in v0.6.2)
+- **Dead Notification SW Code**: Removed ~105 lines of unused push/notificationclick handlers from service worker
+
+### Technical
+- Service worker cache version bumped from `dish-diary-static-v2` to `dish-diary-static-v3`
+- Export manager version updated from `0.6.5` to `0.8.2`
+- Added `React.memo` wrapper to CalendarDayCell with pre-computed props
+- `useConfirmDialog` callbacks wrapped in `useCallback` for stable references
+- Import executor collects meals to save, then batch-writes them in groups of 100
+- Firestore backup uses `getCountFromServer` aggregation query for status checks
+
 ## [0.8.1] - 2025-11-04
 
 ### Added

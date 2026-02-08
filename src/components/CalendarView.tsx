@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Timestamp } from "firebase/firestore";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import ActionButton from "@/components/ActionButton";
@@ -37,6 +37,61 @@ function formatDateForInput(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+// Hoist constant arrays to module scope — they never change
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const FULL_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+interface CalendarDayCellProps {
+  day: DayCell;
+  mealsForDay: Meal[];
+  isSelected: boolean;
+  currentMonth: number;
+  currentYear: number;
+  onDayClick: (day: DayCell) => void;
+}
+
+const CalendarDayCell = React.memo<CalendarDayCellProps>(({
+  day,
+  mealsForDay,
+  isSelected,
+  currentMonth,
+  currentYear,
+  onDayClick
+}) => {
+  const emoji = day.isCurrentMonth && day.hasData ? getLeadingEmojiFromMeals(mealsForDay) : null;
+  const ariaLabel = day.isCurrentMonth
+    ? `${MONTH_NAMES[currentMonth]} ${day.date}, ${currentYear}${
+        day.hasData && mealsForDay.length
+          ? `. Meals: ${mealsForDay.map(meal => meal.mealName).join(', ')}`
+          : ''
+      }`
+    : undefined;
+
+  return (
+    <button
+      className={`calendar-day ${!day.isCurrentMonth ? 'calendar-day-other-month' : ''} ${day.hasData ? 'calendar-day-has-dish' : ''} ${isSelected ? 'calendar-day-selected' : ''}`}
+      onClick={() => onDayClick(day)}
+      disabled={!day.isCurrentMonth}
+      aria-label={ariaLabel}
+    >
+      <span className="calendar-day-number">{day.date}</span>
+      {emoji && (
+        <span className="calendar-day-emoji" aria-hidden="true">
+          {emoji}
+        </span>
+      )}
+    </button>
+  );
+});
+
+CalendarDayCell.displayName = 'CalendarDayCell';
 
 interface CalendarViewProps {
   refreshTrigger?: number;
@@ -218,19 +273,12 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
     );
   }, [handleDelete, showDialog]);
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   const getSelectedDateDisplay = () => {
     if (!selectedDate) return "";
     const [year, month, day] = selectedDate.split('-').map(Number);
     const date = new Date(year, month - 1, day);
-    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
-    const monthName = monthNames[month - 1];
+    const dayName = FULL_DAY_NAMES[date.getDay()];
+    const monthName = MONTH_NAMES[month - 1];
     return `${dayName}, ${monthName} ${day}`;
   };
 
@@ -245,7 +293,7 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
           &lt;
         </button>
         <h2 className="calendar-title">
-          {monthNames[currentMonth]} {currentYear}
+          {MONTH_NAMES[currentMonth]} {currentYear}
         </h2>
         <button
           className="calendar-nav-button"
@@ -257,7 +305,7 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
       </div>
 
       <div className="calendar-grid">
-        {dayNames.map(dayName => (
+        {DAY_NAMES.map(dayName => (
           <div key={dayName} className="calendar-day-name">
             {dayName}
           </div>
@@ -267,31 +315,17 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
             ? `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`
             : '';
           const mealsForDay = day.isCurrentMonth && dateKey ? mealsByDate[dateKey] || [] : [];
-          const emoji = day.isCurrentMonth && day.hasData ? getLeadingEmojiFromMeals(mealsForDay) : null;
-          const isSelected = dateKey === selectedDate;
-          const ariaLabel = day.isCurrentMonth
-            ? `${monthNames[currentMonth]} ${day.date}, ${currentYear}${
-                day.hasData && mealsForDay.length
-                  ? `. Meals: ${mealsForDay.map(meal => meal.mealName).join(', ')}`
-                  : ''
-              }`
-            : undefined;
 
           return (
-            <button
+            <CalendarDayCell
               key={index}
-              className={`calendar-day ${!day.isCurrentMonth ? 'calendar-day-other-month' : ''} ${day.hasData ? 'calendar-day-has-dish' : ''} ${isSelected ? 'calendar-day-selected' : ''}`}
-              onClick={() => handleDayClick(day)}
-              disabled={!day.isCurrentMonth}
-              aria-label={ariaLabel}
-            >
-              <span className="calendar-day-number">{day.date}</span>
-              {emoji && (
-                <span className="calendar-day-emoji" aria-hidden="true">
-                  {emoji}
-                </span>
-              )}
-            </button>
+              day={day}
+              mealsForDay={mealsForDay}
+              isSelected={dateKey === selectedDate}
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              onDayClick={handleDayClick}
+            />
           );
         })}
       </div>

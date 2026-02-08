@@ -1,10 +1,11 @@
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
-import CategoryManagementModal from "@/components/CategoryManagementModal";
 import { TagManager, type TagInfo, type TagCategory, TAG_COLORS, type TagColor } from "@/lib/tag-manager";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
+
+const CategoryManagementModal = lazy(() => import("@/components/CategoryManagementModal"));
 
 export default function Tags() {
   const [tags, setTags] = useState<TagInfo[]>([]);
@@ -132,8 +133,8 @@ export default function Tags() {
     });
   };
 
-  // Group tags by category
-  const groupedTags = (() => {
+  // Group tags by category — memoized to avoid recomputing on every render
+  const groupedTags = useMemo(() => {
     const grouped = new Map<string, TagInfo[]>();
 
     // Initialize with all categories
@@ -154,7 +155,7 @@ export default function Tags() {
     });
 
     return grouped;
-  })();
+  }, [tags, categories]);
 
   return (
     <>
@@ -524,11 +525,13 @@ export default function Tags() {
         )}
 
         {showCategoryManagement && (
-          <CategoryManagementModal
-            categories={categories}
-            onClose={() => setShowCategoryManagement(false)}
-            onUpdated={handleCategoriesUpdated}
-          />
+          <Suspense fallback={null}>
+            <CategoryManagementModal
+              categories={categories}
+              onClose={() => setShowCategoryManagement(false)}
+              onUpdated={handleCategoriesUpdated}
+            />
+          </Suspense>
         )}
 
         <ConfirmDialog

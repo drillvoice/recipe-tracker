@@ -2,7 +2,7 @@ import {
   doc,
   setDoc,
   collection,
-  getDocs,
+  getCountFromServer,
   serverTimestamp,
   getDoc,
   writeBatch
@@ -179,10 +179,10 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
       status.cloudMealCount = data.mealCount || 0;
     }
 
-    // Get actual count of meals in Firestore
+    // Get actual count of meals in Firestore without downloading documents
     const mealsCollectionRef = collection(database, 'users', currentUser.uid, 'meals');
-    const snapshot = await getDocs(mealsCollectionRef);
-    status.cloudMealCount = snapshot.size;
+    const countSnapshot = await getCountFromServer(mealsCollectionRef);
+    status.cloudMealCount = countSnapshot.data().count;
 
     // Check if local meals need syncing (use actual meal count from main database)
     const localMeals = await getAllMeals();

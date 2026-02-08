@@ -76,10 +76,10 @@
       ]
     },
     {
-      "name": "View History",
-      "short_name": "History",
-      "description": "View meal history",
-      "url": "/history",
+      "name": "View Dishes",
+      "short_name": "Dishes",
+      "description": "View your dishes",
+      "url": "/dishes",
       "icons": [
         {
           "src": "/icons/shortcut-history.svg",

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -17,35 +17,37 @@ const DEFAULT_STATE: ConfirmDialogState = {
 export function useConfirmDialog() {
   const [dialogState, setDialogState] = useState<ConfirmDialogState>(DEFAULT_STATE);
 
-  const showDialog = (title: string, message: string, onConfirm: () => void) => {
+  const showDialog = useCallback((title: string, message: string, onConfirm: () => void) => {
     setDialogState({
       isOpen: true,
       title,
       message,
       onConfirm
     });
-  };
+  }, []);
 
-  const hideDialog = () => {
+  const hideDialog = useCallback(() => {
     setDialogState(DEFAULT_STATE);
-  };
+  }, []);
 
-  const confirmAndClose = () => {
+  const confirmAndClose = useCallback(() => {
     try {
       dialogState.onConfirm();
     } finally {
       hideDialog();
     }
-  };
+  }, [dialogState, hideDialog]);
+
+  const dialogProps = useMemo(() => ({
+    isOpen: dialogState.isOpen,
+    title: dialogState.title,
+    message: dialogState.message,
+    onConfirm: confirmAndClose,
+    onCancel: hideDialog
+  }), [dialogState.isOpen, dialogState.title, dialogState.message, confirmAndClose, hideDialog]);
 
   return {
-    dialogProps: {
-      isOpen: dialogState.isOpen,
-      title: dialogState.title,
-      message: dialogState.message,
-      onConfirm: confirmAndClose,
-      onCancel: hideDialog
-    },
+    dialogProps,
     showDialog
   };
 }

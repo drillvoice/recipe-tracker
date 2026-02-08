@@ -45,8 +45,7 @@ export function useMealsQuery() {
         return updated.sort((a, b) => b.date.toMillis() - a.date.toMillis());
       });
 
-      // Invalidate to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.meals });
+      // Only invalidate ideas (derived data) — meals cache is already updated optimistically
       queryClient.invalidateQueries({ queryKey: queryKeys.ideas });
     },
     onError: (error) => {

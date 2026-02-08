@@ -1,8 +1,11 @@
-import { getAllMeals, updateSettings, updateCacheMetadata } from '../offline-storage';
+import { getAllMeals, saveMeal as saveMealToDb, updateSettings, updateCacheMetadata, type Meal } from '../offline-storage';
+import { Timestamp } from 'firebase/firestore';
 import { TagManager } from '../tag-manager';
 import { type SerializableMeal } from '../export-manager';
 import { type ImportOptions, type ConflictItem, type MealUpdateConflict } from './types';
 import { ConflictResolver } from './conflict-resolver';
+
+const IMPORT_BATCH_SIZE = 100;
 
 export class ImportExecutor {
   /**
@@ -27,6 +30,9 @@ export class ImportExecutor {
 
     const existingMeals = await getAllMeals();
     const existingMealMap = new Map(existingMeals.map(m => [m.id, m]));
+
+    // Collect meals to save in batches
+    const mealsToSave: SerializableMeal[] = [];
 
     for (const incomingMeal of meals) {
       result.processed++;
@@ -53,7 +59,7 @@ export class ImportExecutor {
             if (action === 'skip') {
               result.skipped++;
             } else if (action === 'overwrite' && !options.dryRun) {
-              await ConflictResolver.saveMealFromImport(incomingMeal);
+              mealsToSave.push(incomingMeal);
               result.updated++;
             }
           } else {
@@ -63,12 +69,34 @@ export class ImportExecutor {
         } else {
           // New meal
           if (!options.dryRun) {
-            await ConflictResolver.saveMealFromImport(incomingMeal);
+            mealsToSave.push(incomingMeal);
           }
           result.imported++;
         }
       } catch (error) {
         result.errors.push(`Failed to process meal ${incomingMeal.id}: ${error}`);
+      }
+    }
+
+    // Batch save collected meals
+    if (!options.dryRun && mealsToSave.length > 0) {
+      for (let i = 0; i < mealsToSave.length; i += IMPORT_BATCH_SIZE) {
+        const batch = mealsToSave.slice(i, i + IMPORT_BATCH_SIZE);
+        try {
+          await Promise.all(batch.map(mealData => {
+            const meal: Meal = {
+              id: mealData.id,
+              mealName: mealData.mealName,
+              date: new Timestamp(mealData.date.seconds, mealData.date.nanoseconds),
+              uid: mealData.uid,
+              pending: mealData.pending,
+              hidden: mealData.hidden
+            };
+            return saveMealToDb(meal);
+          }));
+        } catch (error) {
+          result.errors.push(`Failed to save batch starting at index ${i}: ${error}`);
+        }
       }
     }
 

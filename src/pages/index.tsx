@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import Head from "next/head";
 import { auth, db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
@@ -11,8 +11,9 @@ import {
 } from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
 import HistoryAccordion from "@/components/HistoryAccordion";
-import CalendarView from "@/components/CalendarView";
 import { validateMeal } from "@/utils/validation";
+
+const CalendarView = lazy(() => import("@/components/CalendarView"));
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
 import { TaglineManager } from "@/lib/tagline-manager";
 import { useFormState, useToggle, useAutocomplete, useMessages } from "@/hooks/common";
@@ -227,7 +228,9 @@ export default function Meals() {
         </div>
       )}
 
-      <CalendarView refreshTrigger={refreshTrigger} />
+      <Suspense fallback={<div className="form"><p>Loading calendar...</p></div>}>
+        <CalendarView refreshTrigger={refreshTrigger} />
+      </Suspense>
 
       <HistoryAccordion
         isOpen={historyAccordionOpen}
@@ -236,7 +239,7 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.8.1
+        v0.8.2
       </div>
     </main>
     </>
