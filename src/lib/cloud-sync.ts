@@ -12,7 +12,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from './firebase';
-import { signInEmail, signOutUser } from './auth';
+import { sendReset, signInEmail, signOutUser, signUpEmail } from './auth';
 import {
   assignSyncQueueTargetUid,
   getAllMeals,
@@ -401,6 +401,20 @@ export async function signInWithEmailPassword(email: string, password: string): 
     await runSignedInSync(credential.user.uid);
     startRealtimeListener(credential.user.uid);
   }
+}
+
+export async function createAccountWithEmailPassword(email: string, password: string): Promise<void> {
+  const credential = await signUpEmail(email, password);
+  currentUser = credential.user;
+
+  if (!credential.user.isAnonymous) {
+    await runSignedInSync(credential.user.uid);
+    startRealtimeListener(credential.user.uid);
+  }
+}
+
+export async function sendPasswordReset(email: string): Promise<void> {
+  await sendReset(email);
 }
 
 export async function signOutAndStopSync(): Promise<void> {

@@ -70,6 +70,8 @@ const mockGetSyncStatus = jest.fn().mockResolvedValue({
 });
 
 const mockSignInWithEmailPassword = jest.fn().mockResolvedValue(undefined);
+const mockCreateAccountWithEmailPassword = jest.fn().mockResolvedValue(undefined);
+const mockSendPasswordReset = jest.fn().mockResolvedValue(undefined);
 const mockSignOutAndStopSync = jest.fn().mockResolvedValue(undefined);
 const mockSyncNow = jest.fn().mockResolvedValue({
   pushed: 2,
@@ -80,6 +82,8 @@ const mockSyncNow = jest.fn().mockResolvedValue({
 jest.mock('@/lib/cloud-sync', () => ({
   getSyncStatus: () => mockGetSyncStatus(),
   signInWithEmailPassword: (...args: unknown[]) => mockSignInWithEmailPassword(...args),
+  createAccountWithEmailPassword: (...args: unknown[]) => mockCreateAccountWithEmailPassword(...args),
+  sendPasswordReset: (...args: unknown[]) => mockSendPasswordReset(...args),
   signOutAndStopSync: () => mockSignOutAndStopSync(),
   syncNow: () => mockSyncNow()
 }));
@@ -115,6 +119,8 @@ describe('Data Management Page', () => {
     expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
     expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByText('Create Account')).toBeInTheDocument();
+    expect(screen.getByText('Reset Password')).toBeInTheDocument();
   });
 
   test('submits email/password sign-in', async () => {
@@ -138,6 +144,41 @@ describe('Data Management Page', () => {
     });
 
     expect(mockSignInWithEmailPassword).toHaveBeenCalledWith('test@example.com', 'password123');
+  });
+
+  test('submits create account action', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'new@example.com' }
+    });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'password123' }
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Create Account'));
+    });
+
+    expect(mockCreateAccountWithEmailPassword).toHaveBeenCalledWith('new@example.com', 'password123');
+  });
+
+  test('submits reset password action', async () => {
+    await act(async () => {
+      render(<Account />);
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' }
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Reset Password'));
+    });
+
+    expect(mockSendPasswordReset).toHaveBeenCalledWith('test@example.com');
   });
 
   test('shows sync and sign-out actions when signed in', async () => {

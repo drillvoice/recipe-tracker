@@ -23,7 +23,8 @@ export async function linkAnonymousWithEmailPassword(email: string, password: st
   try {
     return await linkWithCredential(firebaseAuth.currentUser, credential);
   } catch (err: unknown) {
-    if ((err as { code?: string }).code === "auth/credential-already-in-use") {
+    const code = (err as { code?: string }).code;
+    if (code === "auth/credential-already-in-use" || code === "auth/email-already-in-use") {
       return await signInWithEmailAndPassword(firebaseAuth, email, password);
     }
     throw err;
@@ -59,4 +60,3 @@ export function sendVerification() {
   if (!firebaseAuth.currentUser) throw new Error("No current user");
   return sendEmailVerification(firebaseAuth.currentUser);
 }
-

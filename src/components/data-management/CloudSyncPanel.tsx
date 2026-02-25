@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
+  createAccountWithEmailPassword,
   getSyncStatus,
+  sendPasswordReset,
   signInWithEmailPassword,
   signOutAndStopSync,
   syncNow,
@@ -78,6 +80,57 @@ export default function CloudSyncPanel({ onMessage }: CloudSyncPanelProps) {
       onMessage({
         type: 'error',
         text: `Sign-in failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    onMessage(null);
+    setIsAuthLoading(true);
+
+    try {
+      await createAccountWithEmailPassword(email.trim(), password);
+      setPassword('');
+      setStatus(await getSyncStatus());
+      onMessage({
+        type: 'success',
+        text: 'Account created and signed in. Cloud sync is active for this account.'
+      });
+    } catch (error) {
+      onMessage({
+        type: 'error',
+        text: `Create account failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      onMessage({
+        type: 'error',
+        text: 'Enter your email first, then click Reset Password.'
+      });
+      return;
+    }
+
+    onMessage(null);
+    setIsAuthLoading(true);
+
+    try {
+      await sendPasswordReset(normalizedEmail);
+      onMessage({
+        type: 'success',
+        text: `Password reset email sent to ${normalizedEmail}.`
+      });
+    } catch (error) {
+      onMessage({
+        type: 'error',
+        text: `Reset password failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       });
     } finally {
       setIsAuthLoading(false);
@@ -231,6 +284,26 @@ export default function CloudSyncPanel({ onMessage }: CloudSyncPanelProps) {
           <button type="submit" className="backup-button compact" disabled={isAuthLoading || !status.isConfigured}>
             {isAuthLoading ? 'Signing In...' : 'Sign In'}
           </button>
+          <div className="sync-actions" style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              type="button"
+              className="backup-button compact"
+              onClick={handleCreateAccount}
+              disabled={isAuthLoading || !status.isConfigured || !email.trim() || !password}
+              style={{ background: '#0f766e' }}
+            >
+              {isAuthLoading ? 'Working...' : 'Create Account'}
+            </button>
+            <button
+              type="button"
+              className="backup-button compact"
+              onClick={handleResetPassword}
+              disabled={isAuthLoading || !status.isConfigured}
+              style={{ background: '#6b7280' }}
+            >
+              {isAuthLoading ? 'Working...' : 'Reset Password'}
+            </button>
+          </div>
         </form>
       ) : (
         <div className="sync-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
