@@ -2,7 +2,7 @@ import { useState, lazy, Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 import InstallPrompt from '@/components/InstallPrompt';
 import PWAStatus from '@/components/PWAStatus';
-import CloudBackup from './CloudBackup';
+import CloudSyncPanel from './CloudSyncPanel';
 import type { TabType, MessageState } from './types';
 
 const DataExport = lazy(() => import('./DataExport'));
@@ -47,9 +47,9 @@ export default function DataManagement() {
           </div>
         )}
 
-        {/* Cloud Backup Section */}
+        {/* Cloud Sync Section */}
         <section className="data-section">
-          <CloudBackup onMessage={setMessage} />
+          <CloudSyncPanel onMessage={setMessage} />
         </section>
 
         {/* Local Data Management */}
@@ -114,7 +114,7 @@ export default function DataManagement() {
         <div className="info-note">
           <p>
             💡 <strong>Data Storage:</strong> All your data is stored locally on your device using IndexedDB,
-            ensuring privacy and offline access. Cloud backup provides additional security and cross-device sync.
+            ensuring privacy and offline access. Sign in to enable account-based cloud sync across devices.
           </p>
         </div>
       </main>

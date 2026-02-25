@@ -12,7 +12,9 @@ let available = true;
 
 beforeAll(async () => {
   try {
-    const rules = fs.readFileSync('docs/firestore-rules.md', 'utf8');
+    const rulesMarkdown = fs.readFileSync('docs/firestore-rules.md', 'utf8');
+    const match = rulesMarkdown.match(/```\\n([\\s\\S]*?)\\n```/);
+    const rules = match ? match[1] : rulesMarkdown;
     testEnv = await initializeTestEnvironment({
       projectId: 'demo-test',
       firestore: { rules },
@@ -33,6 +35,6 @@ test('user can write only to own path', async () => {
     throw new Error('Firestore test environment was not initialized.');
   }
   const aliceDb = testEnv.authenticatedContext('alice').firestore();
-  await assertSucceeds(setDoc(doc(aliceDb, 'meals/alice/items/1'), { name: 'x' }));
-  await assertFails(setDoc(doc(aliceDb, 'meals/bob/items/1'), { name: 'x' }));
+  await assertSucceeds(setDoc(doc(aliceDb, 'users/alice/meals/1'), { mealName: 'x', uid: 'alice' }));
+  await assertFails(setDoc(doc(aliceDb, 'users/bob/meals/1'), { mealName: 'x', uid: 'alice' }));
 });

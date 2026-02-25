@@ -2,12 +2,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import type { AppProps } from 'next/app';
 
 const mockEnsureAuthPersistence = jest.fn().mockResolvedValue(undefined);
+const mockStartCloudSync = jest.fn(() => jest.fn());
 
 jest.mock('@/lib/firebase', () => ({
   auth: {},
   ensureAuthPersistence: mockEnsureAuthPersistence,
   isFirebaseConfigured: true,
 }));
+jest.mock('@/lib/cloud-sync', () => ({ startCloudSync: mockStartCloudSync }));
 
 const mockSignInAnonymously = jest.fn().mockResolvedValue({});
 jest.mock('firebase/auth', () => ({ signInAnonymously: mockSignInAnonymously }));
@@ -41,6 +43,7 @@ test('renders page component', async () => {
   expect(screen.getByTestId('dummy')).toBeInTheDocument();
 
   await waitFor(() => {
+    expect(mockStartCloudSync).toHaveBeenCalled();
     expect(mockEnsureAuthPersistence).toHaveBeenCalled();
     expect(mockSignInAnonymously).toHaveBeenCalled();
   });

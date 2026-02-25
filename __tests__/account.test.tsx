@@ -58,22 +58,30 @@ jest.mock('@/lib/import-manager', () => ({
   }
 }));
 
-// Mock the firestore-backup module
-jest.mock('@/lib/firestore-backup', () => ({
-  backupMealsToCloud: jest.fn().mockResolvedValue({
-    success: true,
-    mealsBackedUp: 5,
-    timestamp: Date.now(),
-    errors: [],
-    userId: 'test-uid'
-  }),
-  getCloudBackupStatus: jest.fn().mockResolvedValue({
-    isAuthenticated: true,
-    userId: 'test-uid',
-    lastCloudBackup: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
-    cloudMealCount: 5,
-    syncNeeded: false
-  })
+const mockGetSyncStatus = jest.fn().mockResolvedValue({
+  isConfigured: true,
+  isAuthenticated: false,
+  isAnonymous: false,
+  pendingCount: 0,
+  lastSyncAt: 0,
+  lastError: null,
+  isSyncing: false,
+  realtimeConnected: false
+});
+
+const mockSignInWithEmailPassword = jest.fn().mockResolvedValue(undefined);
+const mockSignOutAndStopSync = jest.fn().mockResolvedValue(undefined);
+const mockSyncNow = jest.fn().mockResolvedValue({
+  pushed: 2,
+  pulled: 3,
+  errors: []
+});
+
+jest.mock('@/lib/cloud-sync', () => ({
+  getSyncStatus: () => mockGetSyncStatus(),
+  signInWithEmailPassword: (...args: unknown[]) => mockSignInWithEmailPassword(...args),
+  signOutAndStopSync: () => mockSignOutAndStopSync(),
+  syncNow: () => mockSyncNow()
 }));
 
 describe('Data Management Page', () => {
@@ -91,43 +99,68 @@ describe('Data Management Page', () => {
       expect(screen.getByText('Data Management')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
-    // Note: This text is now shown with an emoji prefix
-    expect(screen.getByText('Backup Now')).toBeInTheDocument();
+    expect(screen.getByText('Cloud Sync')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
   });
 
-  test('displays backup status correctly', async () => {
+  test('renders sign-in form for cloud sync', async () => {
     await act(async () => {
       render(<Account />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Cloud Backup')).toBeInTheDocument();
+      expect(screen.getByText('Cloud Sync')).toBeInTheDocument();
     });
 
-    // Check for cloud backup status elements in the new format
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('Cloud Meals:')).toBeInTheDocument();
-    expect(screen.getByText('Last Backup:')).toBeInTheDocument();
-    expect(screen.getByText('Status:')).toBeInTheDocument();
-    expect(screen.getByText('✅ Connected')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
   });
 
-  test('backup button is clickable', async () => {
+  test('submits email/password sign-in', async () => {
     await act(async () => {
       render(<Account />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Backup Now')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
     });
 
-    const backupButton = screen.getByText('Backup Now');
-    expect(backupButton).toBeEnabled();
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' }
+    });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'password123' }
+    });
 
-    // Just ensure clicking doesn't crash
     await act(async () => {
-      fireEvent.click(backupButton);
+      fireEvent.click(screen.getByText('Sign In'));
+    });
+
+    expect(mockSignInWithEmailPassword).toHaveBeenCalledWith('test@example.com', 'password123');
+  });
+
+  test('shows sync and sign-out actions when signed in', async () => {
+    mockGetSyncStatus.mockResolvedValueOnce({
+      isConfigured: true,
+      isAuthenticated: true,
+      isAnonymous: false,
+      userId: 'user-1',
+      email: 'test@example.com',
+      pendingCount: 1,
+      lastSyncAt: Date.now(),
+      lastError: null,
+      isSyncing: false,
+      realtimeConnected: true
+    });
+
+    await act(async () => {
+      render(<Account />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Sync Now')).toBeInTheDocument();
+      expect(screen.getByText('Sign Out')).toBeInTheDocument();
     });
   });
 

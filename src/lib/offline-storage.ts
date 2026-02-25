@@ -10,6 +10,8 @@ export interface Meal {
   pending?: boolean;
   hidden?: boolean;
   tags?: string[]; // Array of simple tag strings
+  updatedAtMs?: number;
+  syncState?: 'pending' | 'synced' | 'error';
 }
 
 // Tag interface for the tagging system
@@ -47,11 +49,14 @@ export interface AppSettings {
 
 export interface SyncItem {
   id: string;
-  type: 'meal' | 'setting' | 'tag';
+  entityType: 'meal';
+  entityId: string;
   operation: 'create' | 'update' | 'delete';
-  data: unknown;
+  payload?: Partial<Meal>;
+  targetUid?: string;
   timestamp: number;
   retryCount?: number;
+  lastError?: string;
 }
 
 // Enhanced database schema
@@ -77,7 +82,8 @@ interface RecipeTrackerDB extends DBSchema {
     value: SyncItem;
     indexes: {
       'timestamp': number;
-      'type': string;
+      'entityType': string;
+      'entityId': string;
     };
   };
   tags: {
@@ -132,7 +138,8 @@ function getDb(): Promise<IDBPDatabase<RecipeTrackerDB>> | null {
       if (!db.objectStoreNames.contains('sync_queue')) {
         const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id' });
         syncStore.createIndex('timestamp', 'timestamp');
-        syncStore.createIndex('type', 'type');
+        syncStore.createIndex('entityType', 'entityType');
+        syncStore.createIndex('entityId', 'entityId');
       }
 
       // Create tags object store for tagging system (v3+)
@@ -205,44 +212,158 @@ export async function getAllMeals(): Promise<Meal[]> {
   });
 }
 
-export async function saveMeal(meal: Meal): Promise<void> {
+export async function getMealById(id: string): Promise<Meal | null> {
+  const db = getDb();
+  if (!db) return null;
+
+  const meal = await (await db).get('meals', id);
+  if (!meal) return null;
+
+  const [normalized] = await Promise.resolve([meal]).then((meals) =>
+    meals.map(m => {
+      if (m.date && typeof m.date.toMillis === 'function' && typeof m.date.toDate === 'function') {
+        return { ...m, date: m.date };
+      }
+
+      try {
+        if (m.date && typeof (m.date as { seconds: number; nanoseconds?: number }).seconds === 'number') {
+          const dateObj = m.date as { seconds: number; nanoseconds?: number };
+          return { ...m, date: new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0) };
+        }
+      } catch {
+        // Keep original shape when restoring fails.
+      }
+
+      return { ...m, date: m.date };
+    })
+  );
+
+  return normalized;
+}
+
+function withLocalSyncMetadata(meal: Meal, existing?: Meal): Meal {
+  const updatedAtMs = meal.updatedAtMs ?? existing?.updatedAtMs ?? Date.now();
+  return {
+    ...meal,
+    updatedAtMs,
+    pending: meal.pending ?? true,
+    syncState: meal.syncState ?? 'pending'
+  };
+}
+
+function withUpdatedSyncMetadata(meal: Meal, updates: Partial<Meal>): Meal {
+  return {
+    ...meal,
+    ...updates,
+    updatedAtMs: updates.updatedAtMs ?? Date.now(),
+    pending: updates.pending ?? true,
+    syncState: updates.syncState ?? 'pending'
+  };
+}
+
+async function enqueueMealSync(
+  dbInstance: IDBPDatabase<RecipeTrackerDB>,
+  item: Omit<SyncItem, 'id' | 'timestamp' | 'retryCount' | 'lastError'>
+): Promise<void> {
+  const existingQueueItems = await dbInstance.getAll('sync_queue');
+  const existing = existingQueueItems.find(
+    queued => queued.entityType === 'meal' && queued.entityId === item.entityId
+  );
+
+  const mergedOperation: SyncItem['operation'] =
+    item.operation === 'delete'
+      ? 'delete'
+      : existing?.operation === 'create'
+        ? 'create'
+        : item.operation;
+
+  const syncItem: SyncItem = {
+    id: existing?.id ?? `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+    entityType: 'meal',
+    entityId: item.entityId,
+    operation: mergedOperation,
+    payload: item.operation === 'delete' ? undefined : item.payload,
+    targetUid: item.targetUid ?? existing?.targetUid,
+    timestamp: Date.now(),
+    retryCount: 0,
+    lastError: undefined
+  };
+
+  await dbInstance.put('sync_queue', syncItem);
+}
+
+export async function saveMeal(
+  meal: Meal,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
   const dbInstance = await db;
+  const existingMeal = await dbInstance.get('meals', meal.id);
+  const mealToSave = withLocalSyncMetadata(meal, existingMeal ?? undefined);
 
-  // Use transaction for atomic operation
-  const tx = dbInstance.transaction(['meals', 'cache_meta'], 'readwrite');
-  await tx.objectStore('meals').put(meal);
+  await dbInstance.put('meals', mealToSave);
 
-  // Update meal count in metadata atomically
-  const mealCount = await tx.objectStore('meals').count();
-  const metaStore = tx.objectStore('cache_meta');
-  const existing = await metaStore.get('backup_status') || { key: 'backup_status' };
-  await metaStore.put({ ...existing, mealCount });
+  if (!options.skipSyncQueue) {
+    await enqueueMealSync(dbInstance, {
+      entityType: 'meal',
+      entityId: mealToSave.id,
+      operation: existingMeal ? 'update' : 'create',
+      payload: mealToSave,
+      targetUid: mealToSave.uid
+    });
+  }
 
-  await tx.done;
+  await updateCacheMetadata('backup_status', {
+    mealCount: await dbInstance.count('meals')
+  });
 }
 
-export async function updateMeal(id: string, updates: Partial<Meal>): Promise<Meal | null> {
+export async function updateMeal(
+  id: string,
+  updates: Partial<Meal>,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<Meal | null> {
   const db = getDb();
   if (!db) return null;
 
   const dbInstance = await db;
   const meal = await dbInstance.get('meals', id);
   if (meal) {
-    const updatedMeal = { ...meal, ...updates };
+    const updatedMeal = withUpdatedSyncMetadata(meal, updates);
     await dbInstance.put('meals', updatedMeal);
+    if (!options.skipSyncQueue) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: updatedMeal.id,
+        operation: 'update',
+        payload: updatedMeal,
+        targetUid: updatedMeal.uid
+      });
+    }
     return updatedMeal;
   }
   return null;
 }
 
-export async function deleteMeal(id: string): Promise<void> {
+export async function deleteMeal(
+  id: string,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
   const dbInstance = await db;
+  const existingMeal = await dbInstance.get('meals', id);
+  if (!options.skipSyncQueue && existingMeal) {
+    await enqueueMealSync(dbInstance, {
+      entityType: 'meal',
+      entityId: id,
+      operation: 'delete',
+      targetUid: existingMeal.uid
+    });
+  }
   await dbInstance.delete('meals', id);
 
   // Update meal count in metadata
@@ -251,7 +372,11 @@ export async function deleteMeal(id: string): Promise<void> {
   });
 }
 
-export async function hideMealsByName(mealName: string, hidden: boolean): Promise<void> {
+export async function hideMealsByName(
+  mealName: string,
+  hidden: boolean,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
@@ -268,14 +393,33 @@ export async function hideMealsByName(mealName: string, hidden: boolean): Promis
   // Batch update all matching meals
   const updatePromises = mealsToUpdate.map(meal => {
     meal.hidden = hidden;
+    meal.updatedAtMs = Date.now();
+    meal.pending = true;
+    meal.syncState = 'pending';
     return store.put(meal);
   });
 
   await Promise.all(updatePromises);
   await tx.done;
+
+  if (!options.skipSyncQueue) {
+    for (const meal of mealsToUpdate) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'update',
+        payload: meal,
+        targetUid: meal.uid
+      });
+    }
+  }
 }
 
-export async function updateMealTagsByName(mealName: string, tags: string[]): Promise<void> {
+export async function updateMealTagsByName(
+  mealName: string,
+  tags: string[],
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
@@ -292,14 +436,33 @@ export async function updateMealTagsByName(mealName: string, tags: string[]): Pr
   // Batch update all matching meals with new tags
   const updatePromises = mealsToUpdate.map(meal => {
     meal.tags = [...tags]; // Create a copy of the tags array
+    meal.updatedAtMs = Date.now();
+    meal.pending = true;
+    meal.syncState = 'pending';
     return store.put(meal);
   });
 
   await Promise.all(updatePromises);
   await tx.done;
+
+  if (!options.skipSyncQueue) {
+    for (const meal of mealsToUpdate) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'update',
+        payload: meal,
+        targetUid: meal.uid
+      });
+    }
+  }
 }
 
-export async function updateMealNameByName(oldName: string, newName: string): Promise<void> {
+export async function updateMealNameByName(
+  oldName: string,
+  newName: string,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
@@ -316,14 +479,32 @@ export async function updateMealNameByName(oldName: string, newName: string): Pr
   // Batch update all matching meals with new name
   const updatePromises = mealsToUpdate.map(meal => {
     meal.mealName = newName;
+    meal.updatedAtMs = Date.now();
+    meal.pending = true;
+    meal.syncState = 'pending';
     return store.put(meal);
   });
 
   await Promise.all(updatePromises);
   await tx.done;
+
+  if (!options.skipSyncQueue) {
+    for (const meal of mealsToUpdate) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'update',
+        payload: meal,
+        targetUid: meal.uid
+      });
+    }
+  }
 }
 
-export async function deleteMealsByName(mealName: string): Promise<void> {
+export async function deleteMealsByName(
+  mealName: string,
+  options: { skipSyncQueue?: boolean } = {}
+): Promise<void> {
   const db = getDb();
   if (!db) return;
 
@@ -336,6 +517,17 @@ export async function deleteMealsByName(mealName: string): Promise<void> {
 
   // Get all meals with this name using the index
   const mealsToDelete = await index.getAll(mealName);
+
+  if (!options.skipSyncQueue) {
+    for (const meal of mealsToDelete) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'delete',
+        targetUid: meal.uid
+      });
+    }
+  }
 
   // Batch delete all matching meals
   const deletePromises = mealsToDelete.map(meal => store.delete(meal.id));
@@ -451,13 +643,13 @@ export async function updateSettings(updates: Partial<AppSettings>): Promise<voi
 
 // === SYNC QUEUE OPERATIONS ===
 
-export async function addToSyncQueue(item: Omit<SyncItem, 'id' | 'timestamp'>): Promise<void> {
+export async function addToSyncQueue(item: Omit<SyncItem, 'id' | 'timestamp' | 'retryCount'>): Promise<void> {
   const db = getDb();
   if (!db) return;
 
   const syncItem: SyncItem = {
     ...item,
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
     timestamp: Date.now(),
     retryCount: 0
   };
@@ -471,6 +663,32 @@ export async function getSyncQueue(): Promise<SyncItem[]> {
 
   const items = await (await db).getAll('sync_queue');
   return items.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+export async function updateSyncItem(id: string, updates: Partial<SyncItem>): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const existing = await dbInstance.get('sync_queue', id);
+  if (!existing) return;
+
+  await dbInstance.put('sync_queue', {
+    ...existing,
+    ...updates,
+    timestamp: updates.timestamp ?? existing.timestamp
+  });
+}
+
+export async function assignSyncQueueTargetUid(uid: string): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const items = await dbInstance.getAll('sync_queue');
+  await Promise.all(
+    items.map(item => dbInstance.put('sync_queue', { ...item, targetUid: uid }))
+  );
 }
 
 export async function removeSyncItem(id: string): Promise<void> {
@@ -539,6 +757,46 @@ export async function markMealSynced(localId: string, newId: string): Promise<vo
     meal.pending = false;
     await dbInstance.put('meals', meal);
   }
+}
+
+export async function markMealSyncState(
+  mealId: string,
+  syncState: Meal['syncState'],
+  pending: boolean
+): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const meal = await dbInstance.get('meals', mealId);
+  if (!meal) return;
+
+  await dbInstance.put('meals', {
+    ...meal,
+    syncState,
+    pending
+  });
+}
+
+export async function upsertMealFromCloud(meal: Meal): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const normalizedMeal: Meal = {
+    ...meal,
+    pending: false,
+    syncState: 'synced'
+  };
+
+  await dbInstance.put('meals', normalizedMeal);
+  await updateCacheMetadata('backup_status', {
+    mealCount: await dbInstance.count('meals')
+  });
+}
+
+export async function deleteMealFromCloud(mealId: string): Promise<void> {
+  await deleteMeal(mealId, { skipSyncQueue: true });
 }
 
 // === TAG OPERATIONS ===

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-02-25
+
+### Added
+- **Account-Based Cloud Sync**: Added robust bidirectional Firebase sync for signed-in email/password users with account-scoped Firestore storage at `users/{uid}/meals/{mealId}`.
+- **Cloud Sync Engine**: Added centralized sync orchestration with initial merge, queued writes, retry tracking, online recovery, and realtime remote updates.
+- **Cloud Sync UI**: Replaced backup-focused account panel with a sync panel supporting email/password sign-in, sign-out, sync status, pending queue visibility, and manual `Sync Now`.
+- **Sync Test Coverage**: Added `__tests__/cloud-sync.test.ts` and updated account/app/index tests for new sync/auth behavior.
+
+### Changed
+- **Local Storage Metadata**: Extended `Meal` with `updatedAtMs` and `syncState`; extended sync queue records with entity metadata, target UID, and error details.
+- **Mutation Pipeline**: Local create/update/delete operations now enqueue sync actions automatically while preserving local-first writes.
+- **Home Page Data Writes**: Removed direct Firestore `addDoc` pending-sync path from the add-dish page in favor of queue-driven sync.
+- **App Startup**: App now initializes cloud sync lifecycle on boot while retaining anonymous auth bootstrap for local continuity.
+- **Firestore Rules Documentation**: Updated rules guidance and tests to enforce account-scoped user paths.
+
+### Technical
+- Added `src/lib/cloud-sync.ts` as the sync lifecycle controller.
+- Added storage helpers for queue item updates, queue UID assignment, remote upsert/delete apply, and sync-state updates.
+- Updated visible app/export version references to `0.9.0`.
+
 ## [0.8.2] - 2026-02-08
 
 ### Changed

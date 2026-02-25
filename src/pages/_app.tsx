@@ -6,9 +6,12 @@ import { signInAnonymously } from "firebase/auth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { registerServiceWorker } from "@/lib/pwa-utils";
 import { QueryClientProvider, queryClient } from "@/hooks/queries";
+import { startCloudSync } from "@/lib/cloud-sync";
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
+    const stopCloudSync = startCloudSync();
+
     // Initialize Firebase auth
     if (!isFirebaseConfigured || !auth) {
       console.warn("Firebase auth is not configured. Skipping anonymous sign-in.");
@@ -41,6 +44,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     return () => {
       window.removeEventListener('sw-update-available', handleSWUpdate);
+      stopCloudSync();
     };
   }, []);
 

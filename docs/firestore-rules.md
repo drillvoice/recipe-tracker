@@ -4,17 +4,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User profile documents (if needed in future)
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Meals collection - flat structure with uid field for user separation
-    match /meals/{mealId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.uid;
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.uid;
+    // Account-scoped meal storage.
+    match /users/{userId}/meals/{mealId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
@@ -25,4 +21,4 @@ service cloud.firestore {
 2. Navigate to Firestore Database ➜ Rules.
 3. Replace the existing rules with the snippet above and click **Publish**.
 
-These rules require authentication for all accesses and restrict data to the owner's UID.
+These rules require authentication for all accesses and keep each user's data isolated under `users/{uid}/meals`.

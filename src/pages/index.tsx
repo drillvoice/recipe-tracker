@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import Head from "next/head";
-import { auth, db } from "@/lib/firebase";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { auth } from "@/lib/firebase";
+import { Timestamp } from "firebase/firestore";
 import {
   saveMeal,
   getAllMeals,
-  getPendingMeals,
-  markMealSynced,
   type Meal,
 } from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
@@ -49,27 +47,6 @@ export default function Meals() {
   const [currentTagline, setCurrentTagline] = useState<string>("");
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
-  const syncPendingMeals = useCallback(async () => {
-    const database = db;
-    if (!database) {
-      return;
-    }
-
-    const pending = await getPendingMeals();
-    for (const m of pending) {
-      try {
-        const docRef = await addDoc(collection(database, "meals"), {
-          mealName: m.mealName,
-          date: m.date,
-          uid: m.uid,
-        });
-        await markMealSynced(m.id, docRef.id);
-      } catch {
-        // ignore offline errors
-      }
-    }
-  }, []);
-
   // Initialize and manage tagline rotation
   useEffect(() => {
     // Set initial tagline
@@ -93,9 +70,8 @@ export default function Meals() {
   }, []);
 
   useEffect(() => {
-    syncPendingMeals();
     loadSuggestions();
-  }, [loadSuggestions, syncPendingMeals]);
+  }, [loadSuggestions]);
 
   // handleMealNameChange and selectSuggestion are now handled by useAutocomplete hook
 
@@ -146,7 +122,6 @@ export default function Meals() {
         Array.from(new Set([...prev, validation.data.mealName]))
       );
       closeSuggestions();
-      syncPendingMeals();
     } catch (error) {
       console.error('Error saving meal:', error);
       addError('Failed to save meal. Please try again.');
@@ -239,10 +214,9 @@ export default function Meals() {
       />
 
       <div className="version-indicator">
-        v0.8.2
+        v0.9.0
       </div>
     </main>
     </>
   );
 }
-

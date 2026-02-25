@@ -15,7 +15,6 @@ jest.mock('@/lib/firebase', () => ({
 
 jest.mock('@/lib/offline-storage', () => ({
   saveMeal: jest.fn().mockResolvedValue(undefined),
-  getPendingMeals: jest.fn().mockResolvedValue([]),
   getAllMeals: jest.fn().mockResolvedValue([
     {
       id: '1',
@@ -29,12 +28,9 @@ jest.mock('@/lib/offline-storage', () => ({
       tags: ['Dinner']
     }
   ]),
-  markMealSynced: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(),
-  addDoc: jest.fn(),
   Timestamp: {
     fromDate: (d: Date) => ({ toDate: () => d, toMillis: () => d.getTime() }),
     now: () => ({ toDate: () => new Date('2024-01-03'), toMillis: () => new Date('2024-01-03').getTime() })
@@ -65,4 +61,3 @@ test('suggests previous meals', async () => {
   // Note: Suggestions may not appear in test environment without proper data setup
   expect(input).toHaveValue('Burr');
 });
-
