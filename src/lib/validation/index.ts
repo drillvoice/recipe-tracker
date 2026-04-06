@@ -92,11 +92,11 @@ export class DataValidator {
         });
       }
 
-    } catch (_error) {
+    } catch (error) {
       result.errors.push({
         type: 'critical',
         field: 'system',
-        message: `Validation failed: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
+        message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         suggestion: 'Check system integrity and try again'
       });
       result.valid = false;
@@ -132,7 +132,7 @@ export class DataValidator {
         criticalIssues,
         lastChecked: Date.now()
       };
-    } catch (_error) {
+    } catch {
       return {
         healthy: false,
         score: 0,

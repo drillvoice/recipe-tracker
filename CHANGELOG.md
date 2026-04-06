@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-04-06
+
+### Added
+- **Dish Sorting Controls**: Added Dishes page sort options for newest first, oldest first, and alphabetical ordering so filtered lists can be reviewed in the most useful order.
+- **Dish Sorting Test Coverage**: Added page-level tests covering oldest-first and alphabetical dish sorting.
+
+### Fixed
+- **Validation Lint Warnings**: Removed seven pre-existing unused catch variable warnings in validation utilities without changing validation behavior.
+
+### Technical
+- Updated visible app/export version references to `0.9.1`.
+- Service worker cache version bumped from `dish-diary-static-v3` to `dish-diary-static-v4`.
+
 ## [0.9.0] - 2026-02-25
 
 ### Added

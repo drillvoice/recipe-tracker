@@ -1,4 +1,4 @@
-const STATIC_CACHE_NAME = 'dish-diary-static-v3';
+const STATIC_CACHE_NAME = 'dish-diary-static-v4';
 const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 
 // Files to cache for offline use
@@ -175,4 +175,3 @@ async function doBackgroundSync() {
   console.log('[SW] Performing background sync...');
   // This will be implemented when we add background sync for meal uploads
 }
-

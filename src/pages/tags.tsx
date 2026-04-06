@@ -541,7 +541,7 @@ export default function Tags() {
         />
 
         <div className="version-indicator">
-          v0.9.0
+          v0.9.1
         </div>
       </main>
     </>

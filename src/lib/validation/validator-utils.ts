@@ -104,7 +104,7 @@ export class ValidatorUtils {
               suggestion: 'Check if this date is correct'
             });
           }
-        } catch (_error) {
+        } catch {
           result.stats.invalidDates++;
           result.errors.push({
             type: 'error',
