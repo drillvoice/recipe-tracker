@@ -7,11 +7,13 @@ import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 type DateFilterOption = "any" | "7days" | "14days" | "21days" | "28days";
 type TagFilterMode = "OR" | "AND";
+type SortOption = "newest" | "oldest" | "alphabetical";
 
 export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilterOption>("any");
+  const [sortOrder, setSortOrder] = useState<SortOption>("newest");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
   const { dialogProps, showDialog } = useConfirmDialog();
@@ -108,8 +110,35 @@ export default function Ideas() {
       }
     }
 
-    return filtered;
-  }, [ideas, showHidden, dateFilter, selectedTags, tagFilterMode]);
+    const sortedIdeas = [...filtered];
+
+    switch (sortOrder) {
+      case "oldest":
+        sortedIdeas.sort(
+          (a, b) =>
+            a.lastMade.toMillis() - b.lastMade.toMillis() ||
+            a.mealName.localeCompare(b.mealName)
+        );
+        break;
+      case "alphabetical":
+        sortedIdeas.sort(
+          (a, b) =>
+            a.mealName.localeCompare(b.mealName) ||
+            a.lastMade.toMillis() - b.lastMade.toMillis()
+        );
+        break;
+      case "newest":
+      default:
+        sortedIdeas.sort(
+          (a, b) =>
+            b.lastMade.toMillis() - a.lastMade.toMillis() ||
+            a.mealName.localeCompare(b.mealName)
+        );
+        break;
+    }
+
+    return sortedIdeas;
+  }, [ideas, showHidden, dateFilter, selectedTags, tagFilterMode, sortOrder]);
 
   const hiddenCount = useMemo(() =>
     ideas.filter(i => i.hidden).length,
@@ -189,6 +218,22 @@ export default function Ideas() {
               </button>
             </div>
           )}
+
+          <div className="filter-section">
+            <div className="form-group-compact">
+              <label htmlFor="dish-sort-order">Sort dishes</label>
+              <select
+                id="dish-sort-order"
+                className="form-select-compact"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOption)}
+              >
+                <option value="newest">Last made: newest first</option>
+                <option value="oldest">Last made: oldest first</option>
+                <option value="alphabetical">Name: A-Z</option>
+              </select>
+            </div>
+          </div>
 
           {/* Tag Filter */}
           {allUniqueTags.length > 0 && (
@@ -312,4 +357,3 @@ export default function Ideas() {
     </main>
   );
 }
-
