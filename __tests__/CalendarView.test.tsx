@@ -95,4 +95,48 @@ describe("CalendarView", () => {
     const dayButton = screen.getByRole("button", { name: /March 8, 2024/ });
     expect(within(dayButton).getByText("🍔")).toBeInTheDocument();
   });
+
+  it("shows a full leading emoji sequence with modifiers", () => {
+    useMealsMock.mockReturnValueOnce({
+      meals: [
+        {
+          id: "meal-6",
+          mealName: "👩🏻‍🍳 Pasta",
+          date: Timestamp.fromDate(new Date("2024-03-09T00:00:00.000Z"))
+        }
+      ],
+      ...baseMealsState
+    });
+
+    render(<CalendarView refreshTrigger={2} />);
+
+    const dayButton = screen.getByRole("button", { name: /March 9, 2024/ });
+    expect(within(dayButton).getByText("👩🏻‍🍳")).toBeInTheDocument();
+  });
+
+  it("shows leading flag and keycap emoji", () => {
+    useMealsMock.mockReturnValueOnce({
+      meals: [
+        {
+          id: "meal-7",
+          mealName: "🇯🇵 Curry",
+          date: Timestamp.fromDate(new Date("2024-03-11T00:00:00.000Z"))
+        },
+        {
+          id: "meal-8",
+          mealName: "1️⃣ Pancakes",
+          date: Timestamp.fromDate(new Date("2024-03-12T00:00:00.000Z"))
+        }
+      ],
+      ...baseMealsState
+    });
+
+    render(<CalendarView refreshTrigger={3} />);
+
+    const flagDayButton = screen.getByRole("button", { name: /March 11, 2024/ });
+    expect(within(flagDayButton).getByText("🇯🇵")).toBeInTheDocument();
+
+    const keycapDayButton = screen.getByRole("button", { name: /March 12, 2024/ });
+    expect(within(keycapDayButton).getByText("1️⃣")).toBeInTheDocument();
+  });
 });

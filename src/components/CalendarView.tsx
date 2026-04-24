@@ -7,7 +7,7 @@ import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/offline-storage";
 
 const LEADING_EMOJI_PATTERN = new RegExp(
-  "^\\p{Extended_Pictographic}(?:\\uFE0F|\\u200D\\p{Extended_Pictographic})*",
+  "^(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*)*)",
   "u"
 );
 
