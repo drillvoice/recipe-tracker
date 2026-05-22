@@ -51,8 +51,8 @@ test('renders unique meals with counts', async () => {
 
   const rows = screen.getAllByRole('row').slice(1); // skip header
   expect(rows).toHaveLength(2);
-  expect(rows[0]).toHaveTextContent('Chicken Stir Fry');
-  expect(rows[1]).toHaveTextContent('Pasta Carbonara');
+  expect(rows[0]).toHaveTextContent('Pasta Carbonara');
+  expect(rows[1]).toHaveTextContent('Chicken Stir Fry');
 
   // Check that info buttons are present instead of count columns
   expect(screen.getAllByTitle('Show details')).toHaveLength(2);
@@ -96,25 +96,24 @@ test('supports sorting dishes by oldest first and alphabetically', async () => {
       .slice(1)
       .map((row) => within(row).getAllByRole('cell')[0]?.textContent);
 
+  // Default is oldest-first
   expect(getDishOrder()).toEqual([
-    'Chicken Stir Fry',
-    'Apple Curry',
     'Beef Tacos',
+    'Apple Curry',
+    'Chicken Stir Fry',
   ]);
 
-  fireEvent.click(screen.getByRole('button', { name: /filter/i }));
-
-  fireEvent.change(screen.getByLabelText('Sort dishes'), {
-    target: { value: 'oldest' },
+  fireEvent.change(screen.getByLabelText('Sort:'), {
+    target: { value: 'newest' },
   });
 
   expect(getDishOrder()).toEqual([
-    'Beef Tacos',
-    'Apple Curry',
     'Chicken Stir Fry',
+    'Apple Curry',
+    'Beef Tacos',
   ]);
 
-  fireEvent.change(screen.getByLabelText('Sort dishes'), {
+  fireEvent.change(screen.getByLabelText('Sort:'), {
     target: { value: 'alphabetical' },
   });
 
