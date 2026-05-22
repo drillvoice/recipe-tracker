@@ -13,7 +13,7 @@ export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilterOption>("any");
-  const [sortOrder, setSortOrder] = useState<SortOption>("newest");
+  const [sortOrder, setSortOrder] = useState<SortOption>("oldest");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
   const { dialogProps, showDialog } = useConfirmDialog();
@@ -169,6 +169,22 @@ export default function Ideas() {
         </button>
       </div>
 
+      <div className="dishes-toolbar">
+        <div className="toolbar-sort">
+          <label htmlFor="dish-sort-order">Sort:</label>
+          <select
+            id="dish-sort-order"
+            className="sort-select-inline"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as SortOption)}
+          >
+            <option value="newest">Last made: newest first</option>
+            <option value="oldest">Last made: oldest first</option>
+            <option value="alphabetical">Name: A–Z</option>
+          </select>
+        </div>
+      </div>
+
       {showFilters && (
         <div className="ideas-filters">
           <h3 className="filter-section-title">Filters</h3>
@@ -218,22 +234,6 @@ export default function Ideas() {
               </button>
             </div>
           )}
-
-          <div className="filter-section">
-            <div className="form-group-compact">
-              <label htmlFor="dish-sort-order">Sort dishes</label>
-              <select
-                id="dish-sort-order"
-                className="form-select-compact"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as SortOption)}
-              >
-                <option value="newest">Last made: newest first</option>
-                <option value="oldest">Last made: oldest first</option>
-                <option value="alphabetical">Name: A-Z</option>
-              </select>
-            </div>
-          </div>
 
           {/* Tag Filter */}
           {allUniqueTags.length > 0 && (

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-05-22
+
+### Changed
+- **Dishes Default Sort**: Sort order on the Dishes page now defaults to "Last made: oldest first" so meal planning surfaces dishes you haven't had recently without any extra interaction.
+- **Always-Visible Sort Dropdown**: The sort control is moved out of the collapsible filter panel into a persistent toolbar row at the top of the page, accessible without opening the filters.
+- **Compact Dish List**: Reduced table cell padding and widened the Dish name column (30% → 42%) while narrowing Last Made (15% → 11%) and Tags (45% → 37%), fitting more dishes on screen at once.
+
+### Technical
+- Updated visible app/export version references to `0.9.2`.
+
 ## [0.9.1] - 2026-04-06
 
 ### Added
