@@ -1,4 +1,4 @@
-import { getAllMeals, saveMeal as saveMealToDb, updateSettings, updateCacheMetadata, type Meal } from '../offline-storage';
+import { getAllMeals, saveMeal as saveMealToDb, updateSettings, updateCacheMetadata, type Meal, type AppSettings } from '../offline-storage';
 import { Timestamp } from 'firebase/firestore';
 import { TagManager } from '../tag-manager';
 import { type SerializableMeal } from '../export-manager';
@@ -90,7 +90,8 @@ export class ImportExecutor {
               date: new Timestamp(mealData.date.seconds, mealData.date.nanoseconds),
               uid: mealData.uid,
               pending: mealData.pending,
-              hidden: mealData.hidden
+              hidden: mealData.hidden,
+              tags: Array.isArray(mealData.tags) ? [...mealData.tags] : undefined
             };
             return saveMealToDb(meal);
           }));
@@ -111,9 +112,21 @@ export class ImportExecutor {
       return false;
     }
 
+    // Only persist known AppSettings keys to avoid polluting the settings store with
+    // stale or renamed fields from older exports.
+    const knownKeys: ReadonlyArray<keyof AppSettings> = [
+      'id', 'theme', 'autoBackupEnabled', 'backupFrequencyDays', 'exportFormat', 'lastExportTimestamp'
+    ];
+    const filtered: Partial<AppSettings> = {};
+    for (const key of knownKeys) {
+      if (key in settings) {
+        (filtered as Record<string, unknown>)[key] = settings[key];
+      }
+    }
+
     try {
       if (!dryRun) {
-        await updateSettings(settings);
+        await updateSettings(filtered);
       }
       return true;
     } catch (error) {
