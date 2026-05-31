@@ -241,8 +241,14 @@ export async function getMealById(id: string): Promise<Meal | null> {
   return normalized;
 }
 
-function withLocalSyncMetadata(meal: Meal, existing?: Meal): Meal {
-  const updatedAtMs = meal.updatedAtMs ?? existing?.updatedAtMs ?? Date.now();
+function withLocalSyncMetadata(meal: Meal, existing?: Meal, preserveTimestamp = false): Meal {
+  // Always stamp a fresh timestamp on local writes so the freshness comparison in
+  // cloud-sync never loses a local edit to a stale cloud copy.  Pass
+  // preserveTimestamp=true only when re-saving a meal whose timestamp must not
+  // advance (e.g. initialPullAndMerge re-assigning UID without user edits).
+  const updatedAtMs = preserveTimestamp
+    ? (meal.updatedAtMs ?? existing?.updatedAtMs ?? Date.now())
+    : Date.now();
   return {
     ...meal,
     updatedAtMs,
@@ -294,14 +300,14 @@ async function enqueueMealSync(
 
 export async function saveMeal(
   meal: Meal,
-  options: { skipSyncQueue?: boolean } = {}
+  options: { skipSyncQueue?: boolean; preserveTimestamp?: boolean } = {}
 ): Promise<void> {
   const db = getDb();
   if (!db) return;
 
   const dbInstance = await db;
   const existingMeal = await dbInstance.get('meals', meal.id);
-  const mealToSave = withLocalSyncMetadata(meal, existingMeal ?? undefined);
+  const mealToSave = withLocalSyncMetadata(meal, existingMeal ?? undefined, options.preserveTimestamp);
 
   await dbInstance.put('meals', mealToSave);
 
@@ -518,18 +524,9 @@ export async function deleteMealsByName(
   // Get all meals with this name using the index
   const mealsToDelete = await index.getAll(mealName);
 
-  if (!options.skipSyncQueue) {
-    for (const meal of mealsToDelete) {
-      await enqueueMealSync(dbInstance, {
-        entityType: 'meal',
-        entityId: meal.id,
-        operation: 'delete',
-        targetUid: meal.uid
-      });
-    }
-  }
-
-  // Batch delete all matching meals
+  // Delete within the transaction first, then enqueue sync ops after commit.
+  // This order matches hideMealsByName / updateMealNameByName and avoids
+  // orphaned "delete" sync items if the transaction fails to commit.
   const deletePromises = mealsToDelete.map(meal => store.delete(meal.id));
   await Promise.all(deletePromises);
 
@@ -540,6 +537,17 @@ export async function deleteMealsByName(
   await metaStore.put({ ...existing, mealCount });
 
   await tx.done;
+
+  if (!options.skipSyncQueue) {
+    for (const meal of mealsToDelete) {
+      await enqueueMealSync(dbInstance, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'delete',
+        targetUid: meal.uid
+      });
+    }
+  }
 }
 
 // === METADATA OPERATIONS ===

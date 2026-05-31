@@ -190,7 +190,7 @@ describe('cloud-sync', () => {
     expect(mockUpsertMealFromCloud).toHaveBeenCalled();
     expect(mockSaveMeal).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'local-only', uid: 'uid-1', pending: true }),
-      { skipSyncQueue: false }
+      { skipSyncQueue: false, preserveTimestamp: true }
     );
   });
 });

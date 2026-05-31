@@ -42,7 +42,9 @@ export const TagManagementSection = React.memo<TagManagementSectionProps>(({
     const trimmedTag = newTagInput.trim();
     if (trimmedTag && !tagStrings.includes(trimmedTag)) {
       const newTags = [...tagStrings, trimmedTag];
-      onTagsUpdated?.(idea.mealName, newTags);
+      Promise.resolve(onTagsUpdated?.(idea.mealName, newTags)).catch(err =>
+        console.error('Tag update failed:', err)
+      );
     }
     setNewTagInput('');
     setShowTagInput(false);
@@ -57,7 +59,9 @@ export const TagManagementSection = React.memo<TagManagementSectionProps>(({
 
   const handleRemoveTag = useCallback((tagToRemove: string) => {
     const newTags = tagStrings.filter(tag => tag !== tagToRemove);
-    onTagsUpdated?.(idea.mealName, newTags);
+    Promise.resolve(onTagsUpdated?.(idea.mealName, newTags)).catch(err =>
+      console.error('Tag update failed:', err)
+    );
   }, [tagStrings, idea.mealName, onTagsUpdated]);
 
   const selectSuggestion = useCallback((suggestion: string) => {
@@ -66,7 +70,9 @@ export const TagManagementSection = React.memo<TagManagementSectionProps>(({
     // Auto-add the selected suggestion
     if (!tagStrings.includes(suggestion)) {
       const newTags = [...tagStrings, suggestion];
-      onTagsUpdated?.(idea.mealName, newTags);
+      Promise.resolve(onTagsUpdated?.(idea.mealName, newTags)).catch(err =>
+        console.error('Tag update failed:', err)
+      );
     }
     setNewTagInput('');
     setShowTagInput(false);

@@ -16,7 +16,9 @@ if (typeof window !== "undefined" && auth && typeof auth.onAuthStateChanged === 
 }
 
 export function getCurrentUser(): User | null {
-  return currentUser;
+  // Prefer the SDK's own currentUser which is updated synchronously on sign-in,
+  // rather than the module-level copy which waits for the onAuthStateChanged callback.
+  return auth?.currentUser ?? currentUser;
 }
 
 export async function ensureAuthenticatedUser(): Promise<User> {

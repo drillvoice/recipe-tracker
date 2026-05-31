@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   createAccountWithEmailPassword,
   getSyncStatus,
@@ -33,6 +33,11 @@ export default function CloudSyncPanel({ onMessage }: CloudSyncPanelProps) {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
 
+  // Keep a stable ref so the polling effect doesn't re-register its interval
+  // every time the parent passes a new onMessage function reference.
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
+
   useEffect(() => {
     let active = true;
 
@@ -44,7 +49,7 @@ export default function CloudSyncPanel({ onMessage }: CloudSyncPanelProps) {
         }
       } catch (error) {
         if (active) {
-          onMessage({
+          onMessageRef.current({
             type: 'error',
             text: `Unable to load sync status: ${error instanceof Error ? error.message : 'Unknown error'}`
           });
@@ -61,7 +66,7 @@ export default function CloudSyncPanel({ onMessage }: CloudSyncPanelProps) {
       active = false;
       window.clearInterval(interval);
     };
-  }, [onMessage]);
+  }, []);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

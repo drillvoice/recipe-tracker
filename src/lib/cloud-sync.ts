@@ -164,7 +164,7 @@ async function initialPullAndMerge(uid: string): Promise<number> {
           syncState: 'pending',
           updatedAtMs: localMeal.updatedAtMs ?? localFresh
         },
-        { skipSyncQueue: false }
+        { skipSyncQueue: false, preserveTimestamp: true }
       );
     }
   }
@@ -304,8 +304,6 @@ async function runSignedInSync(uid: string): Promise<SyncNowResult> {
     const flushResult = await flushSyncQueue(uid);
     result.pushed += flushResult.pushed;
     result.errors.push(...flushResult.errors);
-
-    result.pulled += await initialPullAndMerge(uid);
 
     if (result.errors.length > 0) {
       lastError = result.errors.join(' | ');

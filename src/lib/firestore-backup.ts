@@ -184,9 +184,16 @@ export async function getCloudBackupStatus(): Promise<CloudBackupStatus> {
     const countSnapshot = await getCountFromServer(mealsCollectionRef);
     status.cloudMealCount = countSnapshot.data().count;
 
-    // Check if local meals need syncing (use actual meal count from main database)
+    // Check if local meals need syncing: count differs, or any meal was updated
+    // after the last backup (catches edits/renames that leave counts unchanged).
     const localMeals = await getAllMeals();
-    status.syncNeeded = localMeals.length !== status.cloudMealCount;
+    const mostRecentLocalChange = localMeals.reduce(
+      (max, m) => Math.max(max, m.updatedAtMs ?? m.date.toMillis()),
+      0
+    );
+    status.syncNeeded =
+      localMeals.length !== status.cloudMealCount ||
+      (status.lastCloudBackup > 0 && mostRecentLocalChange > status.lastCloudBackup);
 
     return status;
 
