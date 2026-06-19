@@ -204,7 +204,10 @@ export default function Meals() {
       )}
 
       <Suspense fallback={<div className="form"><p>Loading calendar...</p></div>}>
-        <CalendarView refreshTrigger={refreshTrigger} />
+        <CalendarView
+          refreshTrigger={refreshTrigger}
+          onDateSelect={date => updateFormValue('date', date)}
+        />
       </Suspense>
 
       <HistoryAccordion
