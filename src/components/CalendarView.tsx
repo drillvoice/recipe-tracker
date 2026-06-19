@@ -95,6 +95,7 @@ CalendarDayCell.displayName = 'CalendarDayCell';
 
 interface CalendarViewProps {
   refreshTrigger?: number;
+  onDateSelect?: (date: string) => void;
 }
 
 interface DayCell {
@@ -103,7 +104,7 @@ interface DayCell {
   hasData: boolean;
 }
 
-export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
+export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarViewProps) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -219,12 +220,15 @@ export default function CalendarView({ refreshTrigger }: CalendarViewProps) {
   }, [currentMonth, currentYear]);
 
   const handleDayClick = useCallback((day: DayCell) => {
-    if (!day.isCurrentMonth || !day.hasData) return;
+    if (!day.isCurrentMonth) return;
 
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day.date).padStart(2, '0')}`;
+    onDateSelect?.(dateKey);
+
+    if (!day.hasData) return;
     setSelectedDate(dateKey);
     setEditingId(null); // Cancel any ongoing edits
-  }, [currentYear, currentMonth]);
+  }, [currentYear, currentMonth, onDateSelect]);
 
   const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);
