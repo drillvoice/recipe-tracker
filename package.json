@@ -15,13 +15,13 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.101.2",
-    "dompurify": "^3.4.11",
-    "firebase": "^12.15.0",
+    "@tanstack/react-query": "^5.101.4",
+    "dompurify": "^3.4.12",
+    "firebase": "^12.16.0",
     "idb": "^8.0.3",
-    "next": "^16.2.9",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
