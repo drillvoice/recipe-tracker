@@ -15,14 +15,14 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.101.4",
-    "dompurify": "^3.4.12",
-    "firebase": "^12.16.0",
+    "@tanstack/react-query": "^5.102.8",
+    "dompurify": "^3.4.14",
+    "firebase": "^12.18.0",
     "idb": "^8.0.3",
-    "next": "^16.2.12",
+    "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.5.1"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
