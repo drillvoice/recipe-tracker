@@ -29,12 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **No Loading Flicker**: Lists no longer flash "Loading..." after each add or edit, and revisiting a page shows cached dishes immediately while they refresh.
 - **Dishes Empty States**: The empty list now says whether you have no dishes yet, your filters match nothing (with a Clear filters button), or everything is hidden (with a Show hidden button).
 - **Terminology**: Remaining "meal" wording in the UI changed to "dish".
+- **Faster Dishes List**: Tag colour settings are read from browser storage once per page instead of once per dish row, and refresh when changed in another tab.
 
 ### Technical
 - `useMeals` is backed by a module-level store (`useSyncExternalStore`) with request deduplication; added `addMeal` and a `dish-diary:meals-changed` window event (`src/lib/meal-events.ts`).
 - Sync queue merging uses the `entityId` index instead of scanning the whole queue; bulk by-name operations write meals and queue items in one atomic transaction.
 - Added `completeSyncItem`, `getSyncQueueCount` and `normalizeMealDate` to `offline-storage.ts`; sync status polling counts the queue instead of loading it.
 - Added `src/utils/date.ts` (`toLocalDateKey` / `fromLocalDateKey`).
+- Added `src/hooks/useTagColors.ts`, a shared `useSyncExternalStore` cache of tag management data used by `IdeasTableRow`; exported `TAG_MANAGEMENT_STORAGE_KEY` from `tag-manager.ts`.
 - Added `__tests__/sync-queue.test.ts` (fake-indexeddb) plus new tests for auth startup, sync merge/upload, the shared store, autocomplete keyboard use and Dishes page states.
 - Updated visible app/export version references to `0.9.3`.
 - Service worker cache version bumped from `dish-diary-static-v4` to `dish-diary-static-v5`.

@@ -43,9 +43,10 @@ export const DEFAULT_CATEGORIES: TagCategory[] = [
 ];
 
 export const TAG_MANAGEMENT_UPDATED_EVENT = 'tag-management-updated';
+export const TAG_MANAGEMENT_STORAGE_KEY = 'dish-diary-tag-management';
 
 export class TagManager {
-  private static readonly STORAGE_KEY = 'dish-diary-tag-management';
+  private static readonly STORAGE_KEY = TAG_MANAGEMENT_STORAGE_KEY;
 
   // Get tag management data from localStorage
   static getTagManagementData(): TagManagementData {

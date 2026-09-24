@@ -162,6 +162,36 @@ describe('IdeasTableRow tag metadata caching', () => {
 });
 
 
+describe('IdeasTableRow shared tag settings', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('reads tag settings once for a whole list of rows', () => {
+    mockedTagManager.getTagManagementData.mockReturnValue(
+      createTagManagementData({
+        categories: [{ id: 'spice', name: 'Spice', color: 'pink', createdAt: 0 }],
+        tags: { Spicy: { category: 'spice' } }
+      })
+    );
+
+    render(
+      <table>
+        <tbody>
+          {['A', 'B', 'C', 'D', 'E'].map(name => (
+            <IdeasTableRow key={name} idea={createIdea({ mealName: name })} onConfirmHide={jest.fn()} />
+          ))}
+        </tbody>
+      </table>
+    );
+
+    expect(mockedTagManager.getTagManagementData).toHaveBeenCalledTimes(1);
+    screen.getAllByText('Spicy').forEach(chip => {
+      expect(chip).toHaveStyle(`background-color: ${TAG_COLORS.pink}`);
+    });
+  });
+});
+
 describe('IdeasTableRow visibility toggle', () => {
   beforeEach(() => {
     mockedTagManager.getTagManagementData.mockReturnValue(createTagManagementData({}));

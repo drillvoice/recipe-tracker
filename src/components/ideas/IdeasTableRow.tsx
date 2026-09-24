@@ -1,12 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import ActionButton from '@/components/ActionButton';
-import {
-  TagManager,
-  TAG_COLORS,
-  TAG_MANAGEMENT_UPDATED_EVENT,
-  type TagCategory,
-  type TagManagementData
-} from '@/lib/tag-manager';
+import { useTagColors } from '@/hooks/useTagColors';
 import { ExpandableRowContent } from './ExpandableRowContent';
 import type { Idea } from '@/hooks/useIdeas';
 
@@ -29,62 +23,9 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
   allExistingTags: allExistingTagsProp,
   allIdeas = []
 }) => {
-  const [categories, setCategories] = useState<TagCategory[]>([]);
-  const [tagMetadata, setTagMetadata] = useState<TagManagementData['tags']>({});
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Load categories and tag metadata once and refresh when tag settings change
-  useEffect(() => {
-    const loadTagManagementData = () => {
-      const data = TagManager.getTagManagementData();
-      setCategories(data.categories);
-      setTagMetadata(data.tags);
-    };
-
-    loadTagManagementData();
-
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const handleTagManagementUpdate = () => {
-      loadTagManagementData();
-    };
-
-    window.addEventListener(
-      TAG_MANAGEMENT_UPDATED_EVENT,
-      handleTagManagementUpdate
-    );
-
-    return () => {
-      window.removeEventListener(
-        TAG_MANAGEMENT_UPDATED_EVENT,
-        handleTagManagementUpdate
-      );
-    };
-  }, []);
-
-  const getTagColor = useCallback(
-    (tagName: string): string => {
-      const metadata = tagMetadata[tagName];
-
-      const customColor = metadata?.customColor;
-      if (customColor && TAG_COLORS[customColor]) {
-        return TAG_COLORS[customColor];
-      }
-
-      const categoryId = metadata?.category;
-      if (categoryId) {
-        const category = categories.find(c => c.id === categoryId);
-        if (category) {
-          return TAG_COLORS[category.color];
-        }
-      }
-
-      return TAG_COLORS.gray;
-    },
-    [categories, tagMetadata]
-  );
+  // Shared across rows: tag settings are parsed once per page, not per row
+  const getTagColor = useTagColors();
 
   // Use the tags from the idea data
   const tagStrings = useMemo(() => idea.tags ?? [], [idea.tags]);
