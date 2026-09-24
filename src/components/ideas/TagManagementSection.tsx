@@ -104,7 +104,7 @@ export const TagManagementSection = React.memo<TagManagementSectionProps>(({
                   // Delay hiding to allow clicks on suggestions
                   setTimeout(() => setShowTagSuggestions(false), 150);
                 }}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleAddTag();

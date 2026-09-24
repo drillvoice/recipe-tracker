@@ -15,17 +15,23 @@ import { auth, db, isFirebaseConfigured } from './firebase';
 import { sendReset, signInEmail, signOutUser, signUpEmail } from './auth';
 import {
   assignSyncQueueTargetUid,
+  completeSyncItem,
   getAllMeals,
   getMealById,
   getSyncQueue,
+  getSyncQueueCount,
   markMealSyncState,
-  removeSyncItem,
   saveMeal,
   updateSyncItem,
   upsertMealFromCloud,
   deleteMealFromCloud,
-  type Meal
+  type Meal,
+  type SyncItem
 } from './offline-storage';
+import { notifyMealsChanged } from './meal-events';
+
+// Queue items pushed concurrently per round; Firestore pipelines these writes.
+const PUSH_CONCURRENCY = 25;
 
 export interface CloudSyncStatus {
   isConfigured: boolean;
@@ -48,9 +54,11 @@ export interface SyncNowResult {
 
 let authUnsubscribe: Unsubscribe | null = null;
 let mealSnapshotUnsubscribe: Unsubscribe | null = null;
+let listenerUid: string | null = null;
 let onlineListenerAttached = false;
 let currentUser: User | null = null;
 let isSyncing = false;
+let activeSync: Promise<SyncNowResult> | null = null;
 let realtimeConnected = false;
 let lastSyncAt = 0;
 let lastError: string | null = null;
@@ -65,6 +73,17 @@ function isBrowserOnline(): boolean {
 
 function mealFreshness(meal: Meal): number {
   return meal.updatedAtMs ?? meal.date.toMillis();
+}
+
+// Payload dates come back from IndexedDB as plain {seconds, nanoseconds}
+// objects; convert them so Firestore stores a real Timestamp, not a map.
+function toTimestamp(date: Meal['date']): Timestamp {
+  if (date && typeof date.toMillis === 'function') {
+    return date;
+  }
+
+  const raw = date as unknown as { seconds: number; nanoseconds?: number };
+  return new Timestamp(raw.seconds, raw.nanoseconds || 0);
 }
 
 function parseMealDoc(snapshot: QueryDocumentSnapshot<DocumentData>): Meal {
@@ -111,11 +130,16 @@ function stopMealListener(): void {
     mealSnapshotUnsubscribe = null;
   }
 
+  listenerUid = null;
   realtimeConnected = false;
 }
 
-async function applyRemoteMeal(uid: string, meal: Meal): Promise<boolean> {
-  const local = await getMealById(meal.id);
+// `local` may be passed when the caller already has the local copy, to skip
+// a per-meal IndexedDB read (null means "known not to exist locally").
+async function applyRemoteMeal(uid: string, meal: Meal, local?: Meal | null): Promise<boolean> {
+  if (local === undefined) {
+    local = await getMealById(meal.id);
+  }
 
   if (!local || mealFreshness(meal) > mealFreshness(local)) {
     await upsertMealFromCloud({
@@ -137,14 +161,17 @@ async function initialPullAndMerge(uid: string): Promise<number> {
 
   const mealCollection = collection(db, 'users', uid, 'meals');
   const cloudSnapshot = await getDocs(mealCollection);
+  // Read local meals after the network fetch so edits made while it was in
+  // flight are included in the comparison below.
+  const localMeals = await getAllMeals();
   const cloudMeals = cloudSnapshot.docs.map(parseMealDoc);
   const cloudMealMap = new Map(cloudMeals.map((meal) => [meal.id, meal]));
-  const localMeals = await getAllMeals();
+  const localMealMap = new Map(localMeals.map((meal) => [meal.id, meal]));
 
   let pulled = 0;
 
   for (const cloudMeal of cloudMeals) {
-    const didApply = await applyRemoteMeal(uid, cloudMeal);
+    const didApply = await applyRemoteMeal(uid, cloudMeal, localMealMap.get(cloudMeal.id) ?? null);
     if (didApply) {
       pulled += 1;
     }
@@ -154,6 +181,12 @@ async function initialPullAndMerge(uid: string): Promise<number> {
     const cloudMeal = cloudMealMap.get(localMeal.id);
     const cloudFreshness = cloudMeal ? mealFreshness(cloudMeal) : -1;
     const localFresh = mealFreshness(localMeal);
+
+    // A strictly fresher cloud copy was just applied above; re-saving the
+    // stale local snapshot here would overwrite it and push old data back up.
+    if (cloudMeal && cloudFreshness > localFresh) {
+      continue;
+    }
 
     if (!cloudMeal || localFresh > cloudFreshness || localMeal.uid !== uid) {
       await saveMeal(
@@ -169,7 +202,85 @@ async function initialPullAndMerge(uid: string): Promise<number> {
     }
   }
 
+  if (pulled > 0) {
+    notifyMealsChanged();
+  }
+
   return pulled;
+}
+
+async function pushSyncItem(item: SyncItem, uid: string): Promise<string | null> {
+  const targetUid = item.targetUid || uid;
+
+  try {
+    const mealDoc = doc(db!, 'users', targetUid, 'meals', item.entityId);
+
+    if (item.operation === 'delete') {
+      await deleteDoc(mealDoc);
+    } else {
+      const payload = item.payload;
+      if (!payload || !payload.mealName || !payload.date) {
+        throw new Error(`Sync payload for meal ${item.entityId} is incomplete.`);
+      }
+
+      const mealToUpload: Meal = {
+        id: item.entityId,
+        mealName: payload.mealName,
+        date: toTimestamp(payload.date),
+        uid: targetUid,
+        hidden: payload.hidden || false,
+        tags: payload.tags || [],
+        updatedAtMs: payload.updatedAtMs ?? Date.now(),
+        pending: false,
+        syncState: 'synced'
+      };
+
+      await setDoc(mealDoc, buildCloudPayload(mealToUpload, targetUid), { merge: true });
+    }
+
+    await completeSyncItem(item);
+    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown sync failure';
+
+    const retryCount = (item.retryCount ?? 0) + 1;
+    await updateSyncItem(item.id, {
+      retryCount,
+      lastError: message,
+      targetUid,
+      timestamp: Date.now()
+    });
+
+    if (item.operation !== 'delete') {
+      await markMealSyncState(item.entityId, 'error', true);
+    }
+
+    return `Meal ${item.entityId}: ${message}`;
+  }
+}
+
+// Split queue items into rounds of limited size that never contain two items
+// for the same meal, so per-meal operation order is preserved.
+function planPushRounds(items: SyncItem[]): SyncItem[][] {
+  const rounds: SyncItem[][] = [];
+  let current: SyncItem[] = [];
+  let entitiesInRound = new Set<string>();
+
+  for (const item of items) {
+    if (current.length >= PUSH_CONCURRENCY || entitiesInRound.has(item.entityId)) {
+      rounds.push(current);
+      current = [];
+      entitiesInRound = new Set();
+    }
+    current.push(item);
+    entitiesInRound.add(item.entityId);
+  }
+
+  if (current.length > 0) {
+    rounds.push(current);
+  }
+
+  return rounds;
 }
 
 async function flushSyncQueue(uid: string): Promise<{ pushed: number; errors: string[] }> {
@@ -181,52 +292,14 @@ async function flushSyncQueue(uid: string): Promise<{ pushed: number; errors: st
   let pushed = 0;
   const errors: string[] = [];
 
-  for (const item of items) {
-    const targetUid = item.targetUid || uid;
-
-    try {
-      const mealDoc = doc(db, 'users', targetUid, 'meals', item.entityId);
-
-      if (item.operation === 'delete') {
-        await deleteDoc(mealDoc);
+  // Push in concurrent rounds instead of one network round trip per item.
+  for (const round of planPushRounds(items)) {
+    const results = await Promise.all(round.map(item => pushSyncItem(item, uid)));
+    for (const error of results) {
+      if (error) {
+        errors.push(error);
       } else {
-        const payload = item.payload;
-        if (!payload || !payload.mealName || !payload.date) {
-          throw new Error(`Sync payload for meal ${item.entityId} is incomplete.`);
-        }
-
-        const mealToUpload: Meal = {
-          id: item.entityId,
-          mealName: payload.mealName,
-          date: payload.date,
-          uid: targetUid,
-          hidden: payload.hidden || false,
-          tags: payload.tags || [],
-          updatedAtMs: payload.updatedAtMs ?? Date.now(),
-          pending: false,
-          syncState: 'synced'
-        };
-
-        await setDoc(mealDoc, buildCloudPayload(mealToUpload, targetUid), { merge: true });
-        await markMealSyncState(item.entityId, 'synced', false);
-      }
-
-      await removeSyncItem(item.id);
-      pushed += 1;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown sync failure';
-      errors.push(`Meal ${item.entityId}: ${message}`);
-
-      const retryCount = (item.retryCount ?? 0) + 1;
-      await updateSyncItem(item.id, {
-        retryCount,
-        lastError: message,
-        targetUid,
-        timestamp: Date.now()
-      });
-
-      if (item.operation !== 'delete') {
-        await markMealSyncState(item.entityId, 'error', true);
+        pushed += 1;
       }
     }
   }
@@ -239,15 +312,29 @@ function startRealtimeListener(uid: string): void {
     return;
   }
 
+  // Already listening for this account: avoid tearing down and re-reading
+  // the whole collection (sign-in and onAuthStateChanged both call this).
+  if (mealSnapshotUnsubscribe && listenerUid === uid) {
+    return;
+  }
+
   stopMealListener();
+  listenerUid = uid;
 
   mealSnapshotUnsubscribe = onSnapshot(
     collection(db, 'users', uid, 'meals'),
     async (snapshot) => {
       realtimeConnected = true;
 
+      const changes = snapshot.docChanges();
+      // The first snapshot reports every document; read local meals once
+      // instead of issuing one IndexedDB lookup per document.
+      const localMealMap = changes.length > 1
+        ? new Map((await getAllMeals()).map((meal) => [meal.id, meal]))
+        : null;
+
       let changed = false;
-      for (const change of snapshot.docChanges()) {
+      for (const change of changes) {
         const id = change.doc.id;
         if (change.type === 'removed') {
           await deleteMealFromCloud(id);
@@ -256,7 +343,8 @@ function startRealtimeListener(uid: string): void {
         }
 
         const cloudMeal = parseMealDoc(change.doc);
-        const didApply = await applyRemoteMeal(uid, cloudMeal);
+        const local = localMealMap ? localMealMap.get(id) ?? null : undefined;
+        const didApply = await applyRemoteMeal(uid, cloudMeal, local);
         if (didApply) {
           changed = true;
         }
@@ -265,6 +353,7 @@ function startRealtimeListener(uid: string): void {
       if (changed) {
         lastSyncAt = Date.now();
         lastError = null;
+        notifyMealsChanged();
       }
     },
     (error) => {
@@ -274,26 +363,12 @@ function startRealtimeListener(uid: string): void {
   );
 }
 
-async function runSignedInSync(uid: string): Promise<SyncNowResult> {
+async function performSignedInSync(uid: string): Promise<SyncNowResult> {
   const result: SyncNowResult = {
     pushed: 0,
     pulled: 0,
     errors: []
   };
-
-  if (!isFirebaseConfigured || !db) {
-    result.errors.push('Firebase is not configured.');
-    return result;
-  }
-
-  if (!isBrowserOnline()) {
-    result.errors.push('Device is offline. Sync will resume automatically when online.');
-    return result;
-  }
-
-  if (isSyncing) {
-    return result;
-  }
 
   isSyncing = true;
 
@@ -323,6 +398,34 @@ async function runSignedInSync(uid: string): Promise<SyncNowResult> {
   }
 }
 
+function runSignedInSync(uid: string): Promise<SyncNowResult> {
+  if (!isFirebaseConfigured || !db) {
+    return Promise.resolve({ pushed: 0, pulled: 0, errors: ['Firebase is not configured.'] });
+  }
+
+  if (!isBrowserOnline()) {
+    return Promise.resolve({
+      pushed: 0,
+      pulled: 0,
+      errors: ['Device is offline. Sync will resume automatically when online.']
+    });
+  }
+
+  // Share an in-flight sync rather than reporting an empty result.
+  if (!activeSync) {
+    activeSync = performSignedInSync(uid).finally(() => {
+      activeSync = null;
+    });
+  }
+
+  return activeSync;
+}
+
+async function startSyncForUser(uid: string): Promise<void> {
+  await runSignedInSync(uid);
+  startRealtimeListener(uid);
+}
+
 async function handleAuthenticatedUser(user: User): Promise<void> {
   currentUser = user;
 
@@ -331,8 +434,7 @@ async function handleAuthenticatedUser(user: User): Promise<void> {
     return;
   }
 
-  await runSignedInSync(user.uid);
-  startRealtimeListener(user.uid);
+  await startSyncForUser(user.uid);
 }
 
 function attachOnlineListener(): void {
@@ -391,13 +493,14 @@ export async function syncNow(): Promise<SyncNowResult> {
   return runSignedInSync(currentUser.uid);
 }
 
+// Sign-in resolves as soon as auth succeeds; the initial sync continues in
+// the background (its progress is visible through getSyncStatus).
 export async function signInWithEmailPassword(email: string, password: string): Promise<void> {
   const credential = await signInEmail(email, password);
   currentUser = credential.user;
 
   if (!credential.user.isAnonymous) {
-    await runSignedInSync(credential.user.uid);
-    startRealtimeListener(credential.user.uid);
+    void startSyncForUser(credential.user.uid);
   }
 }
 
@@ -406,8 +509,7 @@ export async function createAccountWithEmailPassword(email: string, password: st
   currentUser = credential.user;
 
   if (!credential.user.isAnonymous) {
-    await runSignedInSync(credential.user.uid);
-    startRealtimeListener(credential.user.uid);
+    void startSyncForUser(credential.user.uid);
   }
 }
 
@@ -422,7 +524,7 @@ export async function signOutAndStopSync(): Promise<void> {
 }
 
 export async function getSyncStatus(): Promise<CloudSyncStatus> {
-  const queue = await getSyncQueue();
+  const pendingCount = await getSyncQueueCount();
 
   return {
     isConfigured: isFirebaseConfigured,
@@ -430,7 +532,7 @@ export async function getSyncStatus(): Promise<CloudSyncStatus> {
     isAnonymous: Boolean(currentUser?.isAnonymous),
     userId: currentUser?.uid,
     email: currentUser?.email,
-    pendingCount: queue.length,
+    pendingCount,
     lastSyncAt,
     lastError,
     isSyncing,
@@ -444,5 +546,6 @@ export const __private = {
   buildCloudPayload,
   flushSyncQueue,
   initialPullAndMerge,
+  planPushRounds,
   runSignedInSync
 };

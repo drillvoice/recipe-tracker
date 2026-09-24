@@ -32,8 +32,12 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleHideClick = () => {
-    // Always show confirmation for hiding
-    setShowHideConfirm(true);
+    if (idea.hidden) {
+      // Unhiding is easily reversible, so no confirmation
+      onConfirmHide(idea);
+    } else {
+      setShowHideConfirm(true);
+    }
   };
 
   const handleConfirmHide = () => {
@@ -107,6 +111,14 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
                   placeholder="Enter dish name"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleSaveNameEdit();
+                    } else if (e.key === 'Escape') {
+                      handleCancelNameEdit();
+                    }
+                  }}
                   autoFocus
                 />
                 <div className="edit-name-buttons">
@@ -205,9 +217,9 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
                 />
               )}
               <ActionButton
-                icon="👁️‍🗨️"
+                icon={idea.hidden ? "👁️" : "👁️‍🗨️"}
                 onClick={handleHideClick}
-                title={`Hide "${idea.mealName}" from suggestions`}
+                title={idea.hidden ? `Show "${idea.mealName}" in dishes list` : `Hide "${idea.mealName}" from dishes list`}
                 variant="primary"
               />
             </div>

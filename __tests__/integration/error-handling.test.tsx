@@ -52,6 +52,7 @@ const TagsPage = require('@/pages/tags').default;
 
 describe.skip('Error Handling Integration Tests', () => {
   beforeEach(() => {
+    require('@/hooks/useMeals').__resetMealsStore();
     jest.clearAllMocks();
     consoleErrorSpy.mockClear();
   });
@@ -112,7 +113,7 @@ describe.skip('Error Handling Integration Tests', () => {
       });
       
       // Start editing
-      const editButton = screen.getByTitle('Edit meal');
+      const editButton = screen.getByTitle('Edit dish');
       
       await act(async () => {
         fireEvent.click(editButton);
@@ -157,7 +158,7 @@ describe.skip('Error Handling Integration Tests', () => {
       
       // Click delete and confirm
       await act(async () => {
-        fireEvent.click(screen.getByTitle('Delete meal'));
+        fireEvent.click(screen.getByTitle('Delete dish'));
       });
       
       await waitFor(() => {
@@ -315,7 +316,7 @@ describe.skip('Error Handling Integration Tests', () => {
       });
       
       // Start editing
-      const editButton = screen.getByTitle('Edit meal');
+      const editButton = screen.getByTitle('Edit dish');
       
       await act(async () => {
         fireEvent.click(editButton);

@@ -73,7 +73,8 @@ export function useAutocomplete(
   } = options;
 
   const [inputValue, setInputValue] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  // Whether the user wants the list open; it is only shown when there are matches.
+  const [isOpen, setIsOpen] = useState(false);
 
   // Filter and limit suggestions based on input value
   const suggestions = useMemo(() => {
@@ -88,42 +89,37 @@ export function useAutocomplete(
     return filtered.slice(0, maxSuggestions);
   }, [allOptions, inputValue, filterFn, maxSuggestions, caseSensitive]);
 
+  // Derived rather than synced via effects/setState-in-render, so the list
+  // reflects the matches for the current value, including the first keystroke.
+  const showSuggestions = isOpen && suggestions.length > 0;
+
   const handleSetInputValue = useCallback((value: string) => {
     setInputValue(value);
-    setShowSuggestions(value.trim() !== '' && suggestions.length > 0);
-  }, [suggestions.length]);
+    setIsOpen(value.trim() !== '');
+  }, []);
 
   const selectSuggestion = useCallback((suggestion: string) => {
     setInputValue(suggestion);
-    setShowSuggestions(false);
+    setIsOpen(false);
   }, []);
 
   const clearSuggestions = useCallback(() => {
-    setShowSuggestions(false);
+    setIsOpen(false);
   }, []);
 
   const openSuggestions = useCallback(() => {
-    if (inputValue.trim() && suggestions.length > 0) {
-      setShowSuggestions(true);
+    if (inputValue.trim()) {
+      setIsOpen(true);
     }
-  }, [inputValue, suggestions.length]);
+  }, [inputValue]);
 
   const closeSuggestions = useCallback(() => {
-    setShowSuggestions(false);
+    setIsOpen(false);
   }, []);
-
-  // Update suggestions visibility when suggestions change
-  const filteredSuggestions = useMemo(() => {
-    const shouldShow = inputValue.trim() !== '' && suggestions.length > 0;
-    if (!shouldShow && showSuggestions) {
-      setShowSuggestions(false);
-    }
-    return suggestions;
-  }, [suggestions, inputValue, showSuggestions]);
 
   return {
     inputValue,
-    suggestions: filteredSuggestions,
+    suggestions,
     showSuggestions,
     setInputValue: handleSetInputValue,
     selectSuggestion,

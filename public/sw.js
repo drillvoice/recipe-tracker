@@ -1,4 +1,4 @@
-const STATIC_CACHE_NAME = 'dish-diary-static-v4';
+const STATIC_CACHE_NAME = 'dish-diary-static-v5';
 const DYNAMIC_CACHE_NAME = 'dish-diary-dynamic-v2';
 
 // Files to cache for offline use

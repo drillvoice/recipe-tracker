@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useMeals } from '@/hooks/useMeals';
+import { useMeals, __resetMealsStore } from '@/hooks/useMeals';
+import { MEALS_CHANGED_EVENT } from '@/lib/meal-events';
 
 // Mock offline storage
 const mockGetAllMeals = jest.fn();
@@ -32,6 +33,7 @@ describe('useMeals hook', () => {
   });
 
   beforeEach(() => {
+    __resetMealsStore();
     jest.clearAllMocks();
     mockGetAllMeals.mockResolvedValue([]);
     mockUpdateMeal.mockResolvedValue(undefined);
@@ -421,6 +423,52 @@ describe('useMeals hook', () => {
       });
 
       expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe('shared store', () => {
+    test('instances share one load and see each other\'s edits', async () => {
+      mockGetAllMeals.mockResolvedValue([
+        createMockMeal('1', 'Pizza', 2000000),
+        createMockMeal('2', 'Pasta', 1000000),
+      ]);
+
+      const calendar = renderHook(() => useMeals());
+      const history = renderHook(() => useMeals());
+
+      await waitFor(() => {
+        expect(history.result.current.meals).toHaveLength(2);
+      });
+      expect(mockGetAllMeals).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await calendar.result.current.deleteMealData('1');
+      });
+
+      expect(history.result.current.meals.map(m => m.id)).toEqual(['2']);
+    });
+
+    test('reloads when sync reports changed meals, without a loading flash', async () => {
+      mockGetAllMeals.mockResolvedValueOnce([createMockMeal('1', 'Pizza', 1000000)]);
+      const { result } = renderHook(() => useMeals());
+
+      await waitFor(() => {
+        expect(result.current.meals).toHaveLength(1);
+      });
+
+      mockGetAllMeals.mockResolvedValueOnce([
+        createMockMeal('1', 'Pizza', 1000000),
+        createMockMeal('2', 'Synced Soup', 2000000),
+      ]);
+
+      await act(async () => {
+        window.dispatchEvent(new Event(MEALS_CHANGED_EVENT));
+      });
+      expect(result.current.isLoading).toBe(false);
+
+      await waitFor(() => {
+        expect(result.current.meals[0].mealName).toBe('Synced Soup');
+      });
     });
   });
 });

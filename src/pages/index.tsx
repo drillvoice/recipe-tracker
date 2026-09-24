@@ -1,15 +1,13 @@
-import { useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import Head from "next/head";
 import { auth } from "@/lib/firebase";
 import { Timestamp } from "firebase/firestore";
-import {
-  saveMeal,
-  getAllMeals,
-  type Meal,
-} from "@/lib/offline-storage";
+import type { Meal } from "@/lib/offline-storage";
 import Navigation from "@/components/Navigation";
 import HistoryAccordion from "@/components/HistoryAccordion";
 import { validateMeal } from "@/utils/validation";
+import { toLocalDateKey, fromLocalDateKey } from "@/utils/date";
+import { useMeals } from "@/hooks/useMeals";
 
 const CalendarView = lazy(() => import("@/components/CalendarView"));
 import { checkFormSubmissionLimit } from "@/utils/rateLimit";
@@ -20,7 +18,7 @@ export default function Meals() {
   // Form state using useFormState hook
   const { values: formValues, updateValue: updateFormValue } = useFormState({
     mealName: "",
-    date: new Date().toISOString().substring(0, 10)
+    date: toLocalDateKey()
   });
 
   // Message management using useMessages hook
@@ -32,8 +30,17 @@ export default function Meals() {
   // Toggle states using useToggle hook
   const { isOpen: historyAccordionOpen, toggle: toggleHistoryAccordion, open: openHistoryAccordion } = useToggle(false);
 
-  // Autocomplete for meal suggestions using useAutocomplete hook
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  // Shared with CalendarView and HistoryAccordion, so the page reads
+  // IndexedDB once and a new dish appears everywhere without reloading.
+  const { meals, addMeal: saveNewMeal } = useMeals();
+
+  // Unique dish names, most recently made first (meals are sorted newest first)
+  const suggestions = useMemo(
+    () => Array.from(new Set(meals.map(m => m.mealName))),
+    [meals]
+  );
+
+  // Autocomplete for dish suggestions using useAutocomplete hook
   const {
     inputValue: mealName,
     suggestions: filteredSuggestions,
@@ -42,38 +49,21 @@ export default function Meals() {
     selectSuggestion,
     closeSuggestions
   } = useAutocomplete(suggestions, { maxSuggestions: 5 });
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
 
-  // Other component state
   const [currentTagline, setCurrentTagline] = useState<string>("");
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   // Initialize and manage tagline rotation
   useEffect(() => {
-    // Set initial tagline
     setCurrentTagline(TaglineManager.getCurrentTagline());
 
     // Check for tagline updates every hour
     const checkTaglineInterval = setInterval(() => {
-      const newTagline = TaglineManager.getCurrentTagline();
-      if (newTagline !== currentTagline) {
-        setCurrentTagline(newTagline);
-      }
-    }, 60 * 60 * 1000); // Check every hour
+      setCurrentTagline(TaglineManager.getCurrentTagline());
+    }, 60 * 60 * 1000);
 
     return () => clearInterval(checkTaglineInterval);
-  }, [currentTagline]);
-
-  const loadSuggestions = useCallback(async () => {
-    const all = await getAllMeals();
-    const names = Array.from(new Set(all.map(m => m.mealName)));
-    setSuggestions(names);
   }, []);
-
-  useEffect(() => {
-    loadSuggestions();
-  }, [loadSuggestions]);
-
-  // handleMealNameChange and selectSuggestion are now handled by useAutocomplete hook
 
   async function addMeal() {
     // Clear previous messages
@@ -97,30 +87,22 @@ export default function Meals() {
       const newMeal: Meal = {
         id: Date.now().toString(),
         mealName: validation.data.mealName,
-        date: Timestamp.fromDate(new Date(validation.data.date + 'T00:00:00')),
+        date: Timestamp.fromDate(fromLocalDateKey(validation.data.date)),
         uid: auth?.currentUser?.uid,
         pending: true,
       };
 
-      await saveMeal(newMeal);
+      await saveNewMeal(newMeal);
 
       // Reset form using the hook
       setMealName("");
-      updateFormValue('date', new Date().toISOString().substring(0, 10));
+      setActiveSuggestion(-1);
+      updateFormValue('date', toLocalDateKey());
 
-      // Show success message using the hook
-      addSuccess("Meal saved successfully");
+      addSuccess("Dish saved");
 
       // Open history accordion to show visual confirmation
       openHistoryAccordion();
-
-      // Trigger history refresh
-      setRefreshTrigger(Date.now());
-
-      // Update suggestions and close autocomplete
-      setSuggestions(prev =>
-        Array.from(new Set([...prev, validation.data.mealName]))
-      );
       closeSuggestions();
     } catch (error) {
       console.error('Error saving meal:', error);
@@ -142,35 +124,49 @@ export default function Meals() {
           Dish name
           <div className="autocomplete-container">
             <input
-              placeholder="Enter meal name..."
+              placeholder="Enter dish name..."
               value={mealName}
-              onChange={e => setMealName(e.target.value)}
-              onFocus={() => {
-                if (mealName.trim() && filteredSuggestions.length > 0) {
-                  // openSuggestions is called automatically by useAutocomplete
-                }
+              onChange={e => {
+                setMealName(e.target.value);
+                setActiveSuggestion(-1);
               }}
               onBlur={() => {
                 // Delay hiding to allow clicks on suggestions
                 setTimeout(() => closeSuggestions(), 150);
               }}
               onKeyDown={event => {
-                if (event.key === "Enter") {
-                  if (showSuggestions && filteredSuggestions.length > 0) {
-                    return;
-                  }
+                const suggestionsOpen = showSuggestions && filteredSuggestions.length > 0;
+                if (suggestionsOpen && event.key === "ArrowDown") {
                   event.preventDefault();
-                  addMeal();
+                  setActiveSuggestion(i => (i + 1) % filteredSuggestions.length);
+                } else if (suggestionsOpen && event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setActiveSuggestion(i => (i <= 0 ? filteredSuggestions.length : i) - 1);
+                } else if (suggestionsOpen && event.key === "Escape") {
+                  closeSuggestions();
+                  setActiveSuggestion(-1);
+                } else if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (suggestionsOpen && activeSuggestion >= 0) {
+                    // Pick the highlighted suggestion; a second Enter adds it
+                    selectSuggestion(filteredSuggestions[activeSuggestion]);
+                    setActiveSuggestion(-1);
+                  } else {
+                    addMeal();
+                  }
                 }
               }}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showSuggestions && filteredSuggestions.length > 0}
             />
             {showSuggestions && filteredSuggestions.length > 0 && (
               <div className="suggestions-dropdown">
-                {filteredSuggestions.slice(0, 5).map(suggestion => (
+                {filteredSuggestions.slice(0, 5).map((suggestion, index) => (
                   <button
                     key={suggestion}
                     type="button"
-                    className="suggestion-item"
+                    className={`suggestion-item${index === activeSuggestion ? " active" : ""}`}
                     onClick={() => selectSuggestion(suggestion)}
                     onMouseDown={(e) => e.preventDefault()} // Prevent input blur
                   >
@@ -205,7 +201,6 @@ export default function Meals() {
 
       <Suspense fallback={<div className="form"><p>Loading calendar...</p></div>}>
         <CalendarView
-          refreshTrigger={refreshTrigger}
           onDateSelect={date => updateFormValue('date', date)}
         />
       </Suspense>
@@ -213,11 +208,10 @@ export default function Meals() {
       <HistoryAccordion
         isOpen={historyAccordionOpen}
         onToggle={toggleHistoryAccordion}
-        refreshTrigger={refreshTrigger}
       />
 
       <div className="version-indicator">
-        v0.9.2
+        v0.9.3
       </div>
     </main>
     </>

@@ -18,7 +18,11 @@ export default function App({ Component, pageProps }: AppProps) {
     } else {
       const firebaseAuth = auth;
       ensureAuthPersistence()
-        .then(() => signInAnonymously(firebaseAuth))
+        // Wait for the persisted session to restore before deciding to sign in
+        // anonymously; otherwise signInAnonymously would replace a signed-in
+        // email account with a fresh anonymous user on every launch.
+        .then(() => firebaseAuth.authStateReady?.())
+        .then(() => (firebaseAuth.currentUser ? undefined : signInAnonymously(firebaseAuth)))
         .catch((error) => {
           console.warn("Firebase auth initialization skipped:", error);
         });

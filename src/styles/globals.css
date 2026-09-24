@@ -319,7 +319,8 @@ h1 {
   transition: background-color 0.15s;
 }
 
-.suggestion-item:hover {
+.suggestion-item:hover,
+.suggestion-item.active {
   background: #f3f4f6;
 }
 
@@ -3289,4 +3290,17 @@ h1 {
   .edit-name-section {
     padding: 0.75rem;
   }
+}
+
+/* Dishes page empty states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.empty-state p {
+  margin: 0;
 }

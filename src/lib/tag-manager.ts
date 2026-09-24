@@ -43,9 +43,10 @@ export const DEFAULT_CATEGORIES: TagCategory[] = [
 ];
 
 export const TAG_MANAGEMENT_UPDATED_EVENT = 'tag-management-updated';
+export const TAG_MANAGEMENT_STORAGE_KEY = 'dish-diary-tag-management';
 
 export class TagManager {
-  private static readonly STORAGE_KEY = 'dish-diary-tag-management';
+  private static readonly STORAGE_KEY = TAG_MANAGEMENT_STORAGE_KEY;
 
   // Get tag management data from localStorage
   static getTagManagementData(): TagManagementData {
@@ -177,9 +178,10 @@ export class TagManager {
     const updatePromises = meals
       .filter(meal => meal.tags && meal.tags.includes(trimmedOldName))
       .map(async meal => {
-        const updatedTags = meal.tags!.map(tag =>
+        // Dedupe in case the dish already had a tag with the new name
+        const updatedTags = Array.from(new Set(meal.tags!.map(tag =>
           tag === trimmedOldName ? trimmedNewName : tag
-        );
+        )));
 
         await updateMeal(meal.id, { tags: updatedTags });
       });

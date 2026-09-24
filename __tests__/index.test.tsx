@@ -1,4 +1,5 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
+import { saveMeal } from '@/lib/offline-storage';
 
 Object.defineProperty(document, 'createRange', {
   value: () => ({
@@ -38,6 +39,12 @@ jest.mock('firebase/firestore', () => ({
 }));
 
 const Page = require('@/pages/index').default;
+const { __resetMealsStore } = require('@/hooks/useMeals');
+
+beforeEach(() => {
+  __resetMealsStore();
+  (saveMeal as jest.Mock).mockClear();
+});
 
 test('renders add meal form', async () => {
   await act(async () => {
@@ -45,19 +52,66 @@ test('renders add meal form', async () => {
   });
   expect(screen.getByRole('heading', { name: 'DishDiary' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Add Dish' })).toBeInTheDocument();
-  expect(screen.getByPlaceholderText('Enter meal name...')).toBeInTheDocument();
+  expect(screen.getByPlaceholderText('Enter dish name...')).toBeInTheDocument();
 });
 
-test('suggests previous meals', async () => {
+test('suggests previous dishes from the first keystroke', async () => {
   await act(async () => {
     render(<Page />);
   });
-  // The autocomplete now uses custom dropdown instead of datalist
-  // Check that suggestions appear when typing
-  const input = screen.getByPlaceholderText('Enter meal name...');
+  const input = screen.getByPlaceholderText('Enter dish name...');
+  await act(async () => {
+    fireEvent.change(input, { target: { value: 'B' } });
+  });
+  expect(input).toHaveValue('B');
+  expect(screen.getByRole('button', { name: 'Burritos' })).toBeInTheDocument();
+});
+
+test('Enter adds the dish even while suggestions are showing', async () => {
+  await act(async () => {
+    render(<Page />);
+  });
+  const input = screen.getByPlaceholderText('Enter dish name...');
   await act(async () => {
     fireEvent.change(input, { target: { value: 'Burr' } });
   });
-  // Note: Suggestions may not appear in test environment without proper data setup
-  expect(input).toHaveValue('Burr');
+  expect(screen.getByRole('button', { name: 'Burritos' })).toBeInTheDocument();
+
+  await act(async () => {
+    fireEvent.keyDown(input, { key: 'Enter' });
+  });
+
+  expect(saveMeal).toHaveBeenCalledWith(expect.objectContaining({ mealName: 'Burr' }));
+});
+
+test('arrow keys pick a suggestion before Enter adds it', async () => {
+  await act(async () => {
+    render(<Page />);
+  });
+  const input = screen.getByPlaceholderText('Enter dish name...');
+  await act(async () => {
+    fireEvent.change(input, { target: { value: 'bur' } });
+  });
+  await act(async () => {
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+  });
+  await act(async () => {
+    fireEvent.keyDown(input, { key: 'Enter' });
+  });
+  expect(input).toHaveValue('Burritos');
+  expect(saveMeal).not.toHaveBeenCalled();
+
+  await act(async () => {
+    fireEvent.keyDown(input, { key: 'Enter' });
+  });
+  expect(saveMeal).toHaveBeenCalledWith(expect.objectContaining({ mealName: 'Burritos' }));
+});
+
+test('defaults the date to today in local time, not UTC', async () => {
+  await act(async () => {
+    render(<Page />);
+  });
+  const now = new Date();
+  const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  expect(screen.getByDisplayValue(expected)).toBeInTheDocument();
 });

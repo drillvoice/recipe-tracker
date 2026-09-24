@@ -5,6 +5,7 @@ import ActionButton from "@/components/ActionButton";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/offline-storage";
+import { toLocalDateKey, fromLocalDateKey } from "@/utils/date";
 
 const LEADING_EMOJI_PATTERN = new RegExp(
   "^(?:\\p{Regional_Indicator}{2}|[#*0-9]\\uFE0F?\\u20E3|\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*(?:\\u200D\\p{Extended_Pictographic}(?:\\uFE0F|\\p{Emoji_Modifier})*)*)",
@@ -29,13 +30,6 @@ function getLeadingEmojiFromMeals(meals: Meal[]): string | null {
     }
   }
   return null;
-}
-
-function formatDateForInput(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 // Hoist constant arrays to module scope — they never change
@@ -69,7 +63,7 @@ const CalendarDayCell = React.memo<CalendarDayCellProps>(({
   const ariaLabel = day.isCurrentMonth
     ? `${MONTH_NAMES[currentMonth]} ${day.date}, ${currentYear}${
         day.hasData && mealsForDay.length
-          ? `. Meals: ${mealsForDay.map(meal => meal.mealName).join(', ')}`
+          ? `. Dishes: ${mealsForDay.map(meal => meal.mealName).join(', ')}`
           : ''
       }`
     : undefined;
@@ -128,8 +122,7 @@ export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarV
   const mealsByDate = useMemo(() => {
     const grouped: Record<string, Meal[]> = {};
     meals.forEach(meal => {
-      const mealDate = meal.date.toDate();
-      const dateKey = `${mealDate.getFullYear()}-${String(mealDate.getMonth() + 1).padStart(2, '0')}-${String(mealDate.getDate()).padStart(2, '0')}`;
+      const dateKey = toLocalDateKey(meal.date.toDate());
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -233,7 +226,7 @@ export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarV
   const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);
     setEditMealName(meal.mealName);
-    setEditDate(formatDateForInput(meal.date.toDate()));
+    setEditDate(toLocalDateKey(meal.date.toDate()));
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -243,16 +236,18 @@ export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarV
   }, []);
 
   const saveEdit = useCallback(async () => {
-    if (!editingId) return;
+    const trimmedName = editMealName.trim();
+    // Ignore saves that would blank the name or clear the date
+    if (!editingId || !trimmedName || !editDate) return;
 
     try {
       await updateMealData(editingId, {
-        mealName: editMealName,
-        date: Timestamp.fromDate(new Date(editDate + 'T00:00:00'))
+        mealName: trimmedName,
+        date: Timestamp.fromDate(fromLocalDateKey(editDate))
       });
       cancelEdit();
     } catch (error) {
-      console.error('Error updating meal:', error);
+      console.error('Error updating dish:', error);
     }
   }, [editingId, editMealName, editDate, updateMealData, cancelEdit]);
 
@@ -265,7 +260,7 @@ export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarV
         setSelectedDate(null);
       }
     } catch (error) {
-      console.error('Error deleting meal:', error);
+      console.error('Error deleting dish:', error);
     }
   }, [deleteMealData, selectedDishes]);
 
@@ -380,12 +375,12 @@ export default function CalendarView({ refreshTrigger, onDateSelect }: CalendarV
                         <ActionButton
                           icon="✏️"
                           onClick={() => startEdit(meal)}
-                          title="Edit meal"
+                          title="Edit dish"
                         />
                         <ActionButton
                           icon="🗑️"
                           onClick={() => confirmDelete(meal)}
-                          title="Delete meal"
+                          title="Delete dish"
                           variant="danger"
                         />
                       </div>

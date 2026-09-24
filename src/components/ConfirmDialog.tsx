@@ -44,12 +44,32 @@ export default function ConfirmDialog({
     };
   }, [isOpen]);
 
+  // Close on Escape, like a native dialog
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancel]);
+
   if (!isOpen) return null;
 
   return (
     <div className="dialog-overlay" onClick={onCancel}>
-      <div className="dialog-content" onClick={e => e.stopPropagation()}>
-        <h3 className="dialog-title">{title}</h3>
+      <div
+        className="dialog-content"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <h3 className="dialog-title" id="confirm-dialog-title">{title}</h3>
         <p className="dialog-message">{message}</p>
         <div className="dialog-actions">
           <button 

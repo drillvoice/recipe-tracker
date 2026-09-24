@@ -1,123 +1,172 @@
-import { useEffect, useState, useCallback } from 'react';
-import { getAllMeals, updateMeal, deleteMeal, hideMealsByName, updateMealTagsByName, updateMealNameByName, deleteMealsByName, type Meal } from '@/lib/offline-storage';
+import { useEffect, useCallback, useSyncExternalStore } from 'react';
+import { getAllMeals, saveMeal, updateMeal, deleteMeal, hideMealsByName, updateMealTagsByName, updateMealNameByName, deleteMealsByName, type Meal } from '@/lib/offline-storage';
+import { MEALS_CHANGED_EVENT } from '@/lib/meal-events';
 import { Timestamp } from 'firebase/firestore';
 
-export function useMeals() {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+// Every useMeals() consumer (calendar, history, suggestions, dishes page)
+// shares this one in-memory store, so an edit made in one component shows up
+// in all of them, IndexedDB is read once per page rather than once per
+// component, and revisiting a page renders cached data immediately.
+interface MealsState {
+  meals: Meal[];
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  const loadMeals = useCallback(async () => {
+const INITIAL_STATE: MealsState = { meals: [], isLoading: true, error: null };
+
+let state: MealsState = INITIAL_STATE;
+let hasLoaded = false;
+let inFlightLoad: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+function setState(updater: (prev: MealsState) => MealsState): void {
+  state = updater(state);
+  listeners.forEach(listener => listener());
+}
+
+function sortByDateDesc(meals: Meal[]): Meal[] {
+  return meals.sort((a, b) => b.date.toMillis() - a.date.toMillis());
+}
+
+function toError(err: unknown, fallback: string): Error {
+  return err instanceof Error ? err : new Error(fallback);
+}
+
+function loadSharedMeals(): Promise<void> {
+  if (inFlightLoad) return inFlightLoad;
+
+  // Only show a loading state before the first load; later reloads refresh
+  // in the background so lists don't flash "Loading..." after every edit.
+  if (!hasLoaded) {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+  }
+
+  inFlightLoad = (async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const all = await getAllMeals();
-      all.sort((a, b) => b.date.toMillis() - a.date.toMillis());
-      setMeals(all);
+      const all = sortByDateDesc(await getAllMeals());
+      hasLoaded = true;
+      setState(() => ({ meals: all, isLoading: false, error: null }));
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load meals'));
+      setState(prev => ({ ...prev, isLoading: false, error: toError(err, 'Failed to load meals') }));
     } finally {
-      setIsLoading(false);
+      inFlightLoad = null;
     }
-  }, []);
+  })();
 
-  const updateMealData = useCallback(async (id: string, updates: { mealName?: string; date?: Timestamp }) => {
+  return inFlightLoad;
+}
+
+function handleExternalChange(): void {
+  void loadSharedMeals();
+}
+
+function subscribe(listener: () => void): () => void {
+  if (listeners.size === 0 && typeof window !== 'undefined') {
+    window.addEventListener(MEALS_CHANGED_EVENT, handleExternalChange);
+  }
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0 && typeof window !== 'undefined') {
+      window.removeEventListener(MEALS_CHANGED_EVENT, handleExternalChange);
+    }
+  };
+}
+
+function getSnapshot(): MealsState {
+  return state;
+}
+
+function getServerSnapshot(): MealsState {
+  return INITIAL_STATE;
+}
+
+/** Reset the shared store (tests only). */
+export function __resetMealsStore(): void {
+  state = INITIAL_STATE;
+  hasLoaded = false;
+  inFlightLoad = null;
+}
+
+export function useMeals() {
+  const { meals, isLoading, error } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const loadMeals = useCallback(() => loadSharedMeals(), []);
+
+  const runMutation = useCallback(async (operation: () => Promise<void>, fallbackMessage: string) => {
     try {
-      const updatedMeal = await updateMeal(id, updates);
-      if (updatedMeal) {
-        // Optimistically update local state instead of full reload
-        setMeals(prevMeals => {
-          const newMeals = prevMeals.map(meal =>
-            meal.id === id ? updatedMeal : meal
-          );
-          // Re-sort after update
-          newMeals.sort((a, b) => b.date.toMillis() - a.date.toMillis());
-          return newMeals;
-        });
-      }
+      await operation();
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to update meal'));
+      setState(prev => ({ ...prev, error: toError(err, fallbackMessage) }));
       throw err;
     }
   }, []);
 
-  const deleteMealData = useCallback(async (id: string) => {
-    try {
-      await deleteMeal(id);
-      // Optimistically update local state instead of full reload
-      setMeals(prevMeals => prevMeals.filter(meal => meal.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to delete meal'));
-      throw err;
-    }
-  }, []);
+  const addMeal = useCallback((meal: Meal) => runMutation(async () => {
+    await saveMeal(meal);
+    setState(prev => ({
+      ...prev,
+      meals: sortByDateDesc([meal, ...prev.meals.filter(existing => existing.id !== meal.id)])
+    }));
+  }, 'Failed to save meal'), [runMutation]);
 
-  const toggleMealVisibility = useCallback(async (mealName: string, hidden: boolean) => {
-    try {
-      await hideMealsByName(mealName, hidden);
-      // Optimistically update local state instead of full reload
-      setMeals(prevMeals =>
-        prevMeals.map(meal =>
-          meal.mealName === mealName ? { ...meal, hidden } : meal
-        )
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to toggle meal visibility'));
-      throw err;
+  const updateMealData = useCallback((id: string, updates: { mealName?: string; date?: Timestamp }) => runMutation(async () => {
+    const updatedMeal = await updateMeal(id, updates);
+    if (updatedMeal) {
+      setState(prev => ({
+        ...prev,
+        meals: sortByDateDesc(prev.meals.map(meal => meal.id === id ? updatedMeal : meal))
+      }));
     }
-  }, []);
+  }, 'Failed to update meal'), [runMutation]);
 
-  const updateMealTags = useCallback(async (mealName: string, tags: string[]) => {
-    try {
-      await updateMealTagsByName(mealName, tags);
-      // Optimistically update local state instead of full reload
-      setMeals(prevMeals =>
-        prevMeals.map(meal =>
-          meal.mealName === mealName ? { ...meal, tags: [...tags] } : meal
-        )
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to update meal tags'));
-      throw err;
-    }
-  }, []);
+  const deleteMealData = useCallback((id: string) => runMutation(async () => {
+    await deleteMeal(id);
+    setState(prev => ({ ...prev, meals: prev.meals.filter(meal => meal.id !== id) }));
+  }, 'Failed to delete meal'), [runMutation]);
 
-  const renameDishAllInstances = useCallback(async (oldName: string, newName: string) => {
-    try {
-      await updateMealNameByName(oldName, newName);
-      // Optimistically update local state instead of full reload
-      setMeals(prevMeals =>
-        prevMeals.map(meal =>
-          meal.mealName === oldName ? { ...meal, mealName: newName } : meal
-        )
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to rename dish'));
-      throw err;
-    }
-  }, []);
+  const toggleMealVisibility = useCallback((mealName: string, hidden: boolean) => runMutation(async () => {
+    await hideMealsByName(mealName, hidden);
+    setState(prev => ({
+      ...prev,
+      meals: prev.meals.map(meal => meal.mealName === mealName ? { ...meal, hidden } : meal)
+    }));
+  }, 'Failed to toggle meal visibility'), [runMutation]);
 
-  const deleteAllInstancesOfDish = useCallback(async (mealName: string) => {
-    try {
-      await deleteMealsByName(mealName);
-      // Optimistically update local state instead of full reload
-      setMeals(prevMeals => prevMeals.filter(meal => meal.mealName !== mealName));
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to delete dish'));
-      throw err;
-    }
-  }, []);
+  const updateMealTags = useCallback((mealName: string, tags: string[]) => runMutation(async () => {
+    await updateMealTagsByName(mealName, tags);
+    setState(prev => ({
+      ...prev,
+      meals: prev.meals.map(meal => meal.mealName === mealName ? { ...meal, tags: [...tags] } : meal)
+    }));
+  }, 'Failed to update meal tags'), [runMutation]);
 
+  const renameDishAllInstances = useCallback((oldName: string, newName: string) => runMutation(async () => {
+    await updateMealNameByName(oldName, newName);
+    setState(prev => ({
+      ...prev,
+      meals: prev.meals.map(meal => meal.mealName === oldName ? { ...meal, mealName: newName } : meal)
+    }));
+  }, 'Failed to rename dish'), [runMutation]);
+
+  const deleteAllInstancesOfDish = useCallback((mealName: string) => runMutation(async () => {
+    await deleteMealsByName(mealName);
+    setState(prev => ({ ...prev, meals: prev.meals.filter(meal => meal.mealName !== mealName) }));
+  }, 'Failed to delete dish'), [runMutation]);
+
+  // Revalidate on mount; concurrent mounts share one IndexedDB read.
   useEffect(() => {
-    loadMeals();
-  }, [loadMeals]);
+    void loadSharedMeals();
+  }, []);
 
   return {
     meals,
     isLoading,
     error,
     loadMeals,
+    addMeal,
     updateMealData,
     deleteMealData,
     toggleMealVisibility,

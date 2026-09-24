@@ -24,15 +24,12 @@ test('signUpEmail links anonymous and sends verification', async () => {
   expect(sendEmailVerification).toHaveBeenCalled();
 });
 
-test('signInEmail links when anonymous', async () => {
-  await signInEmail('a@b.com', 'pw');
-  expect(linkWithCredential).toHaveBeenCalled();
-});
-
-test('signInEmail falls back to sign-in when link returns email-already-in-use', async () => {
-  (linkWithCredential as jest.Mock).mockRejectedValueOnce({ code: 'auth/email-already-in-use' });
+test('signInEmail signs in directly without linking the anonymous user', async () => {
+  (linkWithCredential as jest.Mock).mockClear();
   await signInEmail('a@b.com', 'pw');
   expect(signInWithEmailAndPassword).toHaveBeenCalledWith(expect.anything(), 'a@b.com', 'pw');
+  // Linking would silently create a new account for a mistyped email.
+  expect(linkWithCredential).not.toHaveBeenCalled();
 });
 
 test('signOutUser calls signOut', async () => {
