@@ -24,7 +24,8 @@ export const MealSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .refine(
       (date) => {
-        const parsedDate = new Date(date);
+        // Parse as local midnight; new Date('YYYY-MM-DD') would be UTC midnight
+        const parsedDate = new Date(`${date}T00:00:00`);
         const now = new Date();
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(now.getFullYear() - 1);

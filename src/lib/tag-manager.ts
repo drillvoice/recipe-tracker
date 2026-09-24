@@ -177,9 +177,10 @@ export class TagManager {
     const updatePromises = meals
       .filter(meal => meal.tags && meal.tags.includes(trimmedOldName))
       .map(async meal => {
-        const updatedTags = meal.tags!.map(tag =>
+        // Dedupe in case the dish already had a tag with the new name
+        const updatedTags = Array.from(new Set(meal.tags!.map(tag =>
           tag === trimmedOldName ? trimmedNewName : tag
-        );
+        )));
 
         await updateMeal(meal.id, { tags: updatedTags });
       });

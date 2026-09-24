@@ -39,12 +39,11 @@ export async function signUpEmail(email: string, password: string) {
   return cred;
 }
 
+// Always a plain sign-in: linking the anonymous user here would silently
+// create a new account when the email is mistyped.  Local dishes are kept in
+// IndexedDB and merged into the account by cloud sync after sign-in.
 export async function signInEmail(email: string, password: string) {
-  const firebaseAuth = requireAuth();
-  if (firebaseAuth.currentUser && firebaseAuth.currentUser.isAnonymous) {
-    return linkAnonymousWithEmailPassword(email, password);
-  }
-  return signInWithEmailAndPassword(firebaseAuth, email, password);
+  return signInWithEmailAndPassword(requireAuth(), email, password);
 }
 
 export function signOutUser() {

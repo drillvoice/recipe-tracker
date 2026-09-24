@@ -79,12 +79,12 @@ const HistoryTableRow = React.memo<HistoryTableRowProps>(({
               <ActionButton
                 icon="✏️"
                 onClick={() => onStartEdit(meal)}
-                title="Edit meal"
+                title="Edit dish"
               />
               <ActionButton
                 icon="🗑️"
                 onClick={() => onConfirmDelete(meal)}
-                title="Delete meal"
+                title="Delete dish"
                 variant="danger"
               />
             </>

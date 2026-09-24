@@ -1,4 +1,4 @@
-import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
+import { openDB, type IDBPDatabase, type IDBPObjectStore, type DBSchema } from 'idb';
 import { Timestamp } from 'firebase/firestore';
 
 // Keep existing Meal interface but enhance it
@@ -184,32 +184,30 @@ function getDb(): Promise<IDBPDatabase<RecipeTrackerDB>> | null {
 
 // === MEAL OPERATIONS (Enhanced) ===
 
+// Restore Firestore Timestamps that lost their prototype when structured-cloned into IndexedDB
+export function normalizeMealDate(meal: Meal): Meal {
+  if (meal.date && typeof meal.date.toMillis === 'function' && typeof meal.date.toDate === 'function') {
+    return meal;
+  }
+
+  try {
+    const dateObj = meal.date as unknown as { seconds?: number; nanoseconds?: number } | undefined;
+    if (dateObj && typeof dateObj.seconds === 'number') {
+      return { ...meal, date: new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0) };
+    }
+  } catch {
+    // If Timestamp constructor fails (like in tests), keep the original object
+  }
+
+  return meal;
+}
+
 export async function getAllMeals(): Promise<Meal[]> {
   const db = getDb();
   if (!db) return [];
 
   const meals = await (await db).getAll('meals');
-
-  // Restore Firestore Timestamps that lost their prototype in IndexedDB
-  return meals.map(m => {
-    // If it's already a proper Timestamp-like object, use it as-is
-    if (m.date && typeof m.date.toMillis === 'function' && typeof m.date.toDate === 'function') {
-      return { ...m, date: m.date };
-    }
-
-    // Try to restore from serialized format
-    try {
-      if (m.date && typeof (m.date as { seconds: number; nanoseconds?: number }).seconds === 'number') {
-        const dateObj = m.date as { seconds: number; nanoseconds?: number };
-        return { ...m, date: new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0) };
-      }
-    } catch {
-      // If Timestamp constructor fails (like in tests), keep the original object
-      // Silently handle this case to avoid test noise
-    }
-
-    return { ...m, date: m.date };
-  });
+  return meals.map(normalizeMealDate);
 }
 
 export async function getMealById(id: string): Promise<Meal | null> {
@@ -217,28 +215,7 @@ export async function getMealById(id: string): Promise<Meal | null> {
   if (!db) return null;
 
   const meal = await (await db).get('meals', id);
-  if (!meal) return null;
-
-  const [normalized] = await Promise.resolve([meal]).then((meals) =>
-    meals.map(m => {
-      if (m.date && typeof m.date.toMillis === 'function' && typeof m.date.toDate === 'function') {
-        return { ...m, date: m.date };
-      }
-
-      try {
-        if (m.date && typeof (m.date as { seconds: number; nanoseconds?: number }).seconds === 'number') {
-          const dateObj = m.date as { seconds: number; nanoseconds?: number };
-          return { ...m, date: new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0) };
-        }
-      } catch {
-        // Keep original shape when restoring fails.
-      }
-
-      return { ...m, date: m.date };
-    })
-  );
-
-  return normalized;
+  return meal ? normalizeMealDate(meal) : null;
 }
 
 function withLocalSyncMetadata(meal: Meal, existing?: Meal, preserveTimestamp = false): Meal {
@@ -267,14 +244,15 @@ function withUpdatedSyncMetadata(meal: Meal, updates: Partial<Meal>): Meal {
   };
 }
 
-async function enqueueMealSync(
-  dbInstance: IDBPDatabase<RecipeTrackerDB>,
-  item: Omit<SyncItem, 'id' | 'timestamp' | 'retryCount' | 'lastError'>
-): Promise<void> {
-  const existingQueueItems = await dbInstance.getAll('sync_queue');
-  const existing = existingQueueItems.find(
-    queued => queued.entityType === 'meal' && queued.entityId === item.entityId
-  );
+type SyncEnqueueItem = Omit<SyncItem, 'id' | 'timestamp' | 'retryCount' | 'lastError'>;
+type SyncQueueStore = IDBPObjectStore<RecipeTrackerDB, ArrayLike<'meals' | 'sync_queue' | 'cache_meta'>, 'sync_queue', 'readwrite'>;
+
+// Merge a new operation into any queued operation for the same meal so the
+// queue holds at most one item per entity.  Uses the entityId index rather
+// than scanning the whole queue.
+async function putMergedSyncItem(store: SyncQueueStore, item: SyncEnqueueItem): Promise<void> {
+  const queuedForEntity = await store.index('entityId').getAll(item.entityId);
+  const existing = queuedForEntity.find(queued => queued.entityType === 'meal');
 
   const mergedOperation: SyncItem['operation'] =
     item.operation === 'delete'
@@ -295,7 +273,55 @@ async function enqueueMealSync(
     lastError: undefined
   };
 
-  await dbInstance.put('sync_queue', syncItem);
+  await store.put(syncItem);
+}
+
+async function enqueueMealSync(
+  dbInstance: IDBPDatabase<RecipeTrackerDB>,
+  item: SyncEnqueueItem
+): Promise<void> {
+  const tx = dbInstance.transaction('sync_queue', 'readwrite');
+  await putMergedSyncItem(tx.store as SyncQueueStore, item);
+  await tx.done;
+}
+
+// Apply a mutation to every instance of a dish and queue the matching sync
+// operations in a single atomic transaction.
+async function updateMealsByName(
+  mealName: string,
+  mutate: (meal: Meal) => void,
+  options: { skipSyncQueue?: boolean }
+): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const tx = dbInstance.transaction(['meals', 'sync_queue'], 'readwrite');
+  const store = tx.objectStore('meals');
+  const queueStore = tx.objectStore('sync_queue') as SyncQueueStore;
+
+  const mealsToUpdate = await store.index('mealName').getAll(mealName);
+  const now = Date.now();
+
+  for (const meal of mealsToUpdate) {
+    mutate(meal);
+    meal.updatedAtMs = now;
+    meal.pending = true;
+    meal.syncState = 'pending';
+    await store.put(meal);
+
+    if (!options.skipSyncQueue) {
+      await putMergedSyncItem(queueStore, {
+        entityType: 'meal',
+        entityId: meal.id,
+        operation: 'update',
+        payload: meal,
+        targetUid: meal.uid
+      });
+    }
+  }
+
+  await tx.done;
 }
 
 export async function saveMeal(
@@ -383,42 +409,7 @@ export async function hideMealsByName(
   hidden: boolean,
   options: { skipSyncQueue?: boolean } = {}
 ): Promise<void> {
-  const db = getDb();
-  if (!db) return;
-
-  const dbInstance = await db;
-
-  // Use index for efficient lookup instead of scanning all meals
-  const tx = dbInstance.transaction('meals', 'readwrite');
-  const store = tx.objectStore('meals');
-  const index = store.index('mealName');
-
-  // Get all meals with this name using the index
-  const mealsToUpdate = await index.getAll(mealName);
-
-  // Batch update all matching meals
-  const updatePromises = mealsToUpdate.map(meal => {
-    meal.hidden = hidden;
-    meal.updatedAtMs = Date.now();
-    meal.pending = true;
-    meal.syncState = 'pending';
-    return store.put(meal);
-  });
-
-  await Promise.all(updatePromises);
-  await tx.done;
-
-  if (!options.skipSyncQueue) {
-    for (const meal of mealsToUpdate) {
-      await enqueueMealSync(dbInstance, {
-        entityType: 'meal',
-        entityId: meal.id,
-        operation: 'update',
-        payload: meal,
-        targetUid: meal.uid
-      });
-    }
-  }
+  await updateMealsByName(mealName, meal => { meal.hidden = hidden; }, options);
 }
 
 export async function updateMealTagsByName(
@@ -426,42 +417,7 @@ export async function updateMealTagsByName(
   tags: string[],
   options: { skipSyncQueue?: boolean } = {}
 ): Promise<void> {
-  const db = getDb();
-  if (!db) return;
-
-  const dbInstance = await db;
-
-  // Use index for efficient lookup instead of scanning all meals
-  const tx = dbInstance.transaction('meals', 'readwrite');
-  const store = tx.objectStore('meals');
-  const index = store.index('mealName');
-
-  // Get all meals with this name using the index
-  const mealsToUpdate = await index.getAll(mealName);
-
-  // Batch update all matching meals with new tags
-  const updatePromises = mealsToUpdate.map(meal => {
-    meal.tags = [...tags]; // Create a copy of the tags array
-    meal.updatedAtMs = Date.now();
-    meal.pending = true;
-    meal.syncState = 'pending';
-    return store.put(meal);
-  });
-
-  await Promise.all(updatePromises);
-  await tx.done;
-
-  if (!options.skipSyncQueue) {
-    for (const meal of mealsToUpdate) {
-      await enqueueMealSync(dbInstance, {
-        entityType: 'meal',
-        entityId: meal.id,
-        operation: 'update',
-        payload: meal,
-        targetUid: meal.uid
-      });
-    }
-  }
+  await updateMealsByName(mealName, meal => { meal.tags = [...tags]; }, options);
 }
 
 export async function updateMealNameByName(
@@ -469,42 +425,7 @@ export async function updateMealNameByName(
   newName: string,
   options: { skipSyncQueue?: boolean } = {}
 ): Promise<void> {
-  const db = getDb();
-  if (!db) return;
-
-  const dbInstance = await db;
-
-  // Use index for efficient lookup instead of scanning all meals
-  const tx = dbInstance.transaction('meals', 'readwrite');
-  const store = tx.objectStore('meals');
-  const index = store.index('mealName');
-
-  // Get all meals with this name using the index
-  const mealsToUpdate = await index.getAll(oldName);
-
-  // Batch update all matching meals with new name
-  const updatePromises = mealsToUpdate.map(meal => {
-    meal.mealName = newName;
-    meal.updatedAtMs = Date.now();
-    meal.pending = true;
-    meal.syncState = 'pending';
-    return store.put(meal);
-  });
-
-  await Promise.all(updatePromises);
-  await tx.done;
-
-  if (!options.skipSyncQueue) {
-    for (const meal of mealsToUpdate) {
-      await enqueueMealSync(dbInstance, {
-        entityType: 'meal',
-        entityId: meal.id,
-        operation: 'update',
-        payload: meal,
-        targetUid: meal.uid
-      });
-    }
-  }
+  await updateMealsByName(oldName, meal => { meal.mealName = newName; }, options);
 }
 
 export async function deleteMealsByName(
@@ -516,31 +437,18 @@ export async function deleteMealsByName(
 
   const dbInstance = await db;
 
-  // Use transaction for atomic operation
-  const tx = dbInstance.transaction(['meals', 'cache_meta'], 'readwrite');
+  // Delete the meals, queue their sync deletes and update the meal count in
+  // one atomic transaction so a failed commit leaves no orphaned queue items.
+  const tx = dbInstance.transaction(['meals', 'sync_queue', 'cache_meta'], 'readwrite');
   const store = tx.objectStore('meals');
-  const index = store.index('mealName');
+  const queueStore = tx.objectStore('sync_queue') as SyncQueueStore;
 
-  // Get all meals with this name using the index
-  const mealsToDelete = await index.getAll(mealName);
+  const mealsToDelete = await store.index('mealName').getAll(mealName);
 
-  // Delete within the transaction first, then enqueue sync ops after commit.
-  // This order matches hideMealsByName / updateMealNameByName and avoids
-  // orphaned "delete" sync items if the transaction fails to commit.
-  const deletePromises = mealsToDelete.map(meal => store.delete(meal.id));
-  await Promise.all(deletePromises);
-
-  // Update meal count in metadata atomically
-  const mealCount = await store.count();
-  const metaStore = tx.objectStore('cache_meta');
-  const existing = await metaStore.get('backup_status') || { key: 'backup_status' };
-  await metaStore.put({ ...existing, mealCount });
-
-  await tx.done;
-
-  if (!options.skipSyncQueue) {
-    for (const meal of mealsToDelete) {
-      await enqueueMealSync(dbInstance, {
+  for (const meal of mealsToDelete) {
+    await store.delete(meal.id);
+    if (!options.skipSyncQueue) {
+      await putMergedSyncItem(queueStore, {
         entityType: 'meal',
         entityId: meal.id,
         operation: 'delete',
@@ -548,6 +456,13 @@ export async function deleteMealsByName(
       });
     }
   }
+
+  const mealCount = await store.count();
+  const metaStore = tx.objectStore('cache_meta');
+  const existing = await metaStore.get('backup_status') || { key: 'backup_status' };
+  await metaStore.put({ ...existing, mealCount });
+
+  await tx.done;
 }
 
 // === METADATA OPERATIONS ===
@@ -671,6 +586,40 @@ export async function getSyncQueue(): Promise<SyncItem[]> {
 
   const items = await (await db).getAll('sync_queue');
   return items.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+export async function getSyncQueueCount(): Promise<number> {
+  const db = getDb();
+  if (!db) return 0;
+
+  return (await db).count('sync_queue');
+}
+
+// Mark a pushed queue item as done.  The queue entry is only removed, and the
+// meal only marked synced, if neither changed while the push was in flight;
+// otherwise the newer local edit stays queued for the next flush.
+export async function completeSyncItem(item: SyncItem): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
+  const dbInstance = await db;
+  const tx = dbInstance.transaction(['sync_queue', 'meals'], 'readwrite');
+  const queueStore = tx.objectStore('sync_queue');
+  const mealsStore = tx.objectStore('meals');
+
+  const queued = await queueStore.get(item.id);
+  if (queued && queued.timestamp === item.timestamp) {
+    await queueStore.delete(item.id);
+  }
+
+  if (item.operation !== 'delete') {
+    const meal = await mealsStore.get(item.entityId);
+    if (meal && meal.updatedAtMs === item.payload?.updatedAtMs) {
+      await mealsStore.put({ ...meal, syncState: 'synced', pending: false });
+    }
+  }
+
+  await tx.done;
 }
 
 export async function updateSyncItem(id: string, updates: Partial<SyncItem>): Promise<void> {
@@ -924,18 +873,7 @@ export async function getMealsByTag(tagId: string): Promise<Meal[]> {
   while (cursor) {
     const meal = cursor.value;
     if (meal.tags && meal.tags.includes(tagId)) {
-      // Restore Timestamp prototype if needed
-      if (meal.date && typeof meal.date.toMillis !== 'function') {
-        try {
-          const dateObj = meal.date as unknown as { seconds: number; nanoseconds?: number };
-          if (typeof dateObj.seconds === 'number') {
-            meal.date = new Timestamp(dateObj.seconds, dateObj.nanoseconds || 0);
-          }
-        } catch {
-          // Keep original date
-        }
-      }
-      results.push(meal);
+      results.push(normalizeMealDate(meal));
     }
     cursor = await cursor.continue();
   }

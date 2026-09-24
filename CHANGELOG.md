@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2026-09-24
+
+### Fixed
+- **Signed Out on Every Launch**: App startup called `signInAnonymously` unconditionally, which replaced a signed-in email account with a new anonymous user on every reload. Startup now waits for the saved session to restore and only signs in anonymously when nobody is signed in.
+- **Sign In Creating Accounts**: "Sign In" linked the anonymous user to the entered credentials, so a mistyped email silently created a new account. Sign-in is now a plain sign-in; local dishes are still merged into the account by cloud sync.
+- **Off-by-One Dates**: The default dish date and the History edit form used the UTC date (`toISOString`), showing yesterday for much of the day in timezones far from UTC (e.g. NZ mornings). Saving a History edit without touching the date could also move the dish back a day. All date inputs now use the local date.
+- **Stale Data Across Components**: Calendar, History and the dish-name suggestions each kept their own copy of the dishes, so editing or deleting in one left the others out of date. They now share one store.
+- **Sync Overwrote Newer Cloud Edits**: On sign-in, the merge could re-save the stale local copy of a dish right after applying a newer cloud version, reverting the local copy and pushing old data back to the cloud.
+- **Lost Edits During Sync**: An edit made while its dish was being uploaded could be dropped from the sync queue and marked synced. Completion is now checked atomically and the newer edit stays queued.
+- **Firestore Date Type**: Queued uploads sent dates as plain `{seconds, nanoseconds}` maps (lost in IndexedDB) instead of Firestore Timestamps.
+- **Autocomplete First Keystroke**: Suggestions didn't appear until the second character, and pressing Enter while suggestions were showing did nothing.
+- **Double Hide Confirmation**: Hiding a dish asked for confirmation twice, and a hidden dish's button said "Hide" while actually unhiding it.
+- **Blank Dish Names**: History and Calendar inline edits could save an empty dish name.
+- **Escape Key**: Escape now closes confirm dialogs and cancels tag entry (the tag input used the deprecated `onKeyPress`, which never fires for Escape).
+- **Tag Rename Duplicates**: Renaming a tag to one a dish already had no longer leaves a duplicate tag on that dish.
+
+### Changed
+- **Faster Sign-In**: Sign-in returns as soon as authentication succeeds, and the first sync keeps running in the background.
+- **Faster Sync**: Queued changes upload in concurrent batches instead of one network round trip at a time, and a realtime listener that's already running isn't torn down and re-read.
+- **Live Sync Updates**: Dishes synced from another device now appear without reloading the page.
+- **Keyboard Suggestions**: Arrow keys highlight dish-name suggestions and Enter picks the highlighted one.
+- **No Loading Flicker**: Lists no longer flash "Loading..." after each add or edit, and revisiting a page shows cached dishes immediately while they refresh.
+- **Dishes Empty States**: The empty list now says whether you have no dishes yet, your filters match nothing (with a Clear filters button), or everything is hidden (with a Show hidden button).
+- **Terminology**: Remaining "meal" wording in the UI changed to "dish".
+
+### Technical
+- `useMeals` is backed by a module-level store (`useSyncExternalStore`) with request deduplication; added `addMeal` and a `dish-diary:meals-changed` window event (`src/lib/meal-events.ts`).
+- Sync queue merging uses the `entityId` index instead of scanning the whole queue; bulk by-name operations write meals and queue items in one atomic transaction.
+- Added `completeSyncItem`, `getSyncQueueCount` and `normalizeMealDate` to `offline-storage.ts`; sync status polling counts the queue instead of loading it.
+- Added `src/utils/date.ts` (`toLocalDateKey` / `fromLocalDateKey`).
+- Added `__tests__/sync-queue.test.ts` (fake-indexeddb) plus new tests for auth startup, sync merge/upload, the shared store, autocomplete keyboard use and Dishes page states.
+- Updated visible app/export version references to `0.9.3`.
+- Service worker cache version bumped from `dish-diary-static-v4` to `dish-diary-static-v5`.
+
 ## [0.9.2] - 2026-05-22
 
 ### Changed

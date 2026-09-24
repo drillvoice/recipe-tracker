@@ -1,7 +1,7 @@
 const mockSignInEmail = jest.fn();
 const mockSignOutUser = jest.fn();
 const mockGetSyncQueue = jest.fn();
-const mockRemoveSyncItem = jest.fn();
+const mockCompleteSyncItem = jest.fn();
 const mockUpdateSyncItem = jest.fn();
 const mockMarkMealSyncState = jest.fn();
 const mockAssignSyncQueueTargetUid = jest.fn();
@@ -33,7 +33,8 @@ jest.mock('@/lib/offline-storage', () => ({
   getMealById: mockGetMealById,
   getSyncQueue: mockGetSyncQueue,
   markMealSyncState: mockMarkMealSyncState,
-  removeSyncItem: mockRemoveSyncItem,
+  completeSyncItem: mockCompleteSyncItem,
+  getSyncQueueCount: jest.fn().mockResolvedValue(0),
   saveMeal: mockSaveMeal,
   updateSyncItem: mockUpdateSyncItem,
   upsertMealFromCloud: mockUpsertMealFromCloud,
@@ -48,7 +49,12 @@ const mockDoc = jest.fn(() => ({ path: 'x' }));
 const mockCollection = jest.fn(() => ({ path: 'c' }));
 
 class MockTimestamp {
-  constructor(private millis: number) {}
+  private millis: number;
+
+  constructor(secondsOrMillis: number, nanoseconds?: number) {
+    // Mirror Firestore's (seconds, nanoseconds) constructor when two args are given.
+    this.millis = nanoseconds === undefined ? secondsOrMillis : secondsOrMillis * 1000 + nanoseconds / 1e6;
+  }
 
   static fromDate(date: Date) {
     return new MockTimestamp(date.getTime());
@@ -136,8 +142,53 @@ describe('cloud-sync', () => {
     expect(result.pushed).toBe(2);
     expect(mockSetDoc).toHaveBeenCalledTimes(1);
     expect(mockDeleteDoc).toHaveBeenCalledTimes(1);
-    expect(mockRemoveSyncItem).toHaveBeenCalledTimes(2);
-    expect(mockMarkMealSyncState).toHaveBeenCalledWith('m1', 'synced', false);
+    expect(mockCompleteSyncItem).toHaveBeenCalledTimes(2);
+    expect(mockCompleteSyncItem).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));
+    expect(mockMarkMealSyncState).not.toHaveBeenCalled();
+  });
+
+  test('flushSyncQueue uploads IndexedDB-cloned dates as real Timestamps', async () => {
+    mockGetSyncQueue.mockResolvedValue([
+      {
+        id: 'a',
+        entityType: 'meal',
+        entityId: 'm1',
+        operation: 'update',
+        // Structured clone strips the Timestamp prototype
+        payload: { mealName: 'Pasta', date: { seconds: 5, nanoseconds: 0 }, updatedAtMs: 1 },
+        timestamp: 1
+      }
+    ]);
+
+    const result = await __private.flushSyncQueue('uid-1');
+
+    expect(result.errors).toHaveLength(0);
+    const uploaded = mockSetDoc.mock.calls[0][1];
+    expect(uploaded.date).toBeInstanceOf(MockTimestamp);
+    expect(uploaded.date.toMillis()).toBe(5000);
+  });
+
+  test('flushSyncQueue records failures without blocking other items', async () => {
+    mockSetDoc.mockRejectedValueOnce(new Error('denied'));
+    mockGetSyncQueue.mockResolvedValue([
+      { id: 'a', entityType: 'meal', entityId: 'm1', operation: 'update', payload: { mealName: 'A', date: new MockTimestamp(1), updatedAtMs: 1 }, timestamp: 1 },
+      { id: 'b', entityType: 'meal', entityId: 'm2', operation: 'update', payload: { mealName: 'B', date: new MockTimestamp(1), updatedAtMs: 1 }, timestamp: 2 }
+    ]);
+
+    const result = await __private.flushSyncQueue('uid-1');
+
+    expect(result.pushed).toBe(1);
+    expect(result.errors).toEqual(['Meal m1: denied']);
+    expect(mockUpdateSyncItem).toHaveBeenCalledWith('a', expect.objectContaining({ retryCount: 1, lastError: 'denied' }));
+    expect(mockMarkMealSyncState).toHaveBeenCalledWith('m1', 'error', true);
+    expect(mockCompleteSyncItem).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }));
+  });
+
+  test('planPushRounds keeps items for the same meal in separate rounds', () => {
+    const item = (id: string, entityId: string) => ({ id, entityId, entityType: 'meal', operation: 'update', timestamp: 0 });
+    const rounds = __private.planPushRounds([item('1', 'm1'), item('2', 'm2'), item('3', 'm1')]);
+
+    expect(rounds.map((round: Array<{ id: string }>) => round.map(i => i.id))).toEqual([['1', '2'], ['3']]);
   });
 
   test('initialPullAndMerge applies newer cloud data and queues local-only records', async () => {
@@ -192,5 +243,13 @@ describe('cloud-sync', () => {
       expect.objectContaining({ id: 'local-only', uid: 'uid-1', pending: true }),
       { skipSyncQueue: false, preserveTimestamp: true }
     );
+    // The stale local copy of cloud-1 must not overwrite the fresher cloud version
+    expect(mockSaveMeal).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cloud-1' }),
+      expect.anything()
+    );
+    expect(mockSaveMeal).toHaveBeenCalledTimes(1);
+    // Local copies come from one getAllMeals read, not per-meal lookups
+    expect(mockGetMealById).not.toHaveBeenCalled();
   });
 });

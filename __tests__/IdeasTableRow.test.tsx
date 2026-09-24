@@ -161,3 +161,48 @@ describe('IdeasTableRow tag metadata caching', () => {
   });
 });
 
+
+describe('IdeasTableRow visibility toggle', () => {
+  beforeEach(() => {
+    mockedTagManager.getTagManagementData.mockReturnValue(createTagManagementData({}));
+  });
+
+  const renderExpanded = (idea: Idea, onConfirmHide: jest.Mock) => {
+    render(
+      <table>
+        <tbody>
+          <IdeasTableRow idea={idea} onConfirmHide={onConfirmHide} />
+        </tbody>
+      </table>
+    );
+    act(() => {
+      screen.getByTitle('Show details').click();
+    });
+  };
+
+  it('asks once before hiding a visible dish', () => {
+    const onConfirmHide = jest.fn();
+    renderExpanded(createIdea(), onConfirmHide);
+
+    act(() => {
+      screen.getByTitle('Hide "Test Meal" from dishes list').click();
+    });
+    expect(onConfirmHide).not.toHaveBeenCalled();
+
+    act(() => {
+      screen.getByTitle('Yes, hide it').click();
+    });
+    expect(onConfirmHide).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a hidden dish immediately with a Show action', () => {
+    const onConfirmHide = jest.fn();
+    renderExpanded(createIdea({ hidden: true }), onConfirmHide);
+
+    act(() => {
+      screen.getByTitle('Show "Test Meal" in dishes list').click();
+    });
+    expect(onConfirmHide).toHaveBeenCalledWith(expect.objectContaining({ hidden: true }));
+    expect(screen.queryByTitle('Yes, hide it')).not.toBeInTheDocument();
+  });
+});

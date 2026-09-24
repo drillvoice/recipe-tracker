@@ -1,8 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import Navigation from "@/components/Navigation";
 import IdeasTableRow from "@/components/IdeasTableRow";
-import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 type DateFilterOption = "any" | "7days" | "14days" | "21days" | "28days";
@@ -16,30 +14,16 @@ export default function Ideas() {
   const [sortOrder, setSortOrder] = useState<SortOption>("oldest");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>("OR");
-  const { dialogProps, showDialog } = useConfirmDialog();
   const { ideas, isLoading, error, toggleMealVisibility, updateMealTags, renameDishAllInstances, deleteAllInstancesOfDish } = useIdeas();
 
-  const handleToggleHidden = useCallback(async (mealName: string, hidden: boolean) => {
+  // The expanded row already asks for confirmation before hiding, so toggle directly.
+  const handleToggleHidden = useCallback(async (idea: Idea) => {
     try {
-      await toggleMealVisibility(mealName, hidden);
+      await toggleMealVisibility(idea.mealName, !idea.hidden);
     } catch (error) {
-      console.error('Error toggling meal visibility:', error);
+      console.error('Error toggling dish visibility:', error);
     }
   }, [toggleMealVisibility]);
-
-  const confirmHide = useCallback((idea: Idea) => {
-    if (idea.hidden) {
-      // Show directly without confirmation
-      handleToggleHidden(idea.mealName, false);
-    } else {
-      // Show confirmation when hiding
-      showDialog(
-        "Hide Dish",
-        `Hide "${idea.mealName}" from dishes list?`,
-        () => handleToggleHidden(idea.mealName, true)
-      );
-    }
-  }, [showDialog, handleToggleHidden]);
 
   // Extract all unique tags from all ideas
   const allUniqueTags = useMemo(() => {
@@ -145,12 +129,19 @@ export default function Ideas() {
     [ideas]
   );
 
+  const hasActiveFilters = dateFilter !== "any" || selectedTags.size > 0;
+
+  const clearAllFilters = useCallback(() => {
+    setDateFilter("any");
+    setSelectedTags(new Set());
+  }, []);
+
   if (error) {
     return (
       <main className="container">
         <Navigation currentPage="dishes" />
         <h1>Dishes</h1>
-        <p className="error-message">Error loading meals: {error.message}</p>
+        <p className="error-message">Error loading dishes: {error.message}</p>
       </main>
     );
   }
@@ -302,7 +293,7 @@ export default function Ideas() {
       )}
 
       {isLoading ? (
-        <p>Loading meals...</p>
+        <p>Loading dishes...</p>
       ) : visibleIdeas.length > 0 ? (
         <>
           <p className="subtitle">
@@ -336,7 +327,7 @@ export default function Ideas() {
                 <IdeasTableRow
                   key={idea.mealName}
                   idea={idea}
-                  onConfirmHide={confirmHide}
+                  onConfirmHide={handleToggleHidden}
                   onTagsUpdated={updateMealTags}
                   onRenameDish={renameDishAllInstances}
                   onDeleteAllInstances={deleteAllInstancesOfDish}
@@ -347,13 +338,26 @@ export default function Ideas() {
           </table>
         </>
       ) : (
-        <p>{showHidden ? "No meals recorded." : "No visible meals. Toggle 'Show Hidden' to see hidden meals."}</p>
+        <div className="empty-state">
+          {ideas.length === 0 ? (
+            <p>No dishes recorded yet. Add your first dish from the home page.</p>
+          ) : hasActiveFilters ? (
+            <>
+              <p>No dishes match your filters.</p>
+              <button className="clear-tags-button" onClick={clearAllFilters}>
+                Clear filters
+              </button>
+            </>
+          ) : (
+            <>
+              <p>All your dishes are hidden.</p>
+              <button className="clear-tags-button" onClick={() => setShowHidden(true)}>
+                Show hidden dishes
+              </button>
+            </>
+          )}
+        </div>
       )}
-
-      <ConfirmDialog
-        {...dialogProps}
-        confirmText="Confirm"
-      />
     </main>
   );
 }

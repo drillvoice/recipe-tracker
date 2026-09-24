@@ -5,6 +5,7 @@ import HistoryTableRow from "@/components/HistoryTableRow";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { useMeals } from "@/hooks/useMeals";
 import type { Meal } from "@/lib/offline-storage";
+import { toLocalDateKey, fromLocalDateKey } from "@/utils/date";
 
 interface HistoryAccordionProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
   const startEdit = useCallback((meal: Meal) => {
     setEditingId(meal.id);
     setEditMealName(meal.mealName);
-    setEditDate(meal.date.toDate().toISOString().substring(0, 10));
+    setEditDate(toLocalDateKey(meal.date.toDate()));
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -41,16 +42,18 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
   }, []);
 
   const saveEdit = useCallback(async () => {
-    if (!editingId) return;
+    const trimmedName = editMealName.trim();
+    // Ignore saves that would blank the name or clear the date
+    if (!editingId || !trimmedName || !editDate) return;
 
     try {
       await updateMealData(editingId, {
-        mealName: editMealName,
-        date: Timestamp.fromDate(new Date(editDate + 'T00:00:00'))
+        mealName: trimmedName,
+        date: Timestamp.fromDate(fromLocalDateKey(editDate))
       });
       cancelEdit();
     } catch (error) {
-      console.error('Error updating meal:', error);
+      console.error('Error updating dish:', error);
     }
   }, [editingId, editMealName, editDate, updateMealData, cancelEdit]);
 
@@ -58,7 +61,7 @@ export default function HistoryAccordion({ isOpen, onToggle, refreshTrigger }: H
     try {
       await deleteMealData(id);
     } catch (error) {
-      console.error('Error deleting meal:', error);
+      console.error('Error deleting dish:', error);
     }
   }, [deleteMealData]);
 
