@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] - 2026-10-31
+
+### Changed
+- **Firebase 13**: Upgraded the Firebase JS SDK from 12.19.0 to 13.1.0. Includes an Auth fix that keeps the saved session through transient server errors at startup instead of signing the user out.
+
+### Technical
+- Upgraded `@firebase/rules-unit-testing` from 5.x to 6.0.0, which is required alongside Firebase 13 (5.x only accepts `firebase@^12`, so installs failed with a peer dependency conflict).
+- Updated visible app/export version references to `0.9.4`.
+- Service worker cache version bumped from `dish-diary-static-v5` to `dish-diary-static-v6`.
+
 ## [0.9.3] - 2026-09-24
 
 ### Fixed
