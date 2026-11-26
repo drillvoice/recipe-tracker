@@ -129,6 +129,56 @@ test('supports sorting dishes by oldest first and alphabetically', async () => {
   ]);
 });
 
+test('shows times made and sorts by it', async () => {
+  const meal = (id: string, mealName: string, day: string) => ({
+    id,
+    mealName,
+    date: {
+      toDate: () => new Date(day),
+      toMillis: () => new Date(day).getTime(),
+    },
+  });
+  (getAllMeals as jest.Mock).mockResolvedValue([
+    meal('1', 'Tacos', '2024-03-10'),
+    meal('2', 'Tacos', '2024-03-12'),
+    meal('3', 'Curry', '2024-03-11'),
+    meal('4', 'Pasta', '2024-03-01'),
+    meal('5', 'Pasta', '2024-03-05'),
+    meal('6', 'Pasta', '2024-03-09'),
+  ]);
+
+  await act(async () => {
+    render(<Page />);
+  });
+
+  const getRows = () =>
+    screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => {
+        const cells = within(row).getAllByRole('cell');
+        return [cells[0]?.textContent, cells[2]?.textContent];
+      });
+
+  fireEvent.change(screen.getByLabelText('Sort:'), {
+    target: { value: 'mostMade' },
+  });
+  expect(getRows()).toEqual([
+    ['Pasta', '3'],
+    ['Tacos', '2'],
+    ['Curry', '1'],
+  ]);
+
+  fireEvent.change(screen.getByLabelText('Sort:'), {
+    target: { value: 'leastMade' },
+  });
+  expect(getRows()).toEqual([
+    ['Curry', '1'],
+    ['Tacos', '2'],
+    ['Pasta', '3'],
+  ]);
+});
+
 test('shows message when there are no meals', async () => {
   (getAllMeals as jest.Mock).mockResolvedValue([]);
 

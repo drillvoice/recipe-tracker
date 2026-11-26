@@ -75,6 +75,9 @@ export const IdeasTableRow = React.memo<IdeasTableRowProps>(({
               month: "numeric",
             })}
         </td>
+        <td className="made-count-cell" title={`Made ${idea.count} time${idea.count === 1 ? '' : 's'}`}>
+          {idea.count}
+        </td>
         <td className="tags-cell">
           <div className="tags-container">
             {renderedTagChips}

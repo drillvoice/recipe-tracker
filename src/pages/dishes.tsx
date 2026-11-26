@@ -5,7 +5,7 @@ import { useIdeas, type Idea } from "@/hooks/useIdeas";
 
 type DateFilterOption = "any" | "7days" | "14days" | "21days" | "28days";
 type TagFilterMode = "OR" | "AND";
-type SortOption = "newest" | "oldest" | "alphabetical";
+type SortOption = "newest" | "oldest" | "alphabetical" | "mostMade" | "leastMade";
 
 export default function Ideas() {
   const [showHidden, setShowHidden] = useState(false);
@@ -104,6 +104,20 @@ export default function Ideas() {
             a.mealName.localeCompare(b.mealName)
         );
         break;
+      case "mostMade":
+        sortedIdeas.sort(
+          (a, b) =>
+            b.count - a.count ||
+            a.mealName.localeCompare(b.mealName)
+        );
+        break;
+      case "leastMade":
+        sortedIdeas.sort(
+          (a, b) =>
+            a.count - b.count ||
+            a.mealName.localeCompare(b.mealName)
+        );
+        break;
       case "alphabetical":
         sortedIdeas.sort(
           (a, b) =>
@@ -171,6 +185,8 @@ export default function Ideas() {
           >
             <option value="newest">Last made: newest first</option>
             <option value="oldest">Last made: oldest first</option>
+            <option value="mostMade">Times made: most first</option>
+            <option value="leastMade">Times made: fewest first</option>
             <option value="alphabetical">Name: A–Z</option>
           </select>
         </div>
@@ -318,6 +334,7 @@ export default function Ideas() {
               <tr>
                 <th>Dish</th>
                 <th>Last Made</th>
+                <th title="Times made">Made</th>
                 <th>Tags</th>
                 <th>Info</th>
               </tr>

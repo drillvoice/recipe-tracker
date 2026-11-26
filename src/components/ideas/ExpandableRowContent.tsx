@@ -92,7 +92,7 @@ export const ExpandableRowContent = React.memo<ExpandableRowContentProps>(({
 
   return (
     <tr className="expanded-row">
-      <td colSpan={4}>
+      <td colSpan={5}>
         <div className="expanded-content">
           <div className="expanded-section">
             <div className="dish-stats">

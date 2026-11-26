@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5] - 2026-11-26
+
+### Added
+- **Times Made Column**: The Dishes list now shows how many times each dish has been made, in a narrow "Made" column next to Last Made.
+- **Sort by Times Made**: New sort options "Times made: most first" and "Times made: fewest first" (ties break alphabetically).
+
+### Technical
+- Rebalanced Dishes table column widths for the new column; expanded row content now spans five columns.
+- Added a Dishes page test for the count column and times-made sorting.
+- Updated visible app/export version references to `0.9.5`.
+- Service worker cache version bumped from `dish-diary-static-v6` to `dish-diary-static-v7`.
+
 ## [0.9.4] - 2026-10-31
 
 ### Changed

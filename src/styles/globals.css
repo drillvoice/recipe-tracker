@@ -2157,7 +2157,7 @@ h1 {
   font-style: italic;
 }
 
-/* Make count column narrower to save space for tags */
+/* Narrow "times made" column to save space for tags */
 .ideas-table th:nth-child(3),
 .ideas-table td:nth-child(3) {
   width: 60px;
@@ -3135,18 +3135,22 @@ h1 {
 
 /* Column width adjustments */
 .ideas-table th:nth-child(1) { /* Dish name */
-  width: 42%;
+  width: 40%;
 }
 
 .ideas-table th:nth-child(2) { /* Last Made */
   width: 11%;
 }
 
-.ideas-table th:nth-child(3) { /* Tags */
-  width: 37%;
+.ideas-table th:nth-child(3) { /* Times made */
+  width: 8%;
 }
 
-.ideas-table th:nth-child(4) { /* Info */
+.ideas-table th:nth-child(4) { /* Tags */
+  width: 31%;
+}
+
+.ideas-table th:nth-child(5) { /* Info */
   width: 10%;
 }
 
